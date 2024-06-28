@@ -103,18 +103,8 @@ const SimplePortfolio = () => {
           fillColor: {
             linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
             stops: [
-              [
-                0,
-                Highcharts.color(Highcharts.getOptions().colors[0])
-                  .setOpacity(0.5)
-                  .get("rgba"),
-              ],
-              [
-                1,
-                Highcharts.color(Highcharts.getOptions().colors[0])
-                  .setOpacity(0)
-                  .get("rgba"),
-              ],
+              [0, "rgba(135,206,235, 0.9)"], // Light green at the top
+              [1, "rgba(135,206,235, 0)"], // Transparent green at the bottom
             ],
           },
         },
@@ -129,18 +119,8 @@ const SimplePortfolio = () => {
           fillColor: {
             linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
             stops: [
-              [
-                0,
-                Highcharts.color("rgba(250, 65, 65, 1)")
-                  .setOpacity(0)
-                  .get("rgba"),
-              ],
-              [
-                1,
-                Highcharts.color("rgba(250, 65, 65, 1)")
-                  .setOpacity(0)
-                  .get("rgba"),
-              ],
+              [0, "rgba(250, 65, 65, 0)"], // Light red at the top
+              [1, "rgba(250, 65, 65, 0)"], // Transparent red at the bottom
             ],
           },
           type: "area",
