@@ -1,198 +1,130 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import {
-  Tabs,
-  TabsHeader,
-  TabsBody,
-  Tab,
-  TabPanel,
-} from "@material-tailwind/react";
+import React, { useState } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import Top10Drawdown from "./Top10Drawdown";
+import { useFetchData } from "@/app/lib/api"; // Assumes this is correctly set up to fetch data
+import {
+  calculateDrawdown,
+  calculateTop10Drawdown,
+  calculateMonthlyPL,
+} from "@/app/lib/Calculation"; // Ensure these are exported from the module
+import { getChartOptions } from "@/app/lib/ChartOptions"; // Ensure this is set up for generating chart options
+import MonthlyPLTable from "./MonthlyPLTable";
 
-const SimplePortfolio = () => {
+const PerformanceAndDrawdownChart = () => {
   const [activeTab, setActiveTab] = useState("scheme1");
-  const [chartData, setChartData] = useState({ scheme1: [], scheme2: [] });
+  const {
+    data: chartData,
+    isLoading,
+    error,
+  } = useFetchData("/investment-data.json");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/investment-data.json");
-        const data = await response.json();
-        setChartData({
-          scheme1: data.strategy1,
-          scheme2: data.strategy2,
-        });
-      } catch (error) {
-        console.log(error.message);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const calculateDrawdown = (data) => {
-    let peak = -Infinity;
-    return data.map((item) => {
-      const value = item["Total Portfolio NAV"];
-      peak = Math.max(peak, value);
-      const drawdown = ((value - peak) / peak) * 100;
-      return [
-        new Date(item.Date.split("-").reverse().join("-")).getTime(),
-        drawdown,
-      ];
-    });
+  // Calculate top 10 drawdowns whenever chartData changes
+  const top10Drawdowns = {
+    scheme1: calculateTop10Drawdown(chartData.scheme1),
+    scheme2: calculateTop10Drawdown(chartData.scheme2),
   };
 
-  const getChartOptions = (scheme) => {
-    const performanceData = chartData[scheme].map((item) => [
-      new Date(item.Date.split("-").reverse().join("-")).getTime(),
-      item["Total Portfolio NAV"],
-    ]);
+  if (isLoading || !chartData) {
+    return (
+      <div className="fixed inset-0 flex justify-center items-center bg-white bg-opacity-80">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+      </div>
+    );
+  }
 
-    const drawdownData = calculateDrawdown(chartData[scheme]);
+  if (error) {
+    return <div className="error">Error: {error}</div>;
+  }
 
-    return {
-      chart: {
-        type: "line",
-        zoomType: "x",
-        height: 500,
-        backgroundColor: "none",
-      },
-      title: {
-        text: `Performance and Drawdown for ${
-          scheme === "scheme1" ? "Scheme 1" : "Scheme 2"
-        }`,
-      },
-      xAxis: {
-        type: "datetime",
-        title: {
-          text: "Date",
-        },
-      },
-      yAxis: [
-        {
-          title: {
-            text: "Total Portfolio NAV",
-          },
-          gridLineWidth: 1,
-          height: "60%",
-        },
-        {
-          title: {
-            text: "Drawdown (%)",
-          },
-          opposite: false,
-          gridLineWidth: 0,
-          top: "60%",
-          height: "40%",
-          offset: 0,
-          min: -30,
-          max: 0,
-          tickPositions: [-20, -10, 0],
-        },
-      ],
-      series: [
-        {
-          name: "Portfolio Value",
-          data: performanceData,
-          yAxis: 0,
-          type: "area",
-          marker: {
-            enabled: false,
-          },
-          fillColor: {
-            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-            stops: [
-              [0, "rgba(135,206,235, 0.9)"], // Light green at the top
-              [1, "rgba(135,206,235, 0)"], // Transparent green at the bottom
-            ],
-          },
-        },
-        {
-          name: "Drawdown",
-          data: drawdownData,
-          color: "rgba(250, 65, 65, 1)",
-          lineWidth: 1,
-          marker: {
-            enabled: false,
-          },
-          fillColor: {
-            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-            stops: [
-              [0, "rgba(250, 65, 65, 0)"], // Light red at the top
-              [1, "rgba(250, 65, 65, 0)"], // Transparent red at the bottom
-            ],
-          },
-          type: "area",
-          yAxis: 1,
-        },
-      ],
-      plotOptions: {
-        area: {
-          marker: {
-            radius: 2,
-          },
-          lineWidth: 1,
-          states: {
-            hover: {
-              lineWidth: 1,
-            },
-          },
-          threshold: null,
-        },
-      },
-      legend: {
-        enabled: false,
-      },
-      tooltip: {
-        shared: true,
-      },
-      credits: {
-        enabled: false,
-      },
-      exporting: {
-        enabled: true,
-      },
-      navigation: {
-        buttonOptions: {
-          enabled: true,
-        },
-      },
-    };
-  };
-
+  // Simplified dynamic generation of chart options based on active tab
+  console.log(chartData[activeTab], activeTab);
+  const chartOptions = getChartOptions(chartData, activeTab);
+  const monthlyPL = calculateMonthlyPL(chartData[activeTab]);
+  //   console.log(monthlyPL);
   return (
-    <Tabs value={activeTab}>
-      <TabsHeader
-        className="rounded-none border-b w-1/3 border-blue-gray-50 bg-transparent p-0"
-        indicatorProps={{
-          className:
-            "bg-transparent border-b-2 border-gray-900 shadow-none rounded-none",
-        }}
-      >
-        <Tab value="scheme1" onClick={() => setActiveTab("scheme1")}>
+    <div>
+      <div className="flex mb-4">
+        <button
+          onClick={() => setActiveTab("scheme1")}
+          className={`px-4 py-2 mr-2 ${
+            activeTab === "scheme1"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
           Scheme 1
-        </Tab>
-        <Tab value="scheme2" onClick={() => setActiveTab("scheme2")}>
+        </button>
+        <button
+          onClick={() => setActiveTab("scheme2")}
+          className={`px-4 py-2 ${
+            activeTab === "scheme2"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
           Scheme 2
-        </Tab>
-      </TabsHeader>
-      <TabsBody>
-        <TabPanel value="scheme1">
-          <HighchartsReact
-            highcharts={Highcharts}
-            options={getChartOptions("scheme1")}
-          />
-        </TabPanel>
-        <TabPanel value="scheme2">
-          <HighchartsReact
-            highcharts={Highcharts}
-            options={getChartOptions("scheme2")}
-          />
-        </TabPanel>
-      </TabsBody>
-    </Tabs>
+        </button>
+      </div>
+      {chartData[activeTab] && (
+        <>
+          <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+          <Top10Drawdown drawdowns={top10Drawdowns[activeTab]} />
+          <MonthlyPLTable data={monthlyPL} />
+        </>
+      )}
+    </div>
   );
+
+  //   console.log(top10Drawdowns);
+
+  //   return (
+  //     <div>
+  //       <div className="flex mb-4">
+  //         <button
+  //           className={`px-4 py-2 mr-2 ${
+  //             activeTab === "scheme1"
+  //               ? "bg-blue-500 text-white"
+  //               : "bg-gray-200 text-gray-700"
+  //           }`}
+  //           onClick={() => setActiveTab("scheme1")}
+  //         >
+  //           Scheme 1
+  //         </button>
+  //         <button
+  //           className={`px-4 py-2 ${
+  //             activeTab === "scheme2"
+  //               ? "bg-blue-500 text-white"
+  //               : "bg-gray-200 text-gray-700"
+  //           }`}
+  //           onClick={() => setActiveTab("scheme2")}
+  //         >
+  //           Scheme 2
+  //         </button>
+  //       </div>
+  //       <div>
+  //         {activeTab === "scheme1" && (
+  //           <>
+  //             <HighchartsReact
+  //               highcharts={Highcharts}
+  //               options={getChartOptions("scheme1")}
+  //             />
+  //             <Top10Drawdown drawdowns={top10Drawdowns.scheme1} />
+  //           </>
+  //         )}
+  //         {activeTab === "scheme2" && (
+  //           <>
+  //             <HighchartsReact
+  //               highcharts={Highcharts}
+  //               options={getChartOptions("scheme2")}
+  //             />
+  //             <Top10Drawdown drawdowns={top10Drawdowns.scheme2} />
+  //           </>
+  //         )}
+  //       </div>
+  //     </div>
+  //   );
 };
 
-export default SimplePortfolio;
+export default PerformanceAndDrawdownChart;
