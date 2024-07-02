@@ -50,13 +50,16 @@ const MonthlyPLTable = ({ data }) => {
   const yearlyData = parseData(data);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto mt-20 border rounded-2xl p-5">
+      <h1 className="text-2xl mb-5 font-black">
+        Monthly Profit & Loss Stats of the fund{" "}
+      </h1>
       <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-400 text-white">
           <tr>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
             >
               Year
             </th>
@@ -64,14 +67,14 @@ const MonthlyPLTable = ({ data }) => {
               <th
                 key={month}
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
               >
                 {month}
               </th>
             ))}
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
             >
               Total
             </th>

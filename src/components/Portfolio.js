@@ -11,6 +11,8 @@ import {
 } from "@/app/lib/Calculation"; // Ensure these are exported from the module
 import { getChartOptions } from "@/app/lib/ChartOptions"; // Ensure this is set up for generating chart options
 import MonthlyPLTable from "./MonthlyPLTable";
+import RollingReturns from "./RollingReturns";
+import PortfolioAllocation from "./PortfolioAllocation";
 
 const PerformanceAndDrawdownChart = () => {
   const [activeTab, setActiveTab] = useState("scheme1");
@@ -39,7 +41,6 @@ const PerformanceAndDrawdownChart = () => {
   }
 
   // Simplified dynamic generation of chart options based on active tab
-  console.log(chartData[activeTab], activeTab);
   const chartOptions = getChartOptions(chartData, activeTab);
   const monthlyPL = calculateMonthlyPL(chartData[activeTab]);
   //   console.log(monthlyPL);
@@ -48,9 +49,9 @@ const PerformanceAndDrawdownChart = () => {
       <div className="flex mb-4">
         <button
           onClick={() => setActiveTab("scheme1")}
-          className={`px-4 py-2 mr-2 ${
+          className={`px-4 py-2 mr-2 rounded-lg ${
             activeTab === "scheme1"
-              ? "bg-blue-500 text-white"
+              ? "bg-black text-white"
               : "bg-gray-200 text-gray-700"
           }`}
         >
@@ -58,9 +59,9 @@ const PerformanceAndDrawdownChart = () => {
         </button>
         <button
           onClick={() => setActiveTab("scheme2")}
-          className={`px-4 py-2 ${
+          className={`px-4 py-2 rounded-lg ${
             activeTab === "scheme2"
-              ? "bg-blue-500 text-white"
+              ? "bg-black text-white"
               : "bg-gray-200 text-gray-700"
           }`}
         >
@@ -72,59 +73,12 @@ const PerformanceAndDrawdownChart = () => {
           <HighchartsReact highcharts={Highcharts} options={chartOptions} />
           <Top10Drawdown drawdowns={top10Drawdowns[activeTab]} />
           <MonthlyPLTable data={monthlyPL} />
+          <RollingReturns data={chartData[activeTab]} />
+          <PortfolioAllocation />
         </>
       )}
     </div>
   );
-
-  //   console.log(top10Drawdowns);
-
-  //   return (
-  //     <div>
-  //       <div className="flex mb-4">
-  //         <button
-  //           className={`px-4 py-2 mr-2 ${
-  //             activeTab === "scheme1"
-  //               ? "bg-blue-500 text-white"
-  //               : "bg-gray-200 text-gray-700"
-  //           }`}
-  //           onClick={() => setActiveTab("scheme1")}
-  //         >
-  //           Scheme 1
-  //         </button>
-  //         <button
-  //           className={`px-4 py-2 ${
-  //             activeTab === "scheme2"
-  //               ? "bg-blue-500 text-white"
-  //               : "bg-gray-200 text-gray-700"
-  //           }`}
-  //           onClick={() => setActiveTab("scheme2")}
-  //         >
-  //           Scheme 2
-  //         </button>
-  //       </div>
-  //       <div>
-  //         {activeTab === "scheme1" && (
-  //           <>
-  //             <HighchartsReact
-  //               highcharts={Highcharts}
-  //               options={getChartOptions("scheme1")}
-  //             />
-  //             <Top10Drawdown drawdowns={top10Drawdowns.scheme1} />
-  //           </>
-  //         )}
-  //         {activeTab === "scheme2" && (
-  //           <>
-  //             <HighchartsReact
-  //               highcharts={Highcharts}
-  //               options={getChartOptions("scheme2")}
-  //             />
-  //             <Top10Drawdown drawdowns={top10Drawdowns.scheme2} />
-  //           </>
-  //         )}
-  //       </div>
-  //     </div>
-  //   );
 };
 
 export default PerformanceAndDrawdownChart;

@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import {
   IconButton,
   Typography,
@@ -30,6 +32,8 @@ import {
 } from "@heroicons/react/24/solid";
 
 export default function Sidebar() {
+  // const pathname = usePathname();
+  // const isActive = (path) => path === pathname;
   return (
     <Card className="h-[calc(100vh-2rem)] w-full max-w-[20rem] p-4 shadow-xl shadow-blue-gray-900/5">
       <div className="mb-2 p-4 ">
@@ -58,22 +62,22 @@ export default function Sidebar() {
             Portfolio
           </ListItem>
         </Link>
-        <Link href={'/account'}>
-        <ListItem>
-          <ListItemPrefix>
-            <UserIcon className="h-5 w-5" />
-          </ListItemPrefix>
-          Account
-          <ListItemSuffix>
-            {/* <Chip
+        <Link href={"/account"}>
+          <ListItem>
+            <ListItemPrefix>
+              <UserIcon className="h-5 w-5" />
+            </ListItemPrefix>
+            Account
+            <ListItemSuffix>
+              {/* <Chip
               value="14"
               size="sm"
               variant="ghost"
               color="blue-gray"
               className="rounded-full"
             /> */}
-          </ListItemSuffix>
-        </ListItem>
+            </ListItemSuffix>
+          </ListItem>
         </Link>
         {/* <ListItem>
           <ListItemPrefix>

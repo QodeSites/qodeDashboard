@@ -35,9 +35,7 @@ export const getChartOptions = (chartData, scheme) => {
       backgroundColor: "none",
     },
     title: {
-      text: `Performance and Drawdown for ${
-        scheme === "scheme1" ? "Scheme 1" : "Scheme 2"
-      }`,
+      text: "",
     },
     xAxis: {
       type: "datetime",

@@ -92,6 +92,8 @@ export function calculateMonthlyPL(data) {
       new Date(b.Date.split("-").reverse().join("-"))
   );
 
+  console.log(data);
+
   // Aggregate data by month
   const monthlyData = {};
   data.forEach((item) => {
@@ -107,6 +109,8 @@ export function calculateMonthlyPL(data) {
     monthlyData[monthYearKey].totalNAV += item["Total Portfolio NAV"];
     monthlyData[monthYearKey].count++;
   });
+
+  //   console.log(monthlyData);
 
   // Calculate average monthly NAV values
   const months = Object.keys(monthlyData).sort();
