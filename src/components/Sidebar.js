@@ -35,8 +35,8 @@ export default function Sidebar() {
   // const pathname = usePathname();
   // const isActive = (path) => path === pathname;
   return (
-    <Card className="h-[calc(100vh-2rem)] w-full max-w-[20rem] p-4 shadow-xl shadow-blue-gray-900/5">
-      <div className="mb-2 p-4 ">
+    <Card className="h-screen w-full max-w-[15rem] p-4 shadow-xl shadow-blue-gray-900/5">
+      <div className="mb-2 p-2 ">
         <Typography
           className="playfair-disply-font font-extrabold"
           variant="h5"

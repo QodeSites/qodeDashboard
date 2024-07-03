@@ -50,16 +50,13 @@ const MonthlyPLTable = ({ data }) => {
   const yearlyData = parseData(data);
 
   return (
-    <div className="overflow-x-auto mt-20 border rounded-2xl p-5">
-      <h1 className="text-2xl mb-5 font-black">
-        Monthly Profit & Loss Stats of the fund{" "}
-      </h1>
+    <div className="overflow-x-auto mt-5 border rounded-lg ">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-400 text-white">
           <tr>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider sticky left-0 z-10 bg-gray-400"
             >
               Year
             </th>
@@ -83,7 +80,7 @@ const MonthlyPLTable = ({ data }) => {
         <tbody className="bg-white divide-y divide-gray-200">
           {Object.keys(yearlyData).map((year) => (
             <tr key={year}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10">
                 {year}
               </td>
               {yearlyData[year].map((percentChange, index) => (

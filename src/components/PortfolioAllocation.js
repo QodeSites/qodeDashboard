@@ -32,8 +32,7 @@ export default function PortfolioAllocation() {
 
   return (
     <>
-      <div className="border mt-5 w-1/2 rounded-lg p-5">
-        <h1 className="text-2xl mb-5 font-black">Portfolio Allocation</h1>
+      <div className="border mt-5  rounded-lg ">
         <HighchartsReact highcharts={Highcharts} options={options} />
       </div>
     </>

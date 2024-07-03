@@ -60,17 +60,17 @@ export default function Top10Drawdown({ drawdowns }) {
   });
 
   return (
-    <div className="p-4 border rounded-lg">
-      <h1 className="text-2xl mb-5 font-black">Top 10 Drawdowns</h1>
+    <div className="rounded-lg">
+      {/* <h1 className="text-2xl mb-5 font-black">Top 10 Drawdowns</h1> */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-md">
-        <table className="w-full text-sm text-left text-gray-500">
+        <table className="w-full text-sm text-left text-gray-900">
           <thead className="text-xs text-black uppercase bg-gray-400">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                    className="px-4 py-3 cursor-pointer hover:bg-gray-100"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <div className="flex items-center">
@@ -138,7 +138,7 @@ export default function Top10Drawdown({ drawdowns }) {
                   } border-b hover:bg-gray-100`}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                    <td key={cell.id} className="px-4 py-4 whitespace-nowrap">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
