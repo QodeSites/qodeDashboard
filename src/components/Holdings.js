@@ -95,6 +95,7 @@ const Holdings = ({ strategy }) => {
                 {headerGroup.headers.map((column, index) => (
                   <th
                     {...column.getHeaderProps(column.getSortByToggleProps())}
+                    key={column.id || index}
                     className={`px-6 py-3 text-xs font-medium text-gray-900 uppercase tracking-wider cursor-pointer ${
                       index === 0 ? "text-left" : "text-right"
                     }`}
@@ -116,10 +117,11 @@ const Holdings = ({ strategy }) => {
             {rows.map((row) => {
               prepareRow(row);
               return (
-                <tr {...row.getRowProps()} className="hover:bg-gray-50">
+                <tr {...row.getRowProps()} key={i} className="hover:bg-gray-50">
                   {row.cells.map((cell, index) => (
                     <td
                       {...cell.getCellProps()}
+                      key={cell.column.id}
                       className={`px-6 py-4 whitespace-nowrap border-b text-sm text-gray-900 ${
                         index === 0 ? "" : "text-right"
                       }`}
