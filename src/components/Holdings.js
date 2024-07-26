@@ -86,9 +86,10 @@ const Holdings = ({ strategy }) => {
           className="min-w-full bg-white border border-gray-300"
         >
           <thead>
-            {headerGroups.map((headerGroup) => (
+            {headerGroups.map((headerGroup, i) => (
               <tr
                 {...headerGroup.getHeaderGroupProps()}
+                key={i}
                 className="bg-gray-100"
               >
                 {headerGroup.headers.map((column, index) => (
