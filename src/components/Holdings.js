@@ -114,7 +114,7 @@ const Holdings = ({ strategy }) => {
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {rows.map((row) => {
+            {rows.map((row, i) => {
               prepareRow(row);
               return (
                 <tr {...row.getRowProps()} key={i} className="hover:bg-gray-50">
