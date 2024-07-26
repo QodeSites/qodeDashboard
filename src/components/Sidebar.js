@@ -5,7 +5,7 @@ const Header = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
 
   const navItems = [
-    { name: "My Dashboard", href: "/" },
+    { name: "My Dashboard", href: "/portfolio" },
     { name: "Customer Support", href: "/customer-support" },
     { name: "Strategies", href: "/strategies" },
   ];
