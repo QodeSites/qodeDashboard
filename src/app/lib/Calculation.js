@@ -86,19 +86,15 @@ export function calculateMonthlyPL(data) {
   }
 
   // Sort data by date
-  data.sort(
-    (a, b) =>
-      new Date(a.Date.split("-").reverse().join("-")) -
-      new Date(b.Date.split("-").reverse().join("-"))
-  );
-
-  console.log(data);
+  data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
   // Aggregate data by month
   const monthlyData = {};
   data.forEach((item) => {
-    const date = new Date(item.Date.split("-").reverse().join("-"));
-    const monthYearKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+    const date = new Date(item.Date);
+    const monthYearKey = `${date.getFullYear()}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}`;
 
     if (!monthlyData[monthYearKey]) {
       monthlyData[monthYearKey] = {
@@ -106,31 +102,29 @@ export function calculateMonthlyPL(data) {
         count: 0,
       };
     }
-    monthlyData[monthYearKey].totalNAV += item["Total Portfolio NAV"];
+    monthlyData[monthYearKey].totalNAV += parseFloat(
+      item["Total Portfolio NAV"]
+    );
     monthlyData[monthYearKey].count++;
   });
 
-  //   console.log(monthlyData);
-
-  // Calculate average monthly NAV values
+  // Calculate monthly percentage changes
   const months = Object.keys(monthlyData).sort();
   const results = [];
-  let previousAvgNAV = null;
+  let previousMonthNAV = null;
 
   for (const month of months) {
     const averageNAV = monthlyData[month].totalNAV / monthlyData[month].count;
-    monthlyData[month].averageNAV = averageNAV;
 
-    if (previousAvgNAV !== null) {
-      // Calculate percentage change from the previous month
+    if (previousMonthNAV !== null) {
       const percentChange =
-        ((averageNAV - previousAvgNAV) / previousAvgNAV) * 100;
+        ((averageNAV - previousMonthNAV) / previousMonthNAV) * 100;
       results.push({
         month: month,
-        percentChange: percentChange.toFixed(2) + "%",
+        percentChange: percentChange.toFixed(2),
       });
     }
-    previousAvgNAV = averageNAV; // Update previousAvgNAV for the next iteration
+    previousMonthNAV = averageNAV;
   }
 
   return results;

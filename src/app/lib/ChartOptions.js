@@ -1,15 +1,20 @@
 export const getChartOptions = (chartData, scheme) => {
-  if (!chartData || !chartData[scheme]) {
+  console.log("chartData: ", chartData);
+  if (!chartData) {
     // Handle the case where chartData or chartData[scheme] is not available
     console.error("Data is not available for: ", scheme);
     return {}; // Return an empty object or some default configuration
   }
 
-  const schemeData = chartData[scheme];
-
+  const schemeData = chartData;
   const performanceData = schemeData.map((item) => [
     new Date(item.Date.split("-").reverse().join("-")).getTime(),
     item["Total Portfolio NAV"],
+  ]);
+
+  const niftyData = schemeData.map((item) => [
+    new Date(item.Date.split("-").reverse().join("-")).getTime(),
+    item["Nifty"],
   ]);
 
   const calculateDrawdown = (data) => {
@@ -49,28 +54,28 @@ export const getChartOptions = (chartData, scheme) => {
           text: "Total Portfolio NAV",
         },
         gridLineWidth: 1,
-        height: "60%",
+        height: "100%",
       },
-      {
-        title: {
-          text: "Drawdown (%)",
-        },
-        opposite: false,
-        gridLineWidth: 0,
-        top: "60%",
-        height: "40%",
-        offset: 0,
-        min: -30,
-        max: 0,
-        tickPositions: [-20, -10, 0],
-      },
+      // {
+      //   title: {
+      //     text: "Drawdown (%)",
+      //   },
+      //   opposite: false,
+      //   gridLineWidth: 0,
+      //   top: "70%",
+      //   height: "40%",
+      //   offset: 0,
+      //   min: -30,
+      //   max: 0,
+      //   tickPositions: [-20, -10, 0],
+      // },
     ],
     series: [
       {
         name: "Portfolio Value",
         data: performanceData,
         yAxis: 0,
-        type: "area",
+        type: "line",
         marker: {
           enabled: false,
         },
@@ -83,23 +88,39 @@ export const getChartOptions = (chartData, scheme) => {
         },
       },
       {
-        name: "Drawdown",
-        data: drawdownData,
-        color: "rgba(250, 65, 65, 1)",
-        lineWidth: 1,
+        name: "Nifty",
+        data: niftyData,
+        yAxis: 0,
+        type: "line",
         marker: {
           enabled: false,
         },
         fillColor: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
           stops: [
-            [0, "rgba(250, 65, 65, 0)"], // Light red at the top
-            [1, "rgba(250, 65, 65, 0)"], // Transparent red at the bottom
+            [0, "rgba(135,206,235, 0.9)"], // Light green at the top
+            [1, "rgba(135,206,235, 0)"], // Transparent green at the bottom
           ],
         },
-        type: "area",
-        yAxis: 1,
       },
+      // {
+      //   name: "Drawdown",
+      //   data: drawdownData,
+      //   color: "rgba(250, 65, 65, 1)",
+      //   lineWidth: 1,
+      //   marker: {
+      //     enabled: false,
+      //   },
+      //   fillColor: {
+      //     linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+      //     stops: [
+      //       [0, "rgba(250, 65, 65, 0)"], // Light red at the top
+      //       [1, "rgba(250, 65, 65, 0)"], // Transparent red at the bottom
+      //     ],
+      //   },
+      //   type: "area",
+      //   yAxis: 1,
+      // },
     ],
     plotOptions: {
       area: {

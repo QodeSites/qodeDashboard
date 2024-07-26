@@ -3,6 +3,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
@@ -24,10 +26,18 @@
   font-style: normal;
 }
 
-
-
-body{
-  font-family: "Inter", sans-serif;
-  font-optical-sizing: auto;
+@font-face {
+  font-family: 'CustomHelvetica';
+  src: url('/Fonts/helvetica-neue-5/HelveticaNeueLight.otf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
+
+.helvetica-font {
+  font-family: "CustomHelvetica", sans-serif; /* Fallback to sans-serif */
+}
+
+
+
 

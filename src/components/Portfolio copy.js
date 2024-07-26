@@ -20,8 +20,8 @@ import CompoundedAnnualReturns from "./RollingReturns";
 const PerformanceAndDrawdownChart = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [timeRange, setTimeRange] = useState("3Y");
-  const [activeButton, setActiveButton] = useState("3Y");
+  const [timeRange, setTimeRange] = useState("ALL");
+  const [activeButton, setActiveButton] = useState("ALL");
   const [activeTab, setActiveTab] = useState("strategy1");
   const [triggerFetch, setTriggerFetch] = useState(0);
   const { data: chartData, isLoading, error } = useFetchData("/mainData.json");
@@ -47,7 +47,7 @@ const PerformanceAndDrawdownChart = () => {
 
   const calculateCAGR = useMemo(
     () =>
-      (data, timeRange = "3Y") => {
+      (data, timeRange = "3Y", key = "Total Portfolio NAV") => {
         const parseDate = (dateString) => {
           const [month, day, year] = dateString.split("/").map(Number);
           return new Date(year, month - 1, day);
@@ -99,10 +99,8 @@ const PerformanceAndDrawdownChart = () => {
         );
         if (startIndex === -1) return "N/A"; // No data matches the start date
 
-        const startValue = parseFloat(
-          sortedData[startIndex]["Total Portfolio NAV"]
-        );
-        const endValue = parseFloat(latestData["Total Portfolio NAV"]);
+        const startValue = parseFloat(sortedData[startIndex][key]);
+        const endValue = parseFloat(latestData[key]);
 
         if (isNaN(startValue) || isNaN(endValue)) return "N/A";
 
@@ -122,6 +120,7 @@ const PerformanceAndDrawdownChart = () => {
       },
     []
   );
+
   const calculateReturns = (data, key) => {
     if (data.length < 2) return "N/A";
     const startValue = parseFloat(data[0][key]);
@@ -164,7 +163,7 @@ const PerformanceAndDrawdownChart = () => {
 
   let period;
   if (timeRange === "ALL") {
-    period = "Since Inception";
+    period = "3Y";
   } else {
     period = `${timeRange}`;
   }
@@ -209,9 +208,7 @@ const PerformanceAndDrawdownChart = () => {
               key={range}
               onClick={() => handleTimeRangeChange(range)}
               className={`px-3 py-1 text-sm ${
-                activeButton === range
-                  ? "bg-black text-white"
-                  : "border border-black"
+                activeButton === range ? "bg-black text-white" : "bg-gray-200"
               }`}
             >
               {range}
@@ -221,7 +218,7 @@ const PerformanceAndDrawdownChart = () => {
             className={`py-2 sm:py-1 px-4 text-xs sm:text-sm ${
               activeButton === "ALL"
                 ? "bg-primary-dark text-white bg-black"
-                : "border border-black text-gray-900"
+                : "bg-[#f7f5f5] text-gray-900"
             }`}
             onClick={() => handleTimeRangeChange("ALL")}
           >
@@ -268,26 +265,25 @@ const PerformanceAndDrawdownChart = () => {
       <div className="grid grid-cols-12 gap-12">
         <div className="col-span-4">
           <div className="mb-4">
-            <h2 className="text-lg ">Absolute Returns</h2>
             <p className="text-7xl ">{strategyReturns}</p>
-            <h2 className="text-lg ">Growth Fund</h2>
+            <h2 className="text-lg ">Strategy Returns</h2>
           </div>
           <div>
             <p className="text-2xl ">{niftyReturns}</p>
-            <h2 className="text-lg ">Nifty50</h2>
+            <h2 className="text-lg ">Nifty Returns</h2>
           </div>
         </div>
         <div className="col-start-10 col-span-3">
-          <h2 className="text-xl text-right">{period} CAGR</h2>
-          <p className="text-7xl text-right">{strategyCagr}</p>
-          <h2 className="text-xl text-right">Growth Fund</h2>
-
+          <p className="text-7xl">{strategyCagr}</p>
+          <h2 className="text-xl text-right mr-6">{period} CAGR</h2>
           <div className="col-start-10 mr-6 mt-4 col-span-3">
-            <p className="text-3xl text-right">{niftyCagr}</p>
-            <h2 className="text-lg text-right">Nifty50</h2>
+            <p className="text-2xl text-right">{niftyCagr}</p>
+            <h2 className="text-xl text-right">{period} Nifty CAGR</h2>
           </div>
         </div>
         <div className="col-span-12">
+          <h2 className="text-xl font-bold mb-6">Performance Chart</h2>
+
           <HighchartsReact highcharts={Highcharts} options={chartOptions} />
         </div>
       </div>
