@@ -3,10 +3,11 @@ import Link from "next/link";
 
 const Header = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const navItems = [
-    { name: "My Dashboard", href: "/portfolio" },
-    { name: "Customer Support", href: "/customer-support" },
+    { name: "My Dashboard", href: "/" },
+    // { name: "Customer Support", href: "/customer-support" },
     { name: "Strategies", href: "/strategies" },
   ];
 
@@ -14,10 +15,14 @@ const Header = () => {
     setIsNavOpen(false);
   };
 
+  const handleLogout = () => {
+    // Implement logout logic here
+    console.log("Logging out...");
+  };
   return (
-    <header className="shadow-lg helvetica-font fixed w-full bg-white z-20 top-0">
+    <header className="border-b border-black  helvetica-font fixed w-full bg-white z-20 top-0">
       <div className="mx-auto">
-        <div className="flex justify-between items-center h-16 px-4">
+        <div className="flex justify-between items-center h-16 px-24">
           <div className="w-1/4">
             <button
               type="button"
@@ -47,7 +52,7 @@ const Header = () => {
             </button>
           </div>
 
-          <div className="w-1/2 flex justify-center">
+          <div className="w-1/4 flex justify-center">
             <Link
               href="/"
               className="text-black text-4xl py-5 helvetica-font font-semibold "
@@ -56,7 +61,37 @@ const Header = () => {
             </Link>
           </div>
 
-          <div className="w-1/4"></div>
+          <div className="w-1/4 flex justify-end">
+            <div className="relative">
+              <button
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="p-2 rounded-full hover:bg-gray-100 transition duration-300"
+                aria-label="User menu"
+              >
+                <svg
+                  className="h-6 w-6 text-black"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </button>
+              {isUserDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

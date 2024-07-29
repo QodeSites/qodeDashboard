@@ -17,6 +17,7 @@ export const useFetchData = (url) => {
           scheme2: jsonData.strategy2,
           momentum: jsonData.momentum,
           qgf: jsonData.qgf,
+          lowvol: jsonData.lowvol,
         });
       } catch (error) {
         setError(error.message);
@@ -50,6 +51,7 @@ export const useFetchHoldings = (url) => {
         setHolding({
           momentum: jsonData.momentum,
           qgf: jsonData.qgf,
+          lowvol: jsonData.lowvol,
           strategy1: jsonData.strategy1,
           strategy2: jsonData.strategy2,
         });

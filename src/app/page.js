@@ -1,5 +1,6 @@
 import DefaultLayout from "@/components/Layouts/Layouts";
 import Dashboard from "./dashboard/page";
+import Portfolio from "./portfolio/page";
 
 export const metadata = {
   title:
@@ -10,7 +11,7 @@ export const metadata = {
 export default function Home() {
   return (
     <DefaultLayout>
-      <Dashboard />
+      <Portfolio />
     </DefaultLayout>
   );
 }

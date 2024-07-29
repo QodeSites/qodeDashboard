@@ -3,11 +3,7 @@ import PerformanceAndDrawdownChart from "@/components/Portfolio";
 import React from "react";
 
 const Portfolio = () => {
-  return (
-    <DefaultLayout>
-      <PerformanceAndDrawdownChart />
-    </DefaultLayout>
-  );
+  return <PerformanceAndDrawdownChart />;
 };
 
 export default Portfolio;

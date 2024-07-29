@@ -47,7 +47,7 @@ const PerformanceAndDrawdownChart = () => {
 
   const calculateCAGR = useMemo(
     () =>
-      (data, timeRange = "3Y") => {
+      (data, timeRange = "3Y", portfolioType = "Total Portfolio NAV") => {
         const parseDate = (dateString) => {
           const [month, day, year] = dateString.split("/").map(Number);
           return new Date(year, month - 1, day);
@@ -99,10 +99,8 @@ const PerformanceAndDrawdownChart = () => {
         );
         if (startIndex === -1) return "N/A"; // No data matches the start date
 
-        const startValue = parseFloat(
-          sortedData[startIndex]["Total Portfolio NAV"]
-        );
-        const endValue = parseFloat(latestData["Total Portfolio NAV"]);
+        const startValue = parseFloat(sortedData[startIndex][portfolioType]);
+        const endValue = parseFloat(latestData[portfolioType]);
 
         if (isNaN(startValue) || isNaN(endValue)) return "N/A";
 
@@ -122,6 +120,9 @@ const PerformanceAndDrawdownChart = () => {
       },
     []
   );
+
+  // Usage example
+
   const calculateReturns = (data, key) => {
     if (data.length < 2) return "N/A";
     const startValue = parseFloat(data[0][key]);
@@ -131,7 +132,7 @@ const PerformanceAndDrawdownChart = () => {
 
   const strategyReturns = calculateReturns(filteredData, "Total Portfolio NAV");
   const niftyReturns = calculateReturns(filteredData, "Nifty");
-
+  console.log(filteredData);
   if (isLoading || !filteredData.length) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-white">
@@ -182,23 +183,25 @@ const PerformanceAndDrawdownChart = () => {
     <div className="p-8 mt-10 max-w-7xl mx-auto helvetica-font tracking-wide bg-white text-black">
       <h1 className="text-3xl mb-12">Model Portfolio</h1>
 
-      <div className="mb-12 grid grid-cols-4 gap-4 max-w-full">
-        {["strategy1", "strategy2", "momentum", "qgf"].map((tab) => (
+      <div className="mb-12 grid grid-cols-5 gap-4 max-w-full">
+        {[
+          { id: "strategy1", name: "Strategy 1" },
+          { id: "strategy2", name: "Strategy 2" },
+          { id: "momentum", name: "Momentum" },
+          { id: "qgf", name: "Quant Growth Fund" },
+          { id: "lowvol", name: "Low Volatility Fund" },
+        ].map((strategy) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={strategy.id}
+            onClick={() => setActiveTab(strategy.id)}
             className={`py-3 text-lg transition-colors duration-300 ease-in-out
-              ${
-                activeTab === tab
-                  ? "bg-black text-white"
-                  : "text-black hover:before:bg-black border-black relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
-              }`}
+        ${
+          activeTab === strategy.id
+            ? "bg-black text-white"
+            : "text-black hover:before:bg-black border-black relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+        }`}
           >
-            <span className="relative z-10">
-              {tab === "qgf"
-                ? "Quant Growth Fund"
-                : tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </span>
+            <span className="relative z-10">{strategy.name}</span>
           </button>
         ))}
       </div>
