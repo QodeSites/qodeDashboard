@@ -134,17 +134,19 @@ const Header = () => {
               </button>
 
               {/* Navigation items */}
-              {navItems.map((item) => (
-                <div key={item.name} className="pt-10">
-                  <Link
-                    href={item.href}
-                    className="flex justify-between items-center w-full text-left  text-lg font-medium hover:bg-white/10 transition duration-300 text-black hover:before:bg-black relative h-[50px] overflow-hidden bg-white px-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
-                    onClick={handleNavClick}
-                  >
-                    <span className="relative z-10">{item.name}</span>
-                  </Link>
-                </div>
-              ))}
+              <div className="mt-[4.5rem]">
+                {navItems.map((item) => (
+                  <div key={item.name} className="py-1">
+                    <Link
+                      href={item.href}
+                      className="flex justify-between items-center w-full text-left text-lg font-medium hover:bg-white/10 transition duration-300 text-black hover:before:bg-black relative h-[50px] overflow-hidden bg-white px-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+                      onClick={handleNavClick}
+                    >
+                      <span className="relative z-10">{item.name}</span>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

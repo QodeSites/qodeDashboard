@@ -27,6 +27,14 @@ const PerformanceAndDrawdownChart = () => {
   const { data: chartData, isLoading, error } = useFetchData("/mainData.json");
   const [filteredData, setFilteredData] = useState([]);
 
+  const descriptions = {
+    strategy1: "Description for Strategy 1",
+    strategy2: "Description for Strategy 2",
+    momentum: "Description for Momentum Strategy",
+    qgf: "Description for Quant Growth Fund",
+    lowvol: "Description for Low Volatility Fund",
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -179,10 +187,16 @@ const PerformanceAndDrawdownChart = () => {
   } else {
     active = "QGF";
   }
+
+  const strategyDescription = descriptions[activeTab];
+
   return (
     <div className="p-8 mt-10 max-w-7xl mx-auto helvetica-font tracking-wide bg-white text-black">
       <h1 className="text-3xl mb-12">Model Portfolio</h1>
 
+      <div className="mb-4">
+        <h2 className="text-xl font-bold">{strategyDescription}</h2>
+      </div>
       <div className="mb-12 grid grid-cols-5 gap-4 max-w-full">
         {[
           { id: "strategy1", name: "Strategy 1" },
