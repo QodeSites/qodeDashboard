@@ -52,7 +52,7 @@ const Header = () => {
             </button>
           </div>
 
-          <div className="w-1/4 flex justify-center">
+          <div className="w-1/2 flex justify-center">
             <Link
               href="/"
               className="text-black text-4xl py-5 helvetica-font font-semibold "
