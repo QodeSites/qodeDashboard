@@ -1,0 +1,18 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model tblusers {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  username   String
+  password   String
+  email      String   @unique
+  created_at DateTime @default(now())
+  last_login DateTime @default(now())
+}

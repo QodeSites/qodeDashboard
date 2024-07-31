@@ -1,17 +1,35 @@
+"use client";
 import DefaultLayout from "@/components/Layouts/Layouts";
-import Dashboard from "./dashboard/page";
-import Portfolio from "./portfolio/page";
-
-export const metadata = {
-  title:
-    "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
-  description: "This is Next.js Home for TailAdmin Dashboard Template",
-};
+import PerformanceAndDrawdownChart from "@/components/Portfolio";
+import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session) {
+      router.push("/auth/signin");
+    } else {
+      setLoading(false);
+    }
+  }, [session, status, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <DefaultLayout>
-      <Portfolio />
+      <PerformanceAndDrawdownChart />
     </DefaultLayout>
   );
 }

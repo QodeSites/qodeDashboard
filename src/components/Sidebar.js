@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 
 const Header = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -15,14 +16,18 @@ const Header = () => {
     setIsNavOpen(false);
   };
 
-  const handleLogout = () => {
-    // Implement logout logic here
+  const handleLogout = async () => {
     console.log("Logging out...");
+    try {
+      await signOut({ redirect: true, callbackUrl: "/" });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
   return (
-    <header className="border-b border-black  helvetica-font fixed w-full bg-white z-20 top-0">
+    <header className="border-b border-black z-20  helvetica-font fixed w-full bg-white  top-0">
       <div className="mx-auto">
-        <div className="flex justify-between items-center h-16 px-24">
+        <div className="flex justify-between items-center h-16 px-4">
           <div className="w-1/4">
             <button
               type="button"
@@ -53,11 +58,10 @@ const Header = () => {
           </div>
 
           <div className="w-1/2 flex justify-center">
-            <Link
-              href="/"
-              className="text-black text-4xl py-5 helvetica-font font-semibold "
-            >
-              Qode
+            <Link className="cursor-pointer" href="/">
+              <p className="text-black text-[1.375rem] mr-4 py-5 playfair-display-font ">
+                Qode
+              </p>
             </Link>
           </div>
 
