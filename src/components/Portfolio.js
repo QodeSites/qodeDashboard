@@ -50,7 +50,7 @@ const PerformanceAndDrawdownChart = () => {
         console.error("Error loading data: ", error);
       }
     };
-  
+
     loadData();
   }, [activeTab, timeRange, startDate, endDate, triggerFetch]);
   const calculateCAGR = useMemo(
@@ -131,26 +131,25 @@ const PerformanceAndDrawdownChart = () => {
 
   // Usage example
 
-
   // normalize data
   const normalizeData = (data) => {
     if (data.length === 0) return [];
-  
+
     const firstValue = {
       "Total Portfolio NAV": data[0]["Total Portfolio NAV"],
-      "Nifty": data[0]["Nifty"]
+      Nifty: data[0]["Nifty"],
     };
-  
-    return data.map(item => ({
+
+    return data.map((item) => ({
       ...item,
-      "Total Portfolio NAV": (item["Total Portfolio NAV"] / firstValue["Total Portfolio NAV"]) * 100,
-      "Nifty": (item["Nifty"] / firstValue["Nifty"]) * 100
+      "Total Portfolio NAV":
+        (item["Total Portfolio NAV"] / firstValue["Total Portfolio NAV"]) * 100,
+      Nifty: (item["Nifty"] / firstValue["Nifty"]) * 100,
     }));
   };
 
-
-
   const calculateReturns = (data, key) => {
+    console.log("datasss", data);
     if (data.length < 2) return "N/A";
     const startValue = parseFloat(data[0][key]);
     const endValue = parseFloat(data[data.length - 1][key]);

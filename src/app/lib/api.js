@@ -127,6 +127,11 @@ const filterDataByTimeRange = (data, range, start, end, latestDataDate) => {
         latestDate.setFullYear(latestDate.getFullYear() - 1)
       );
       break;
+    case "3Y":
+      filterDate = new Date(
+        latestDate.setFullYear(latestDate.getFullYear() - 3)
+      );
+      break;
     case "5Y":
       filterDate = new Date(
         latestDate.setFullYear(latestDate.getFullYear() - 5)
