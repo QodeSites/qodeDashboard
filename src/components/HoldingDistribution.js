@@ -11,7 +11,6 @@ const HoldingDistribution = ({ activeStrategy }) => {
       try {
         const response = await fetch("/holdingDistribution.json");
         const jsonData = await response.json();
-        console.log("jsonData: ", jsonData);
         const filteredData = jsonData.Sheet1.filter(
           (item) => item.Strategy === activeStrategy
         );
@@ -22,7 +21,7 @@ const HoldingDistribution = ({ activeStrategy }) => {
     };
     fetchData();
   }, [activeStrategy]);
-  console.log("data: ", data);
+
   const { percentages, chartOptions } = useMemo(() => {
     const totals = data.reduce(
       (acc, item) => {
@@ -42,15 +41,15 @@ const HoldingDistribution = ({ activeStrategy }) => {
     );
 
     const percentages = {
-      large: parseFloat((totals.large / totals.total) * 100).toFixed(2),
-      mid: parseFloat((totals.mid / totals.total) * 100).toFixed(2),
-      small: parseFloat((totals.small / totals.total) * 100).toFixed(2),
+      large: ((totals.large / totals.total) * 100).toFixed(2),
+      mid: ((totals.mid / totals.total) * 100).toFixed(2),
+      small: ((totals.small / totals.total) * 100).toFixed(2),
     };
 
     const chartOptions = {
       chart: {
         type: "bar",
-        height: 150,
+        height: 160,
         backgroundColor: "rgba(0, 0, 0, 0)",
       },
       title: {
@@ -95,10 +94,15 @@ const HoldingDistribution = ({ activeStrategy }) => {
         bar: {
           dataLabels: {
             enabled: true,
-            format: "{y}%",
-            color: "#000",
+            useHTML: true,
+            format:
+              '<span style="font-size: 14px;">{y}%</span>',
+            align: "center",
+            verticalAlign: "middle",
+            inside: true,
             style: {
               textOutline: "none",
+              color: "#000",
             },
           },
         },
@@ -110,17 +114,20 @@ const HoldingDistribution = ({ activeStrategy }) => {
         {
           name: "Large Cap",
           data: [parseFloat(percentages.large)],
-          color: "#1995AD",
+          color: "#58A992", // Soft mint green
+          borderColor: "#000",
         },
         {
           name: "Mid Cap",
           data: [parseFloat(percentages.mid)],
-          color: "#A1D6E2",
+          color: "#7BCBA5", // Light seafoam green
+          borderColor: "#000",
         },
         {
           name: "Small Cap",
           data: [parseFloat(percentages.small)],
-          color: "#F1F1F2",
+          color: "#A3E4B6", // Pale spring green
+          borderColor: "#000",
         },
       ],
       credits: {
@@ -132,7 +139,7 @@ const HoldingDistribution = ({ activeStrategy }) => {
   }, [data]);
 
   return (
-    <div className="w-full  bg-white">
+    <div className="w-full ">
       <HighchartsReact highcharts={Highcharts} options={chartOptions} />
     </div>
   );

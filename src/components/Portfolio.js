@@ -147,7 +147,7 @@ const PerformanceAndDrawdownChart = () => {
           const years =
             timeRange === "ALL"
               ? (latestDate - parseDate(sortedData[startIndex].Date)) /
-                (365 * 24 * 60 * 60 * 1000)
+              (365 * 24 * 60 * 60 * 1000)
               : parseInt(timeRange.slice(0, -1));
           const cagr = (Math.pow(endValue / startValue, 1 / years) - 1) * 100;
           return cagr.toFixed(2) + "%";
@@ -179,7 +179,7 @@ const PerformanceAndDrawdownChart = () => {
   };
 
   const calculateReturns = (data, key) => {
-    console.log("datasss", data);
+    // console.log("datasss", data);
     if (data.length < 2) return "N/A";
     const startValue = parseFloat(data[0][key]);
     const endValue = parseFloat(data[data.length - 1][key]);
@@ -254,11 +254,10 @@ const PerformanceAndDrawdownChart = () => {
             key={strategy.id}
             onClick={() => setActiveTab(strategy.id)}
             className={`py-3 text-3xl transition-colors duration-300 ease-in-out
-        ${
-          activeTab === strategy.id
-            ? "bg-black text-white"
-            : "text-black hover:before:bg-black border-black relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
-        }`}
+        ${activeTab === strategy.id
+                ? "bg-black text-white"
+                : "text-black hover:before:bg-black border-black relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+              }`}
           >
             <span className="relative z-10">{strategy.name}</span>
           </button>
@@ -270,77 +269,81 @@ const PerformanceAndDrawdownChart = () => {
           <h2 className="text-4xl">{strategyDescription}</h2>
         </div>
       </div>
-      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 my-10 sm:space-x-4">
-        <div className="flex flex-wrap justify-center gap-2">
-          {["YTD", "1M", "3M", "6M", "1Y", "3Y", "5Y"].map((range) => (
-            <button
-              key={range}
-              onClick={() => handleTimeRangeChange(range)}
-              className={`px-3 py-1 text-sm ${
-                activeButton === range
-                  ? "bg-black text-white"
-                  : "border border-black"
-              }`}
-            >
-              {range}
-            </button>
-          ))}
-          <button
-            className={`py-2 sm:py-1 px-4 text-xs sm:text-sm ${
-              activeButton === "ALL"
-                ? "bg-primary-dark text-white bg-black"
-                : "border border-black text-gray-900"
-            }`}
-            onClick={() => handleTimeRangeChange("ALL")}
-          >
-            All
-          </button>
-        </div>
+      <div className="border border-black p-10">
 
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:space-x-4">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="date"
-                onChange={(e) => setStartDate(e.target.value)}
-                className="border border-black text-gray-900 text-xs sm:text-sm py-2 px-3"
-              />
-              <input
-                type="date"
-                onChange={(e) => setEndDate(e.target.value)}
-                className="border border-black text-gray-900 text-xs sm:text-sm py-2 px-3"
-              />
+        <div className="grid">
+          <div className="col-span-4">
+            <div className="mb-4">
+              <h2 className="text-4xl ">Absolute Returns</h2>
+              <p className="text-7xl ">{strategyReturns}</p>
+            </div>
+            <div>
+              <p className="text-4xl ">{niftyReturns}</p>
+              <h2 className="text-3xl ">Nifty50</h2>
+            </div>
+          </div>
+          <div className="col-start-10 col-span-5 text-right">
+            <h2 className="text-4xl ">{period} CAGR</h2>
+            <p className="text-7xl ">{strategyCagr}</p>
+
+            <div className="col-start-10  mt-4 col-span-3">
+              <p className="text-4xl ">{niftyCagr}</p>
+              <h2 className="text-3xl ">Nifty50</h2>
             </div>
           </div>
         </div>
+        <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 my-10 sm:space-x-4">
+          <div className="flex flex-wrap justify-center gap-2">
+            {["YTD", "1M", "3M", "6M", "1Y", "3Y", "5Y"].map((range) => (
+              <button
+                key={range}
+                onClick={() => handleTimeRangeChange(range)}
+                className={`px-3 py-1 text-3xl ${activeButton === range
+                  ? "bg-black text-white"
+                  : "border border-black"
+                  }`}
+              >
+                {range}
+              </button>
+            ))}
+            <button
+              className={`py-2 sm:py-1 px-4 text-xs sm:text-sm ${activeButton === "ALL"
+                ? "bg-primary-dark text-white bg-black"
+                : "border border-black text-gray-900"
+                }`}
+              onClick={() => handleTimeRangeChange("ALL")}
+            >
+              All
+            </button>
+          </div>
+
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:space-x-4">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="date"
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="border border-black text-gray-900 text-xs sm:text-sm py-2 px-3"
+                />
+                <input
+                  type="date"
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="border border-black text-gray-900 text-xs sm:text-sm py-2 px-3"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-12 gap-12">
+
+          <div className="col-span-12">
+            <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-12">
-        <div className="col-span-4">
-          <div className="mb-4">
-            <h2 className="text-lg ">Absolute Returns</h2>
-            <p className="text-7xl ">{strategyReturns}</p>
-            <h2 className="text-lg ">Growth Fund</h2>
-          </div>
-          <div>
-            <p className="text-2xl ">{niftyReturns}</p>
-            <h2 className="text-lg ">Nifty50</h2>
-          </div>
-        </div>
-        <div className="col-start-10 col-span-3">
-          <h2 className="text-xl text-right">{period} CAGR</h2>
-          <p className="text-7xl text-right">{strategyCagr}</p>
-          <h2 className="text-xl text-right">Growth Fund</h2>
-
-          <div className="col-start-10 mr-6 mt-4 col-span-3">
-            <p className="text-3xl text-right">{niftyCagr}</p>
-            <h2 className="text-lg text-right">Nifty50</h2>
-          </div>
-        </div>
-        <div className="col-span-12">
-          <HighchartsReact highcharts={Highcharts} options={chartOptions} />
-        </div>
-      </div>
       <div>
         <Holdings strategy={activeTab} />
       </div>
@@ -350,25 +353,27 @@ const PerformanceAndDrawdownChart = () => {
       <div>
         <MonthlyPLTable data={monthlyPL} />
       </div>
-      <div className="bg-gray-100 p-6 sm:p-8 md:p-10 my-10">
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
-          <div className="w-full ">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#151E28] mb-2">
-              Holding Distribution
-            </h2>
-          </div>
-
-          <div className="w-full  bg-white  p-4 shadow-md">
-            <HoldingDistribution activeStrategy={active} />
+      {(activeTab === "momentum" || activeTab === "qgf") && (
+        <div className="border border-black p-10 my-10">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+            <div className="w-full">
+              <h2 className="text-5xl text-black mb-2">
+                Holding Distribution
+              </h2>
+            </div>
+            <div className="w-full bg-white">
+              <HoldingDistribution activeStrategy={active} />
+            </div>
           </div>
         </div>
-      </div>
-      <div>
+      )}
+
+      {/* <div>
         <PortfolioAllocation />
       </div>
       <div>
         <CompoundedAnnualReturns data={filteredData} />
-      </div>
+      </div> */}
     </div>
   );
 };

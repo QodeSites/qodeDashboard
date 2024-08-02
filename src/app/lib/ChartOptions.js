@@ -1,3 +1,5 @@
+import { color } from "highcharts";
+
 export const getChartOptions = (chartData, scheme) => {
   console.log("chartData: ", chartData);
   if (!chartData) {
@@ -79,13 +81,7 @@ export const getChartOptions = (chartData, scheme) => {
         marker: {
           enabled: false,
         },
-        fillColor: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: [
-            [0, "rgba(135,206,235, 0.9)"], // Light green at the top
-            [1, "rgba(135,206,235, 0)"], // Transparent green at the bottom
-          ],
-        },
+        color: "#9ddd55",
       },
       {
         name: "Nifty",
@@ -95,13 +91,7 @@ export const getChartOptions = (chartData, scheme) => {
         marker: {
           enabled: false,
         },
-        fillColor: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: [
-            [0, "rgba(135,206,235, 0.9)"], // Light green at the top
-            [1, "rgba(135,206,235, 0)"], // Transparent green at the bottom
-          ],
-        },
+        color: "#000",
       },
       // {
       //   name: "Drawdown",

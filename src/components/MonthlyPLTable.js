@@ -1,6 +1,7 @@
 import React from "react";
 
 const MonthlyPLTable = ({ data }) => {
+  console.log("data: ", data);
   const months = [
     "Jan",
     "Feb",
@@ -41,32 +42,32 @@ const MonthlyPLTable = ({ data }) => {
   };
 
   return (
-    <div className="overflow-x-auto helvetica-font mt-10 font-sans">
-      <h1 className="text-xl text-start font-semibold mb-4">Monthly PL</h1>
-      <table className="min-w-full border-collapse">
+    <div className="overflow-x-auto helvetica-font border border-black p-10 mt-10 font-sans">
+      <h1 className="text-5xl text-start mb-10 ">Monthly & Yearly P&L</h1>
+      <table className="min-w-full border border-black border-collapse">
         <thead>
-          <tr className="border-b-2">
-            <th className="p-3 border-r-2 text-left text-sm sticky left-0 bg-white"></th>
+          <tr className="border-b  border-black">
+            <th className="p-2 text-left text-4xl sticky left-0 bg-white"></th>
             {months.map((month) => (
-              <th key={month} className="p-3 text-left text-[22px] border-r-2">
+              <th key={month} className="p-3 font-medium text-left text-4xl ">
                 {month}
               </th>
             ))}
-            <th className="p-3 text-left text-[22px]">Total</th>
+            <th className="p-2 text-left text-4xl font-medium ">Total</th>
           </tr>
         </thead>
         <tbody>
           {Object.keys(yearlyData).map((year) => (
-            <tr key={year} className="border-b border-gray-200">
-              <td className="p-3 border-r-2 text-[22px] sticky left-0 bg-white">
+            <tr key={year} className="">
+              <td className="p-5  text-4xl sticky left-0 bg-white">
                 {year}
               </td>
               {yearlyData[year].map((percentChange, index) => (
-                <td key={index} className={`p-3 border-r-2 text-sm`}>
+                <td key={index} className={`p-3   text-3xl`}>
                   {getDisplayValue(percentChange)}
                 </td>
               ))}
-              <td className={`p-3  text-xl`}>
+              <td className={`p-2  text-4xl`}>
                 {getDisplayValue(calculateYearlyTotal(yearlyData[year]))}
               </td>
             </tr>

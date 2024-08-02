@@ -21,13 +21,13 @@ const Holdings = ({ strategy }) => {
         accessor: "Quantity",
         Cell: ({ value }) => <div className="text-right">{value}</div>,
       },
-      {
-        Header: "Invested Amount",
-        accessor: "Invested Amount",
-        Cell: ({ value }) => (
-          <div className="text-right">{numberWithCommas(value)}</div>
-        ),
-      },
+      // {
+      //   Header: "Invested Amount",
+      //   accessor: "Invested Amount",
+      //   Cell: ({ value }) => (
+      //     <div className="text-right">{numberWithCommas(value)}</div>
+      //   ),
+      // },
       {
         Header: "Current Price",
         accessor: "Current Price",
@@ -40,9 +40,8 @@ const Holdings = ({ strategy }) => {
         accessor: "Unrealized P&L %",
         Cell: ({ value }) => (
           <div
-            className={`text-right ${
-              parseFloat(value) >= 0 ? "text-green-600" : "text-red-600"
-            }`}
+            className={`text-right ${parseFloat(value) >= 0 ? "text-green-600" : "text-red-600"
+              }`}
           >
             {numberWithCommas(value)}%
           </div>
@@ -77,28 +76,27 @@ const Holdings = ({ strategy }) => {
   }
 
   return (
-    <>
-      <div className="text-2xl mt-5">Current Holdings</div>
-      <p className="mb-5 text-sm text-gray-700">Our 30 holdings.</p>
+    <div className="border border-black p-10 mt-10 helvetica-font">
+      <div className="text-5xl mt-5">Current Holdings</div>
+      <p className="mb-5 text-3xl text-black">Our 30 holdings.</p>
       <div className="overflow-x-auto">
         <table
           {...getTableProps()}
-          className="min-w-full bg-white border border-gray-300"
+          className="min-w-full bg-white border border-black"
         >
           <thead>
             {headerGroups.map((headerGroup, i) => (
               <tr
                 {...headerGroup.getHeaderGroupProps()}
                 key={i}
-                className="bg-gray-100"
+                className="border-b border-black"
               >
                 {headerGroup.headers.map((column, index) => (
                   <th
                     {...column.getHeaderProps(column.getSortByToggleProps())}
                     key={column.id || index}
-                    className={`px-6 py-3 text-xs font-medium text-gray-900 uppercase tracking-wider cursor-pointer ${
-                      index === 0 ? "text-left" : "text-right"
-                    }`}
+                    className={`px-6 py-3 text-3xl font-medium text-gray-900 uppercase tracking-wider cursor-pointer ${index === 0 ? "text-left" : "text-right"
+                      }`}
                   >
                     {column.render("Header")}
                     <span className="ml-2">
@@ -122,9 +120,8 @@ const Holdings = ({ strategy }) => {
                     <td
                       {...cell.getCellProps()}
                       key={cell.column.id}
-                      className={`px-6 py-4 whitespace-nowrap border-b text-sm text-gray-900 ${
-                        index === 0 ? "" : "text-right"
-                      }`}
+                      className={`px-6 py-4 whitespace-nowrap  text-sm text-gray-900 ${index === 0 ? "" : "text-right"
+                        }`}
                     >
                       {cell.render("Cell")}
                     </td>
@@ -135,7 +132,7 @@ const Holdings = ({ strategy }) => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 
