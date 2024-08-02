@@ -15,7 +15,7 @@ const Portfolio = () => {
     if (status === "loading") return; // Do nothing while loading
     if (!session) {
       // Redirect to sign-in page if no session is found
-      router.push("/auth/signin");
+      // router.push("/");
     } else {
       setLoading(false);
     }

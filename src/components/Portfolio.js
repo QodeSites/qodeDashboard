@@ -28,11 +28,41 @@ const PerformanceAndDrawdownChart = () => {
   const [filteredData, setFilteredData] = useState([]);
 
   const descriptions = {
-    strategy1: "Description for Strategy 1",
-    strategy2: "Description for Strategy 2",
-    momentum: "Description for Momentum Strategy",
-    qgf: "Description for Quant Growth Fund",
-    lowvol: "Description for Low Volatility Fund",
+    strategy1: [
+      {
+        name: "Risk-managed Quality Fund",
+        description:
+          "This Strategy invests 60% of your capital in The Quality Fund and 40% in short futures. The short futures make money when the market falls, reducing the loss when the market crashes.Principle - The less you lose the more you gain in the long term.",
+      },
+    ],
+    strategy2: [
+      {
+        name: "Additional Return Fund",
+        description:
+          "This strategy pledges your existing portfolio to get some leverage. We use that leverage for options trading and make additional returns for you. This return is above your existing portfolio return. The maximum loss is -2.6% on the leverage in this strategy.",
+      },
+    ],
+    momentum: [
+      {
+        name: "High-Return & Churn Fund",
+        description:
+          "This strategy invests in 30 businesses whose stock price has grown significantly and sells it before they start falling. Principle - The stock price tells the story before the actual story unfolds.",
+      },
+    ],
+    qgf: [
+      {
+        name: "Quality Fund",
+        description:
+          "This strategy invests in 30 Quality businesses. (Quality Business - A company that generates a high return on invested capital). Principle - In the long run the stock price always matches the business performance.",
+      },
+    ],
+    lowvol: [
+      {
+        name: "Steady Fund",
+        description:
+          "This strategy invests in the 30 most stable stocks in the market. This strategy outperforms the Index with considerably lower risk.",
+      },
+    ],
   };
 
   useEffect(() => {
@@ -206,27 +236,24 @@ const PerformanceAndDrawdownChart = () => {
     active = "QGF";
   }
 
-  const strategyDescription = descriptions[activeTab];
+  const strategyDescription = descriptions[activeTab][0].description;
+  const strategyName = descriptions[activeTab][0].name;
+  let strategies = [
+    { id: "qgf", name: "Quality Fund" },
+    { id: "momentum", name: "High-Return & Churn Fund" },
+    { id: "lowvol", name: "Steady Fund" },
+    { id: "strategy1", name: "Risk-managed Quality Fund" },
+    { id: "strategy2", name: "Additional Return Fund" },
+  ];
 
   return (
-    <div className="p-8 mt-10 max-w-7xl mx-auto helvetica-font tracking-wide bg-white text-black">
-      <h1 className="text-3xl mb-12">Model Portfolio</h1>
-
-      <div className="mb-4">
-        <h2 className="text-xl font-bold">{strategyDescription}</h2>
-      </div>
+    <div className="p-8 mt-10  mx-auto helvetica-font tracking-wide bg-white text-black">
       <div className="mb-12 grid grid-cols-5 gap-4 max-w-full">
-        {[
-          { id: "strategy1", name: "Strategy 1" },
-          { id: "strategy2", name: "Strategy 2" },
-          { id: "momentum", name: "Momentum" },
-          { id: "qgf", name: "Quant Growth Fund" },
-          { id: "lowvol", name: "Low Volatility Fund" },
-        ].map((strategy) => (
+        {strategies.map((strategy) => (
           <button
             key={strategy.id}
             onClick={() => setActiveTab(strategy.id)}
-            className={`py-3 text-lg transition-colors duration-300 ease-in-out
+            className={`py-3 text-3xl transition-colors duration-300 ease-in-out
         ${
           activeTab === strategy.id
             ? "bg-black text-white"
@@ -236,6 +263,12 @@ const PerformanceAndDrawdownChart = () => {
             <span className="relative z-10">{strategy.name}</span>
           </button>
         ))}
+      </div>
+      <div>
+        <h1 className="text-5xl">{strategyName}</h1>
+        <div className="mb-10 mt-5">
+          <h2 className="text-4xl">{strategyDescription}</h2>
+        </div>
       </div>
       <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 my-10 sm:space-x-4">
         <div className="flex flex-wrap justify-center gap-2">
@@ -266,34 +299,16 @@ const PerformanceAndDrawdownChart = () => {
 
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:space-x-4">
-            <div className="flex flex-col">
-              <label
-                htmlFor="startDate"
-                className="text-sm md:hidden block text-gray-600 mb-1"
-              >
-                Start Date
-              </label>
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
-                id="startDate"
                 type="date"
-                value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-[#f7f5f5] text-gray-900 text-xs sm:text-sm py-2 px-3"
+                className="border border-black text-gray-900 text-xs sm:text-sm py-2 px-3"
               />
-            </div>
-            <div className="flex flex-col">
-              <label
-                htmlFor="endDate"
-                className="text-sm md:hidden block text-gray-600 mb-1"
-              >
-                End Date
-              </label>
               <input
-                id="endDate"
                 type="date"
-                value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-[#f7f5f5] text-gray-900 text-xs sm:text-sm py-2 px-3"
+                className="border border-black text-gray-900 text-xs sm:text-sm py-2 px-3"
               />
             </div>
           </div>
