@@ -54,7 +54,12 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    session: ({ session, token }) => {
+    async redirect({ url, baseUrl }) {
+      console.log("Redirect callback:", { url, baseUrl });
+      return baseUrl; // Redirect to the homepage after login
+    },
+    async session({ session, token }) {
+      console.log("Session callback:", { session, token });
       return {
         ...session,
         user: {
@@ -64,7 +69,8 @@ export const authOptions = {
         },
       };
     },
-    jwt: ({ token, user }) => {
+    async jwt({ token, user }) {
+      console.log("JWT callback:", { token, user });
       if (user) {
         return {
           ...token,
@@ -76,6 +82,7 @@ export const authOptions = {
     },
   },
   pages: {
-    signIn: "/",
+    signIn: "/auth/signin",
+    error: "/auth/error",
   },
 };

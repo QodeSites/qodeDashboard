@@ -5,6 +5,22 @@ const nextConfig = {
   experimental: {
     appDir: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/auth/signin',
+        permanent: false,
+        has: [
+          {
+            type: 'query',
+            key: 'redirect',
+            value: 'true',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

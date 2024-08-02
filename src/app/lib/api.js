@@ -127,7 +127,11 @@ const filterDataByTimeRange = (data, range, start, end, latestDataDate) => {
         latestDate.setFullYear(latestDate.getFullYear() - 1)
       );
       break;
+<<<<<<< Updated upstream
     case "3Y":
+=======
+      case "3Y":
+>>>>>>> Stashed changes
       filterDate = new Date(
         latestDate.setFullYear(latestDate.getFullYear() - 3)
       );
