@@ -9,7 +9,7 @@ const Header = () => {
   const navItems = [
     { name: "My Dashboard", href: "/" },
     // { name: "Customer Support", href: "/customer-support" },
-    { name: "Strategies", href: "/strategies" },
+    // { name: "Strategies", href: "/strategies" },
   ];
 
   const handleNavClick = () => {
@@ -101,18 +101,16 @@ const Header = () => {
 
       {/* Navigation menu with slide-in animation */}
       <div
-        className={`fixed inset-0 z-30 transition-opacity duration-300 ${
-          isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-30 transition-opacity duration-300 ${isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div
           className="absolute inset-0 bg-gray-900 bg-opacity-50"
           onClick={() => setIsNavOpen(false)}
         ></div>
         <div
-          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white text-black transform transition-transform duration-300 ease-in-out ${
-            isNavOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white text-black transform transition-transform duration-300 ease-in-out ${isNavOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="h-full overflow-y-auto">
             <div className="pt-6 pb-4">
