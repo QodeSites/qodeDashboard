@@ -9,7 +9,7 @@ const Header = () => {
   const navItems = [
     { name: "My Dashboard", href: "/" },
     // { name: "Customer Support", href: "/customer-support" },
-    { name: "Strategies", href: "/strategies" },
+    // { name: "Strategies", href: "/strategies" },
   ];
 
   const handleNavClick = () => {

@@ -150,4 +150,5 @@ const filterDataByTimeRange = (data, range, start, end, latestDataDate) => {
   return data.filter((item) => new Date(item.Date) >= filterDate);
 };
 
+
 export default fetchStrategyData;
