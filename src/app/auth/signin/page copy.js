@@ -57,15 +57,15 @@ export default function SignIn() {
   return (
     <div className="min-h-screen minion-pro-font bg-white flex flex-col justify-center py-12 sm:px-6 lg:p-10">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="mt-6 text-center text-5xl playfair-disply-font font-bold text-red-600">Qode</h1>
+        <h1 className="mt-6 text-center text-5xl font-bold text-black">Qode Login</h1>
       </div>
 
-      <div className="mt-8  sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-[#fafafa] py-8 px-4 sm:px-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="border  py-8 px-4 sm:px-10">
           {error && <p className="text-red-500 text-sm mb-4" role="alert">{error}</p>}
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div>
-              <label htmlFor="email" className="block  text-xl font-bold text-black">
+              <label htmlFor="email" className="block text-xl font-medium text-black">
                 Email address
               </label>
               <div className="mt-1">
@@ -77,14 +77,14 @@ export default function SignIn() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border  minion-pro-font"
+                  className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-xl"
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block  text-xl font-bold text-black">
+              <label htmlFor="password" className="block text-xl font-medium text-black">
                 Password
               </label>
               <div className="mt-1">
@@ -96,7 +96,7 @@ export default function SignIn() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 bg-white focus:outline-none focus:ring-black sm:text-xl"
+                  className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-xl"
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
@@ -106,7 +106,7 @@ export default function SignIn() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-2 px-4 border my-10 text-sm font-medium text-black bg-white hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
+                className="w-full flex justify-center items-center py-2 px-4 border  text-sm font-medium text-black bg-white hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
                 aria-busy={isLoading}
               >
                 {isLoading ? (
@@ -134,7 +134,7 @@ export default function SignIn() {
             <div className="mt-6">
               <Link
                 href="/auth/register"
-                className="w-full flex justify-center py-2 px-4 border text-sm font-medium text-white bg-red-600 hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
+                className="w-full flex justify-center py-2 px-4 border  text-sm font-medium text-white bg-red-600 hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
               >
                 Sign up
               </Link>

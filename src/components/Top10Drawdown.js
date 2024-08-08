@@ -65,18 +65,18 @@ export default function Top10Drawdown({ drawdowns }) {
   };
   return (
 
-    <div className="flex border helvetica-font border-black p-10 flex-col justify-between my-5">
-      <h1 className="text-5xl text-start  mb-10">
+    <div className="flex bg-[#fafafa]  p-16 flex-col justify-between my-20">
+      <h1 className="text-5xl text-start font-black sophia-pro-font mb-10">
         Top 10 Drawdowns
       </h1>
 
-      <div className="w-full border border-black">
+      <div className="w-full bg-white ">
         {/* Header */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] border-b border-black">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] border-b ">
           {table.getHeaderGroups()[0].headers.map((header) => (
             <div
               key={header.id}
-              className="text-xs uppercase cursor-pointer transition-colors duration-300 hover:text-gray-600 p-4 last:border-r-0"
+              className="text-md uppercase sophia-pro-font font-bold cursor-pointer transition-colors duration-300 hover:text-gray-600 p-4 last:border-r-0"
               onClick={header.column.getToggleSortingHandler()}
             >
               <div className="flex items-center justify-between">
@@ -106,7 +106,7 @@ export default function Top10Drawdown({ drawdowns }) {
               {row.getVisibleCells().map((cell, cellIndex) => (
                 <div
                   key={cell.id}
-                  className="text-sm p-4"
+                  className="text-lg p-4"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </div>

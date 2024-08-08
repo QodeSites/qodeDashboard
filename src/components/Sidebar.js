@@ -17,7 +17,7 @@ const Header = () => {
   };
 
   const handleLogout = async () => {
-    console.log("Logging out...");
+    // console.log("Logging out...");
     try {
       await signOut({ redirect: true, callbackUrl: "/" });
     } catch (error) {
@@ -25,10 +25,10 @@ const Header = () => {
     }
   };
   return (
-    <header className="border-b border-black z-20  helvetica-font fixed w-full bg-white  top-0">
+    <header className="border-b  z-20  minion-pro-font fixed w-full bg-white  top-0">
       <div className="mx-auto">
-        <div className="flex justify-between items-center h-16 px-4">
-          <div className="w-1/4">
+        <div className="flex justify-between items-center h-16 px-14">
+          {/* <div className="w-1/4">
             <button
               type="button"
               className="inline-flex items-center justify-center p-2 rounded-md text-black hover:bg-white/10 transition duration-300"
@@ -54,12 +54,12 @@ const Header = () => {
                   }
                 />
               </svg>
-            </button>
-          </div>
+            </button> */}
+          {/* </div> */}
 
-          <div className="w-1/2 flex justify-center">
+          <div className=" flex justify-center">
             <Link className="cursor-pointer" href="/">
-              <p className="text-black text-5xl  mr-4 py-5 playfair-display-font ">
+              <p className="text-red-600 text-3xl font-bold   mr-4 py-5 playfair-disply-font ">
                 Qode
               </p>
             </Link>
@@ -88,7 +88,7 @@ const Header = () => {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block w-full text-left px-4 py-2 text-md sophia-pro-font text-gray-700 hover:bg-gray-100"
                   >
                     Logout
                   </button>
@@ -101,18 +101,16 @@ const Header = () => {
 
       {/* Navigation menu with slide-in animation */}
       <div
-        className={`fixed inset-0 z-30 transition-opacity duration-300 ${
-          isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-30 transition-opacity duration-300 ${isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div
           className="absolute inset-0 bg-gray-900 bg-opacity-50"
           onClick={() => setIsNavOpen(false)}
         ></div>
         <div
-          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white text-black transform transition-transform duration-300 ease-in-out ${
-            isNavOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white text-black transform transition-transform duration-300 ease-in-out ${isNavOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="h-full overflow-y-auto">
             <div className="pt-6 pb-4">
@@ -143,7 +141,7 @@ const Header = () => {
                   <div key={item.name} className="py-1">
                     <Link
                       href={item.href}
-                      className="flex justify-between items-center w-full text-left text-lg font-medium hover:bg-white/10 transition duration-300 text-black hover:before:bg-black relative h-[50px] overflow-hidden bg-white px-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+                      className="flex justify-between items-center w-full text-left text-lg font-medium hover:bg-white/10 transition duration-300 text-black hover:before:bg-red-600 relative h-[50px] overflow-hidden bg-white px-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
                       onClick={handleNavClick}
                     >
                       <span className="relative z-10">{item.name}</span>

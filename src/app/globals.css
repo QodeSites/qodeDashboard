@@ -28,16 +28,55 @@
 
 @font-face {
   font-family: 'CustomHelvetica';
-  src: url('/Fonts/helvetica-neue-5/HelveticaNeueLight.otf') format('truetype');
+  src: url('/Fonts/helvetica-neue-5/HelveticaNeueLight.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
-.helvetica-font {
-  font-family: "CustomHelvetica", sans-serif; /* Fallback to sans-serif */
+
+
+@font-face {
+  font-family: "MinionPro";
+  src: url("/Fonts/minion-pro/MinionPro-Regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
 }
 
+@font-face {
+  font-family: "SophiaPro";
+  src: url("/Fonts/sofia-pro/Sofia Pro Regular Az.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SophiaProBold";
+  src: url("/Fonts/sofia-pro/Sofia Pro Bold Az.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+
+.sophia-pro-bold-font {
+  font-family: "SophiaProBold", sans-serif;
+}
+
+.minion-pro-font {
+  font-family: "MinionPro", sans-serif;
+}
+
+/* Apply MinionPro font to paragraphs and list items */
+/* p,
+li {
+  font-family: "MinionPro", sans-serif;
+} */
+
+
+.sophia-pro-font{
+  font-family: 'SophiaPro', sans-serif;
+}
 
 
 

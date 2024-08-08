@@ -8,7 +8,7 @@ export default function CompoundedAnnualReturns({ data }) {
   useEffect(() => {
     if (data) {
       const processedData = processData(data);
-      console.log(processedData);
+      // console.log(processedData);
 
       const options = createChartOptions(processedData);
       setChartOptions(options);
@@ -119,7 +119,7 @@ export default function CompoundedAnnualReturns({ data }) {
   }
   return (
     <div className="p-4 border rounded-lg mt-5">
-      <h1 className="text-2xl mb-5 font-black">Compound Annual Returns</h1>
+      <h1 className="text-lg mb-5 font-black">Compound Annual Returns</h1>
 
       <HighchartsReact highcharts={Highcharts} options={chartOptions} />
 

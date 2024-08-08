@@ -2,98 +2,101 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
+import { useToast } from "@/components/ui/use-toast";
 export default function Register() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({ ...prevState, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("data");
-    const response = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
-    });
+    setIsLoading(true);
 
-    if (response.ok) {
-      router.push("/auth/signin");
-    } else {
-      // Handle error
-      console.error("Registration failed");
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Registration successful. Please wait while we verify your account.",
+          variant: "success",
+        });
+        setTimeout(() => router.push("/auth/signin"), 5000);
+      } else {
+        // Display the error message from the server
+        toast({
+          title: "Registration Failed",
+          description: data.error || "An error occurred during registration",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen helvetica-font bg-white flex flex-col justify-center py-12 sm:px-6 lg:p-10">
+    <div className="min-h-screen minion-pro-font bg-[#fafafa] flex flex-col justify-center py-12 sm:px-6 lg:p-10">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-5xl text-black">Qode Sign Up</h2>
+        <h2 className="mt-6 text-center playfair-disply-font text-5xl text-black">Qode</h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="border border-black py-8 px-4 sm:px-10">
+        <div className="border  py-8 px-4 sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="username" className="block text-4xl text-black">
-                Username
-              </label>
-              <div className="mt-1">
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-black placeholder-black-400 focus:outline-none focus:ring-black focus:border-black sm:text-3xl"
-                />
+            {["username", "email", "password"].map((field) => (
+              <div key={field}>
+                <label htmlFor={field} className="block text-xl text-black font-bold capitalize">
+                  {field}
+                </label>
+                <div className="mt-1">
+                  <input
+                    id={field}
+                    name={field}
+                    type={field === "password" ? "password" : field === "email" ? "email" : "text"}
+                    autoComplete={field === "password" ? "new-password" : field === "email" ? "email" : "off"}
+                    required
+                    value={formData[field]}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-xl"
+                  />
+                </div>
               </div>
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-4xl text-black">
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-black placeholder-black-400 focus:outline-none focus:ring-black focus:border-black sm:text-3xl"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-4xl text-black">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-black placeholder-black-400 focus:outline-none focus:ring-black focus:border-black sm:text-3xl"
-                />
-              </div>
-            </div>
+            ))}
 
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 transition px-4 border border-black text-sm font-medium text-black bg-white hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                disabled={isLoading}
+                className="w-full flex justify-center py-2 transition px-4 border  text-sm font-medium text-black bg-white hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50"
               >
-                Sign Up
+                {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
+                {isLoading ? "Signing Up..." : "Sign Up"}
               </button>
             </div>
           </form>
@@ -101,7 +104,7 @@ export default function Register() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-black" />
+                <div className="w-full border-t " />
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-black">
@@ -113,7 +116,7 @@ export default function Register() {
             <div className="mt-6">
               <Link
                 href="/auth/signin"
-                className="w-full flex justify-center py-2 transition px-4 border border-black text-sm font-medium text-white bg-black hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                className="w-full flex justify-center py-2 transition px-4 border  text-sm font-medium text-white bg-red-600 hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
               >
                 Sign in
               </Link>

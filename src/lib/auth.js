@@ -12,34 +12,35 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          console.log("Missing credentials");
-          return null;
+          throw new Error("All fields are required");
         }
 
         try {
-          console.log("Attempting to find user:", credentials.email);
           const user = await prisma.tblusers.findUnique({
-            where: {
-              email: credentials.email,
+            where: { email: credentials.email.toLowerCase() },
+            select: {
+              id: true,
+              email: true,
+              username: true,
+              password: true,
+              is_verified: true,
             },
           });
 
-          console.log("User found:", user ? "Yes" : "No");
-
           if (!user) {
-            return null;
+            throw new Error("User not registered, please sign up");
           }
 
-          const isPasswordValid = await compare(
-            credentials.password,
-            user.password
-          );
 
-          console.log("Password valid:", isPasswordValid ? "Yes" : "No");
-
+          const isPasswordValid = await compare(credentials.password, user.password);
           if (!isPasswordValid) {
-            return null;
+            throw new Error("Invalid email or password");
           }
+
+          if (!user.is_verified) {
+            throw new Error("Please wait while we approve your request.");
+          }
+
 
           return {
             id: user.id.toString(),
@@ -47,42 +48,45 @@ export const authOptions = {
             username: user.username,
           };
         } catch (error) {
-          console.error("Detailed authorization error:", error);
-          return null;
+          console.error("Authentication error:", error);
+          throw new Error(error.message || "An unexpected error occurred");
         }
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET,
+  },
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      console.log("Redirect callback:", { url, baseUrl });
-      return baseUrl; // Redirect to the homepage after login
-    },
     async session({ session, token }) {
-      console.log("Session callback:", { session, token });
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id,
-          username: token.username,
-        },
-      };
+      if (token) {
+        session.user.id = token.id;
+        session.user.username = token.username;
+        session.user.email = token.email;
+      }
+      return session;
     },
-    async jwt({ token, user }) {
-      console.log("JWT callback:", { token, user });
+    async jwt({ token, user, account }) {
       if (user) {
-        return {
-          ...token,
-          id: user.id,
-          username: user.username,
-        };
+        token.id = user.id;
+        token.username = user.username;
+      }
+      if (account) {
+        token.accessToken = account.access_token;
       }
       return token;
     },
   },
   pages: {
     signIn: "/auth/signin",
+    signOut: "/auth/signout",
     error: "/auth/error",
   },
+  debug: process.env.NODE_ENV === "development",
+  secret: process.env.NEXTAUTH_SECRET,
 };

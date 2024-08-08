@@ -1,7 +1,7 @@
 import { color } from "highcharts";
 
 export const getChartOptions = (chartData, scheme) => {
-  console.log("chartData: ", chartData);
+  // console.log("chartData: ", chartData);
   if (!chartData) {
     // Handle the case where chartData or chartData[scheme] is not available
     console.error("Data is not available for: ", scheme);

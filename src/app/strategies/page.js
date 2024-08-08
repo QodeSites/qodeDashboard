@@ -18,12 +18,12 @@ const StrategyCard = ({ strategy, name, description, slug }) => {
       href={`/strategies/${slug}`}
       className={`block bg-white p-10 relative`}
     >
-      <h1 className="text-4xl font-bold playfair-display-font my-5">{name}</h1>
+      <h1 className="text-xl font-bold playfair-display-font my-5">{name}</h1>
       <p className="text-lg mb-3">{description}</p>
       <div className="flex flex-row gap-20">
         {periods.map((period) => (
           <div key={period} className="flex flex-col">
-            <h1 className="text-3xl font-bold playfair-display-font">
+            <h1 className="text-xl font-bold playfair-display-font">
               {period}
             </h1>
             <p className="text-lg">{calculateReturns(period)}</p>
@@ -32,7 +32,7 @@ const StrategyCard = ({ strategy, name, description, slug }) => {
       </div>
 
       <div className="flex items-center justify-end">
-        <div className="py-3 px-5 mt-5 text-center flex justify-between items-center border border-black font-medium hover:bg-white/10 transition duration-300 text-black hover:before:bg-black relative h-[50px] overflow-hidden before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full">
+        <div className="py-3 px-5 mt-5 text-center flex justify-between items-center border  font-medium hover:bg-white/10 transition duration-300 text-black hover:before:bg-red-600 relative h-[50px] overflow-hidden before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full">
           <span className="relative z-10">Know more</span>
         </div>
       </div>
@@ -66,7 +66,7 @@ const Strategies = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-10 w-1/2 helvetica-font mx-auto my-20">
+    <div className="flex flex-col gap-10 w-1/2 minion-pro-font mx-auto my-20">
       {strategies.map((strategy) => (
         <StrategyCard
           key={strategy.id}
@@ -79,7 +79,7 @@ const Strategies = () => {
       <div className="text-center">
         <Link
           href="/open-account"
-          className="bg-black text-white text-xl text-center px-5 py-3 "
+          className="bg-red-600 text-white text-xl text-center px-5 py-3 "
         >
           Open Account With Qode
         </Link>

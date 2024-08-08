@@ -76,26 +76,26 @@ const Holdings = ({ strategy }) => {
   }
 
   return (
-    <div className="border border-black p-10 mt-10 helvetica-font">
-      <div className="text-5xl mt-5">Current Holdings</div>
-      <p className="mb-5 text-3xl text-black">Our 30 holdings.</p>
-      <div className="overflow-x-auto">
+    <div className=" bg-[#fafafa] p-16 mt-16 minion-pro-font">
+      <div className="text-5xl sophia-pro-font font-black mt-5">Current Holdings</div>
+      <p className="mb-5 mt-4  sophia-pro-font font-bold text-xl text-black">Our 30 holdings.</p>
+      <div className="overflow-x-auto mt-10">
         <table
           {...getTableProps()}
-          className="min-w-full bg-white border border-black"
+          className="min-w-full bg-white  "
         >
           <thead>
             {headerGroups.map((headerGroup, i) => (
               <tr
                 {...headerGroup.getHeaderGroupProps()}
                 key={i}
-                className="border-b border-black"
+                className="border-b "
               >
                 {headerGroup.headers.map((column, index) => (
                   <th
                     {...column.getHeaderProps(column.getSortByToggleProps())}
                     key={column.id || index}
-                    className={`px-6 py-3 text-3xl font-medium text-gray-900 uppercase tracking-wider cursor-pointer ${index === 0 ? "text-left" : "text-right"
+                    className={`px-6 py-4 sophia-pro-font font-bold text-xl text-gray-900 uppercase tracking-wider cursor-pointer ${index === 0 ? "text-left" : "text-right"
                       }`}
                   >
                     {column.render("Header")}
@@ -120,7 +120,7 @@ const Holdings = ({ strategy }) => {
                     <td
                       {...cell.getCellProps()}
                       key={cell.column.id}
-                      className={`px-6 py-4 whitespace-nowrap  text-sm text-gray-900 ${index === 0 ? "" : "text-right"
+                      className={`px-6 py-5 whitespace-nowrap  text-lg text-gray-900 ${index === 0 ? "" : "text-right"
                         }`}
                     >
                       {cell.render("Cell")}

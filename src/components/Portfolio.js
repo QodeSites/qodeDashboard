@@ -192,7 +192,7 @@ const PerformanceAndDrawdownChart = () => {
   if (isLoading || !filteredData.length) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-white">
-        <div className="w-16 h-16 border-t-4 border-black rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-t-4  rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -247,69 +247,69 @@ const PerformanceAndDrawdownChart = () => {
   ];
 
   return (
-    <div className="p-8 mt-10  mx-auto helvetica-font tracking-wide bg-white text-black">
+    <div className="p-8 mt-10  mx-auto  tracking-wide bg-white text-black">
       <div className="mb-12 grid grid-cols-5 gap-4 max-w-full">
         {strategies.map((strategy) => (
           <button
             key={strategy.id}
             onClick={() => setActiveTab(strategy.id)}
-            className={`py-3 text-3xl transition-colors duration-300 ease-in-out
+            className={`py-3 text-xl transition-colors duration-300 ease-in-out
         ${activeTab === strategy.id
-                ? "bg-black text-white"
-                : "text-black hover:before:bg-black border-black relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+                ? "bg-red-600 text-white"
+                : "text-black hover:before:bg-red-600  relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
               }`}
           >
-            <span className="relative z-10">{strategy.name}</span>
+            <span className="relative text-sm sophia-pro-font font-black z-10">{strategy.name}</span>
           </button>
         ))}
       </div>
       <div>
-        <h1 className="text-5xl">{strategyName}</h1>
+        <h1 className="text-5xl sophia-pro-font font-black">{strategyName}</h1>
         <div className="mb-10 mt-5">
-          <h2 className="text-4xl">{strategyDescription}</h2>
+          <p className="text-xl">{strategyDescription}</p>
         </div>
       </div>
-      <div className="border border-black p-10">
+      <div className="border  p-10">
 
         <div className="grid">
           <div className="col-span-4">
             <div className="mb-4">
-              <h2 className="text-4xl ">Absolute Returns</h2>
-              <p className="text-7xl ">{strategyReturns}</p>
+              <h2 className="text-xl ">Absolute Returns</h2>
+              <p className="text-5xl sophia-pro-font ">{strategyReturns}</p>
             </div>
             <div>
-              <p className="text-4xl ">{niftyReturns}</p>
-              <h2 className="text-3xl ">Nifty50</h2>
+              <p className="text-xl sophia-pro-font ">{niftyReturns}</p>
+              <h2 className="text-xl ">Nifty50</h2>
             </div>
           </div>
           <div className="col-start-10 col-span-5 text-right">
-            <h2 className="text-4xl ">{period} CAGR</h2>
-            <p className="text-7xl ">{strategyCagr}</p>
+            <h2 className="text-xl ">{period} CAGR</h2>
+            <p className="text-5xl sophia-pro-font ">{strategyCagr}</p>
 
             <div className="col-start-10  mt-4 col-span-3">
-              <p className="text-4xl ">{niftyCagr}</p>
-              <h2 className="text-3xl ">Nifty50</h2>
+              <p className="text-xl sophia-pro-font ">{niftyCagr}</p>
+              <h2 className="text-xl ">Nifty50</h2>
             </div>
           </div>
         </div>
-        <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 my-10 sm:space-x-4">
+        <div className="flex flex-col space-y-4 sophia-pro-font sm:flex-row sm:space-y-0 my-10 sm:space-x-4">
           <div className="flex flex-wrap justify-center gap-2">
             {["YTD", "1M", "3M", "6M", "1Y", "3Y", "5Y"].map((range) => (
               <button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
-                className={`px-3 py-1 text-3xl ${activeButton === range
-                  ? "bg-black text-white"
-                  : "border border-black"
+                className={`px-3 py-1 text-sm ${activeButton === range
+                  ? "bg-red-600 text-white"
+                  : "border "
                   }`}
               >
                 {range}
               </button>
             ))}
             <button
-              className={`py-2 sm:py-1 px-4 text-xs sm:text-sm ${activeButton === "ALL"
-                ? "bg-primary-dark text-white bg-black"
-                : "border border-black text-gray-900"
+              className={`py-2 sm:py-1 px-4 text-xl sm:text-sm ${activeButton === "ALL"
+                ? "bg-primary-dark text-white bg-red-600"
+                : "border  text-gray-900"
                 }`}
               onClick={() => handleTimeRangeChange("ALL")}
             >
@@ -324,12 +324,12 @@ const PerformanceAndDrawdownChart = () => {
                 <input
                   type="date"
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="border border-black text-gray-900 text-xs sm:text-sm py-2 px-3"
+                  className="border  text-gray-900 text-xs sm:text-sm py-2 px-3"
                 />
                 <input
                   type="date"
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="border border-black text-gray-900 text-xs sm:text-sm py-2 px-3"
+                  className="border  text-gray-900 text-xs sm:text-sm py-2 px-3"
                 />
               </div>
             </div>
@@ -354,14 +354,14 @@ const PerformanceAndDrawdownChart = () => {
         <MonthlyPLTable data={monthlyPL} />
       </div>
       {(activeTab === "momentum" || activeTab === "qgf") && (
-        <div className="border border-black p-10 my-10">
+        <div className="border  p-10 my-10">
           <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
             <div className="w-full">
-              <h2 className="text-5xl text-black mb-2">
+              <h2 className="text-5xl font-black sophia-pro-font text-black mb-2">
                 Holding Distribution
               </h2>
             </div>
-            <div className="w-full bg-white">
+            <div className="w-full bg-[#fafafa] mt-16">
               <HoldingDistribution activeStrategy={active} />
             </div>
           </div>

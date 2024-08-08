@@ -3,7 +3,7 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
 const HoldingDistribution = ({ activeStrategy }) => {
-  console.log("activeStrategy: ", activeStrategy);
+  // console.log("activeStrategy: ", activeStrategy);
   const [data, setData] = useState([]);
 
   useEffect(() => {

@@ -109,7 +109,7 @@ const PerformanceAndDrawdownChart = () => {
           const years =
             timeRange === "ALL"
               ? (latestDate - parseDate(sortedData[startIndex].Date)) /
-                (365 * 24 * 60 * 60 * 1000)
+              (365 * 24 * 60 * 60 * 1000)
               : parseInt(timeRange.slice(0, -1));
           const cagr = (Math.pow(endValue / startValue, 1 / years) - 1) * 100;
           return cagr.toFixed(2) + "%";
@@ -134,7 +134,7 @@ const PerformanceAndDrawdownChart = () => {
   if (isLoading || !filteredData.length) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-white">
-        <div className="w-16 h-16 border-t-4 border-black rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-t-4  rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -178,8 +178,8 @@ const PerformanceAndDrawdownChart = () => {
     active = "QGF";
   }
   return (
-    <div className="p-8 mt-10 max-w-7xl mx-auto helvetica-font tracking-wide bg-white text-black">
-      <h1 className="text-3xl mb-12">Model Portfolio</h1>
+    <div className="p-8 mt-10 max-w-7xl mx-auto minion-pro-font tracking-wide bg-white text-black">
+      <h1 className="text-xl mb-12">Model Portfolio</h1>
 
       <div className="mb-12 grid grid-cols-4 gap-4 max-w-full">
         {["strategy1", "strategy2", "momentum", "qgf"].map((tab) => (
@@ -187,10 +187,9 @@ const PerformanceAndDrawdownChart = () => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`py-3 text-lg transition-colors duration-300 ease-in-out
-              ${
-                activeTab === tab
-                  ? "bg-black text-white"
-                  : "text-black hover:before:bg-black border-black relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+              ${activeTab === tab
+                ? "bg-red-600 text-white"
+                : "text-black hover:before:bg-red-600  relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
               }`}
           >
             <span className="relative z-10">
@@ -207,19 +206,17 @@ const PerformanceAndDrawdownChart = () => {
             <button
               key={range}
               onClick={() => handleTimeRangeChange(range)}
-              className={`px-3 py-1 text-sm ${
-                activeButton === range ? "bg-black text-white" : "bg-gray-200"
-              }`}
+              className={`px-3 py-1 text-sm ${activeButton === range ? "bg-red-600 text-white" : "bg-gray-200"
+                }`}
             >
               {range}
             </button>
           ))}
           <button
-            className={`py-2 sm:py-1 px-4 text-xs sm:text-sm ${
-              activeButton === "ALL"
-                ? "bg-primary-dark text-white bg-black"
-                : "bg-[#f7f5f5] text-gray-900"
-            }`}
+            className={`py-2 sm:py-1 px-4 text-xs sm:text-sm ${activeButton === "ALL"
+              ? "bg-primary-dark text-white bg-red-600"
+              : "bg-[#f7f5f5] text-gray-900"
+              }`}
             onClick={() => handleTimeRangeChange("ALL")}
           >
             All
@@ -269,7 +266,7 @@ const PerformanceAndDrawdownChart = () => {
             <h2 className="text-lg ">Strategy Returns</h2>
           </div>
           <div>
-            <p className="text-2xl ">{niftyReturns}</p>
+            <p className="text-lg ">{niftyReturns}</p>
             <h2 className="text-lg ">Nifty Returns</h2>
           </div>
         </div>
@@ -277,7 +274,7 @@ const PerformanceAndDrawdownChart = () => {
           <p className="text-7xl">{strategyCagr}</p>
           <h2 className="text-xl text-right mr-6">{period} CAGR</h2>
           <div className="col-start-10 mr-6 mt-4 col-span-3">
-            <p className="text-2xl text-right">{niftyCagr}</p>
+            <p className="text-lg text-right">{niftyCagr}</p>
             <h2 className="text-xl text-right">{period} Nifty CAGR</h2>
           </div>
         </div>
@@ -299,7 +296,7 @@ const PerformanceAndDrawdownChart = () => {
       <div className="bg-gray-100 p-6 sm:p-8 md:p-10 my-10">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
           <div className="w-full ">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#151E28] mb-2">
+            <h2 className="text-lg sm:text-xl font-bold text-[#151E28] mb-2">
               Holding Distribution
             </h2>
           </div>
