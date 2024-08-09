@@ -18,12 +18,12 @@ const StrategyCard = ({ strategy, name, description, slug }) => {
       href={`/strategies/${slug}`}
       className={`block bg-white p-10 relative`}
     >
-      <h1 className="text-xl font-bold playfair-display-font my-5">{name}</h1>
+      <h1 className="text-md font-bold playfair-display-font my-5">{name}</h1>
       <p className="text-lg mb-3">{description}</p>
       <div className="flex flex-row gap-20">
         {periods.map((period) => (
           <div key={period} className="flex flex-col">
-            <h1 className="text-xl font-bold playfair-display-font">
+            <h1 className="text-md font-bold playfair-display-font">
               {period}
             </h1>
             <p className="text-lg">{calculateReturns(period)}</p>
@@ -79,7 +79,7 @@ const Strategies = () => {
       <div className="text-center">
         <Link
           href="/open-account"
-          className="bg-red-600 text-white text-xl text-center px-5 py-3 "
+          className="bg-red-600 text-white text-md text-center px-5 py-3 "
         >
           Open Account With Qode
         </Link>

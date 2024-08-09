@@ -63,7 +63,7 @@ export default function Register() {
   return (
     <div className="min-h-screen minion-pro-font bg-[#fafafa] flex flex-col justify-center py-12 sm:px-6 lg:p-10">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center playfair-disply-font text-5xl text-black">Qode</h2>
+        <h2 className="mt-6 text-center playfair-disply-font text-3xl text-black">Qode</h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -71,7 +71,7 @@ export default function Register() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             {["username", "email", "password"].map((field) => (
               <div key={field}>
-                <label htmlFor={field} className="block text-xl text-black font-bold capitalize">
+                <label htmlFor={field} className="block text-md text-black font-bold capitalize">
                   {field}
                 </label>
                 <div className="mt-1">
@@ -83,7 +83,7 @@ export default function Register() {
                     required
                     value={formData[field]}
                     onChange={handleChange}
-                    className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-xl"
+                    className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-md"
                   />
                 </div>
               </div>

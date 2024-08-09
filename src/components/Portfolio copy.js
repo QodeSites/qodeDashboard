@@ -179,7 +179,7 @@ const PerformanceAndDrawdownChart = () => {
   }
   return (
     <div className="p-8 mt-10 max-w-7xl mx-auto minion-pro-font tracking-wide bg-white text-black">
-      <h1 className="text-xl mb-12">Model Portfolio</h1>
+      <h1 className="text-md mb-12">Model Portfolio</h1>
 
       <div className="mb-12 grid grid-cols-4 gap-4 max-w-full">
         {["strategy1", "strategy2", "momentum", "qgf"].map((tab) => (
@@ -272,14 +272,14 @@ const PerformanceAndDrawdownChart = () => {
         </div>
         <div className="col-start-10 col-span-3">
           <p className="text-7xl">{strategyCagr}</p>
-          <h2 className="text-xl text-right mr-6">{period} CAGR</h2>
+          <h2 className="text-md text-right mr-6">{period} CAGR</h2>
           <div className="col-start-10 mr-6 mt-4 col-span-3">
             <p className="text-lg text-right">{niftyCagr}</p>
-            <h2 className="text-xl text-right">{period} Nifty CAGR</h2>
+            <h2 className="text-md text-right">{period} Nifty CAGR</h2>
           </div>
         </div>
         <div className="col-span-12">
-          <h2 className="text-xl font-bold mb-6">Performance Chart</h2>
+          <h2 className="text-md font-bold mb-6">Performance Chart</h2>
 
           <HighchartsReact highcharts={Highcharts} options={chartOptions} />
         </div>
@@ -296,7 +296,7 @@ const PerformanceAndDrawdownChart = () => {
       <div className="bg-gray-100 p-6 sm:p-8 md:p-10 my-10">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
           <div className="w-full ">
-            <h2 className="text-lg sm:text-xl font-bold text-[#151E28] mb-2">
+            <h2 className="text-lg sm:text-md font-bold text-[#151E28] mb-2">
               Holding Distribution
             </h2>
           </div>

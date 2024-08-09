@@ -10,6 +10,19 @@ const Holdings = ({ strategy }) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
+  const data = useMemo(() => {
+    if (!holding || !holding[strategy]) return [];
+
+    // Calculate total invested amount
+    const totalInvested = holding[strategy].reduce((sum, stock) => sum + parseFloat(stock["Invested Amount"]), 0);
+
+    // Calculate percentage for each holding
+    return holding[strategy].map(stock => ({
+      ...stock,
+      InvestmentPercentage: (parseFloat(stock["Invested Amount"]) / totalInvested * 100).toFixed(2)
+    }));
+  }, [holding, strategy]);
+
   const columns = useMemo(
     () => [
       {
@@ -17,17 +30,10 @@ const Holdings = ({ strategy }) => {
         accessor: "StockName",
       },
       {
-        Header: "Quantity",
-        accessor: "Quantity",
-        Cell: ({ value }) => <div className="text-right">{value}</div>,
+        Header: "Weight",
+        accessor: "InvestmentPercentage",
+        Cell: ({ value }) => <div className="text-right">{value}%</div>,
       },
-      // {
-      //   Header: "Invested Amount",
-      //   accessor: "Invested Amount",
-      //   Cell: ({ value }) => (
-      //     <div className="text-right">{numberWithCommas(value)}</div>
-      //   ),
-      // },
       {
         Header: "Current Price",
         accessor: "Current Price",
@@ -40,8 +46,7 @@ const Holdings = ({ strategy }) => {
         accessor: "Unrealized P&L %",
         Cell: ({ value }) => (
           <div
-            className={`text-right ${parseFloat(value) >= 0 ? "text-green-600" : "text-red-600"
-              }`}
+            className={`text-right ${parseFloat(value) >= 0 ? "text-green-600" : "text-red-600"}`}
           >
             {numberWithCommas(value)}%
           </div>
@@ -50,11 +55,6 @@ const Holdings = ({ strategy }) => {
     ],
     []
   );
-
-  const data = useMemo(() => {
-    if (!holding || !holding[strategy]) return [];
-    return holding[strategy];
-  }, [holding, strategy]);
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({ columns, data }, useSortBy);
@@ -77,8 +77,8 @@ const Holdings = ({ strategy }) => {
 
   return (
     <div className=" bg-[#fafafa] p-16 mt-16 minion-pro-font">
-      <div className="text-5xl sophia-pro-font font-black mt-5">Current Holdings</div>
-      <p className="mb-5 mt-4  sophia-pro-font font-bold text-xl text-black">Our 30 holdings.</p>
+      <div className="text-3xl sophia-pro-font font-black mt-5">Current Holdings</div>
+      <p className="mb-5 mt-4  sophia-pro-font text-md text-black">Our 30 holdings.</p>
       <div className="overflow-x-auto mt-10">
         <table
           {...getTableProps()}
@@ -95,7 +95,7 @@ const Holdings = ({ strategy }) => {
                   <th
                     {...column.getHeaderProps(column.getSortByToggleProps())}
                     key={column.id || index}
-                    className={`px-6 py-4 sophia-pro-font font-bold text-xl text-gray-900 uppercase tracking-wider cursor-pointer ${index === 0 ? "text-left" : "text-right"
+                    className={`px-6 py-4 sophia-pro-font font-bold text-md text-gray-900 uppercase tracking-wider cursor-pointer ${index === 0 ? "text-left" : "text-right"
                       }`}
                   >
                     {column.render("Header")}
@@ -120,7 +120,7 @@ const Holdings = ({ strategy }) => {
                     <td
                       {...cell.getCellProps()}
                       key={cell.column.id}
-                      className={`px-6 py-5 whitespace-nowrap  text-lg text-gray-900 ${index === 0 ? "" : "text-right"
+                      className={`px-6 py-5 whitespace-nowrap  text-md text-gray-900 ${index === 0 ? "" : "text-right"
                         }`}
                     >
                       {cell.render("Cell")}

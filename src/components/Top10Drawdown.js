@@ -66,7 +66,7 @@ export default function Top10Drawdown({ drawdowns }) {
   return (
 
     <div className="flex bg-[#fafafa]  p-16 flex-col justify-between my-20">
-      <h1 className="text-5xl text-start font-black sophia-pro-font mb-10">
+      <h1 className="text-3xl text-start font-black sophia-pro-font mb-10">
         Top 10 Drawdowns
       </h1>
 

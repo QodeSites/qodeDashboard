@@ -57,7 +57,7 @@ export default function SignIn() {
   return (
     <div className="min-h-screen minion-pro-font bg-white flex flex-col justify-center py-12 sm:px-6 lg:p-10">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="mt-6 text-center text-5xl font-bold text-black">Qode Login</h1>
+        <h1 className="mt-6 text-center text-3xl font-bold text-black">Qode Login</h1>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -65,7 +65,7 @@ export default function SignIn() {
           {error && <p className="text-red-500 text-sm mb-4" role="alert">{error}</p>}
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div>
-              <label htmlFor="email" className="block text-xl font-medium text-black">
+              <label htmlFor="email" className="block text-md font-medium text-black">
                 Email address
               </label>
               <div className="mt-1">
@@ -77,14 +77,14 @@ export default function SignIn() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-xl"
+                  className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-md"
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xl font-medium text-black">
+              <label htmlFor="password" className="block text-md font-medium text-black">
                 Password
               </label>
               <div className="mt-1">
@@ -96,7 +96,7 @@ export default function SignIn() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-xl"
+                  className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-md"
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>

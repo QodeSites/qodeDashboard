@@ -253,7 +253,7 @@ const PerformanceAndDrawdownChart = () => {
           <button
             key={strategy.id}
             onClick={() => setActiveTab(strategy.id)}
-            className={`py-3 text-xl transition-colors duration-300 ease-in-out
+            className={`py-3 text-md transition-colors duration-300 ease-in-out
         ${activeTab === strategy.id
                 ? "bg-red-600 text-white"
                 : "text-black hover:before:bg-red-600  relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
@@ -264,9 +264,9 @@ const PerformanceAndDrawdownChart = () => {
         ))}
       </div>
       <div>
-        <h1 className="text-5xl sophia-pro-font font-black">{strategyName}</h1>
+        <h1 className="text-3xl sophia-pro-font font-black">{strategyName}</h1>
         <div className="mb-10 mt-5">
-          <p className="text-xl">{strategyDescription}</p>
+          <p className="text-md">{strategyDescription}</p>
         </div>
       </div>
       <div className="border  p-10">
@@ -274,21 +274,21 @@ const PerformanceAndDrawdownChart = () => {
         <div className="grid">
           <div className="col-span-4">
             <div className="mb-4">
-              <h2 className="text-xl ">Absolute Returns</h2>
-              <p className="text-5xl sophia-pro-font ">{strategyReturns}</p>
+              <h2 className="text-md ">Absolute Returns</h2>
+              <p className="text-3xl sophia-pro-font ">{strategyReturns}</p>
             </div>
             <div>
-              <p className="text-xl sophia-pro-font ">{niftyReturns}</p>
-              <h2 className="text-xl ">Nifty50</h2>
+              <p className="text-md sophia-pro-font ">{niftyReturns}</p>
+              <h2 className="text-md ">Nifty50</h2>
             </div>
           </div>
           <div className="col-start-10 col-span-5 text-right">
-            <h2 className="text-xl ">{period} CAGR</h2>
-            <p className="text-5xl sophia-pro-font ">{strategyCagr}</p>
+            <h2 className="text-md ">{period} CAGR</h2>
+            <p className="text-3xl sophia-pro-font ">{strategyCagr}</p>
 
             <div className="col-start-10  mt-4 col-span-3">
-              <p className="text-xl sophia-pro-font ">{niftyCagr}</p>
-              <h2 className="text-xl ">Nifty50</h2>
+              <p className="text-md sophia-pro-font ">{niftyCagr}</p>
+              <h2 className="text-md ">Nifty50</h2>
             </div>
           </div>
         </div>
@@ -307,7 +307,7 @@ const PerformanceAndDrawdownChart = () => {
               </button>
             ))}
             <button
-              className={`py-2 sm:py-1 px-4 text-xl sm:text-sm ${activeButton === "ALL"
+              className={`py-2 sm:py-1 px-4 text-md sm:text-sm ${activeButton === "ALL"
                 ? "bg-primary-dark text-white bg-red-600"
                 : "border  text-gray-900"
                 }`}
@@ -348,16 +348,16 @@ const PerformanceAndDrawdownChart = () => {
         <Holdings strategy={activeTab} />
       </div>
       <div>
-        <Top10Drawdown drawdowns={top10Drawdowns} />
+        {/* <Top10Drawdown drawdowns={top10Drawdowns} /> */}
       </div>
       <div>
-        <MonthlyPLTable data={monthlyPL} />
+        {/* <MonthlyPLTable data={monthlyPL} /> */}
       </div>
-      {(activeTab === "momentum" || activeTab === "qgf") && (
+      {/* {(activeTab === "momentum" || activeTab === "qgf") && (
         <div className="border  p-10 my-10">
           <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
             <div className="w-full">
-              <h2 className="text-5xl font-black sophia-pro-font text-black mb-2">
+              <h2 className="text-3xl font-black sophia-pro-font text-black mb-2">
                 Holding Distribution
               </h2>
             </div>
@@ -366,7 +366,7 @@ const PerformanceAndDrawdownChart = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* <div>
         <PortfolioAllocation />
