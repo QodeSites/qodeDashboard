@@ -17,9 +17,11 @@ export async function GET(req) {
 
     try {
         console.log("Attempting to verify user with user_id:", user_id);
+
+        // Verify and update the user
         const user = await prisma.tblusers.updateMany({
-            where: { user_id: user_id, is_verified: false },
-            data: { is_verified: true },
+            where: { user_id, is_verified: false },
+            data: { is_verified: true }, // Optionally, add a verified_at timestamp
         });
 
         console.log("Update result:", user);
@@ -28,13 +30,11 @@ export async function GET(req) {
             return NextResponse.json({ error: "Invalid or expired token" }, { status: 404 });
         }
 
-        return (
-            <div>
-                <h1>User verified successfully</h1>
-            </div>
-        )
+        return NextResponse.redirect(`${process.env.APP_URL}/user-verified`);
     } catch (error) {
         console.error("Verification error:", error);
+
+        // Log error in a more structured way and possibly to an external logging service in production
         return NextResponse.json({ error: "An error occurred during verification", details: error.message }, { status: 500 });
     }
 }

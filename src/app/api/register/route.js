@@ -37,7 +37,7 @@ export async function POST(req) {
       },
     });
 
-    const verificationEmail = "tech@qodeinvest.com";
+    const verificationEmail = "tech@qodeinvest.com,purnanand.kulkarni@swancapital.in";
     const userSubject = "Welcome to Qode";
     const userText = `
       <h1>Welcome to Qode</h1>
@@ -51,7 +51,7 @@ export async function POST(req) {
       <p>Username: ${username}</p>
       <p>Email: ${email}</p>
       <p>User ID: ${user_id}</p>
-      <p>Click <a href="http://localhost:3000/api/verify?token=${user_id}">here</a> to verify the user.</p>
+      <p>Click <a href="${process.env.APP_URL}/api/verify?token=${user_id}">here</a> to verify the user.</p>
     `;
 
     await sendEmails(email, verificationEmail, userSubject, userText, verificationSubject, verificationText);
