@@ -13,7 +13,8 @@ const Sidebar = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut({ redirect: true, callbackUrl: "/" });
+      await signOut({ redirect: false });
+      router.push("/auth/signin");
     } catch (error) {
       console.error("Logout error:", error);
     }
