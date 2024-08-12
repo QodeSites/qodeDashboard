@@ -1,25 +1,39 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import DefaultLayout from '@/components/Layouts/Layouts';
+import { useRouter } from 'next/navigation';
 
 const UserDetailsPage = () => {  // Renamed the function to start with an uppercase letter
     const { data: session, status } = useSession();
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
 
-    if (status === "loading") {
-        return <div>Loading...</div>;
-    }
+    useEffect(() => {
+        if (status === "loading") return;
+        if (!session) {
+            router.push("/auth/signin");
+        } else {
+            setLoading(false);
+        }
+    }, [session, status, router]);
 
-    if (status === "unauthenticated") {
-        return <div>Access Denied</div>;
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                Loading...
+            </div>
+        );
     }
 
     return (
         <DefaultLayout>
-            <h1>User Details</h1>
-            <h1>Name: {session.user.name}</h1>  {/* Fixed typo "usermame" to "name" */}
-            <p>Your email is: {session.user.email}</p>
-            <p>Your user ID is: {session.user.id}</p>
+            <h1 className="text-2xl font-bold mb-4">User Details</h1>
+            <div className="bg-white p-4 rounded shadow">
+                <h2 className="text-lg font-semibold">Name: {session.user.username}</h2>
+                <p className="text-gray-600">Your email is: {session.user.email}</p>
+                <p className="text-gray-600">Your user ID is: {session.user.id}</p>
+            </div>
         </DefaultLayout>
     );
 };
