@@ -6,8 +6,8 @@ const Sidebar = () => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const navItems = [
-    { name: "My Dashboard", href: "/" },
-    // { name: "Customer Support", href: "/customer-support" },
+    { name: "Home", href: "/" },
+    { name: "Strategies", href: "/portfolio" },
     // { name: "Strategies", href: "/strategies" },
   ];
 

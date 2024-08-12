@@ -38,7 +38,7 @@ export const getChartOptions = (chartData, scheme) => {
     chart: {
       type: "line",
       zoomType: "x",
-      height: 500,
+      height: 800,
       backgroundColor: "none",
     },
     title: {
@@ -56,21 +56,22 @@ export const getChartOptions = (chartData, scheme) => {
           text: "Total Portfolio NAV",
         },
         gridLineWidth: 1,
-        height: "100%",
+        height: "60%",
+        min: 0, // Start y-axis from 0
       },
-      // {
-      //   title: {
-      //     text: "Drawdown (%)",
-      //   },
-      //   opposite: false,
-      //   gridLineWidth: 0,
-      //   top: "70%",
-      //   height: "40%",
-      //   offset: 0,
-      //   min: -30,
-      //   max: 0,
-      //   tickPositions: [-20, -10, 0],
-      // },
+      {
+        title: {
+          text: "Drawdown (%)",
+        },
+        opposite: false,
+        gridLineWidth: 1,
+        top: "60%",
+        height: "40%",
+        offset: 0,
+        min: -30,
+        max: 0,
+
+      },
     ],
     series: [
       {
@@ -93,24 +94,24 @@ export const getChartOptions = (chartData, scheme) => {
         },
         color: "#000",
       },
-      // {
-      //   name: "Drawdown",
-      //   data: drawdownData,
-      //   color: "rgba(250, 65, 65, 1)",
-      //   lineWidth: 1,
-      //   marker: {
-      //     enabled: false,
-      //   },
-      //   fillColor: {
-      //     linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-      //     stops: [
-      //       [0, "rgba(250, 65, 65, 0)"], // Light red at the top
-      //       [1, "rgba(250, 65, 65, 0)"], // Transparent red at the bottom
-      //     ],
-      //   },
-      //   type: "area",
-      //   yAxis: 1,
-      // },
+      {
+        name: "Drawdown",
+        data: drawdownData,
+        color: "rgba(250, 65, 65, 1)",
+        lineWidth: 1,
+        marker: {
+          enabled: false,
+        },
+        fillColor: {
+          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+          stops: [
+            [0, "rgba(250, 65, 65, 0)"], // Light red at the top
+            [1, "rgba(250, 65, 65, 0)"], // Transparent red at the bottom
+          ],
+        },
+        type: "area",
+        yAxis: 1,
+      },
     ],
     plotOptions: {
       area: {
@@ -144,4 +145,5 @@ export const getChartOptions = (chartData, scheme) => {
       },
     },
   };
+
 };
