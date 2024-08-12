@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 
-const Header = () => {
-  const [isNavOpen, setIsNavOpen] = useState(false);
+const Sidebar = () => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const navItems = [
@@ -12,68 +11,46 @@ const Header = () => {
     // { name: "Strategies", href: "/strategies" },
   ];
 
-  const handleNavClick = () => {
-    setIsNavOpen(false);
-  };
-
   const handleLogout = async () => {
-    // console.log("Logging out...");
     try {
       await signOut({ redirect: true, callbackUrl: "/" });
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
+
   return (
-    <header className="border-b  z-20  minion-pro-font fixed w-full bg-white  top-0">
-      <div className="mx-auto">
-        <div className="flex justify-between items-center h-16 px-14">
-          {/* <div className="w-1/4">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-black hover:bg-white/10 transition duration-300"
-              onClick={() => setIsNavOpen(!isNavOpen)}
-              aria-label="Toggle menu"
+    <aside className="w-64 h-screen bg-white border-r border-gray-200 z-20 fixed left-0 top-0 sophia-pro-font">
+      <div className="flex flex-col h-full">
+        <div className="p-4 border-b border-gray-200">
+          <Link href="/" className="flex items-center">
+            <p className="text-red-600 text-2xl font-bold playfair-disply-font">
+              Qode
+            </p>
+          </Link>
+        </div>
+
+        <nav className="flex-grow py-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-red-600 transition duration-300"
             >
-              <svg
-                className="h-6 w-6"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={
-                    isNavOpen
-                      ? "M6 18L18 6M6 6l12 12"
-                      : "M4 6h16M4 12h16M4 18h16"
-                  }
-                />
-              </svg>
-            </button> */}
-          {/* </div> */}
-
-          <div className=" flex justify-center">
-            <Link className="cursor-pointer" href="/">
-              <p className="text-red-600 text-3xl font-bold   mr-4 py-5 playfair-disply-font ">
-                Qode
-              </p>
+              {item.name}
             </Link>
-          </div>
+          ))}
+        </nav>
 
-          <div className="w-1/4 flex justify-end">
-            <div className="relative">
+        <div className="p-4 border-t border-gray-200">
+          <div className="relative">
+            <Link href={'/user-details'}>
               <button
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="p-2 rounded-full hover:bg-gray-100 transition duration-300"
-                aria-label="User menu"
+                className="flex items-center w-full text-left px-2 py-2 text-gray-600 hover:bg-gray-100 rounded transition duration-300"
               >
                 <svg
-                  className="h-6 w-6 text-black"
+                  className="h-6 w-6 mr-2"
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -83,78 +60,25 @@ const Header = () => {
                 >
                   <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                 </svg>
+                User Menu
               </button>
-              {isUserDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-md sophia-pro-font text-gray-700 hover:bg-gray-100"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
+            </Link>
+
           </div>
         </div>
-      </div>
 
-      {/* Navigation menu with slide-in animation */}
-      <div
-        className={`fixed inset-0 z-30 transition-opacity duration-300 ${isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-      >
-        <div
-          className="absolute inset-0 bg-gray-900 bg-opacity-50"
-          onClick={() => setIsNavOpen(false)}
-        ></div>
-        <div
-          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white text-black transform transition-transform duration-300 ease-in-out ${isNavOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-        >
-          <div className="h-full overflow-y-auto">
-            <div className="pt-6 pb-4">
-              <button
-                className="absolute top-4 right-4 text-black"
-                onClick={() => setIsNavOpen(false)}
-                aria-label="Close menu"
-              >
-                <svg
-                  className="h-6 w-6"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-
-              {/* Navigation items */}
-              <div className="mt-[4.5rem]">
-                {navItems.map((item) => (
-                  <div key={item.name} className="py-1">
-                    <Link
-                      href={item.href}
-                      className="flex justify-between items-center w-full text-left text-lg font-medium hover:bg-white/10 transition duration-300 text-black hover:before:bg-red-600 relative h-[50px] overflow-hidden bg-white px-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
-                      onClick={handleNavClick}
-                    >
-                      <span className="relative z-10">{item.name}</span>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Separate Logout button */}
+        <div className="p-4">
+          <button
+            onClick={handleLogout}
+            className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-300"
+          >
+            Logout
+          </button>
         </div>
       </div>
-    </header>
+    </aside>
   );
 };
 
-export default Header;
+export default Sidebar;

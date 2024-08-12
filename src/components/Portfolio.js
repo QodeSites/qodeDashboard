@@ -16,6 +16,7 @@ import Holdings from "./Holdings";
 import HoldingDistribution from "./HoldingDistribution";
 import PortfolioAllocation from "./PortfolioAllocation";
 import CompoundedAnnualReturns from "./RollingReturns";
+import TrailingReturns from "./TrailingReturn";
 
 const PerformanceAndDrawdownChart = () => {
   const [startDate, setStartDate] = useState("");
@@ -263,11 +264,14 @@ const PerformanceAndDrawdownChart = () => {
           </button>
         ))}
       </div>
-      <div>
+      <div className="">
         <h1 className="text-3xl sophia-pro-font font-black">{strategyName}</h1>
-        <div className="mb-10 mt-5">
+        <div className=" mt-5">
           <p className="text-md">{strategyDescription}</p>
         </div>
+      </div>
+      <div className="mt-20 mb-10">
+        <TrailingReturns strategy={activeTab} />
       </div>
       <div className="border  p-10">
 
@@ -335,6 +339,7 @@ const PerformanceAndDrawdownChart = () => {
             </div>
           </div>
         </div>
+
 
         <div className="grid grid-cols-12 gap-12">
 

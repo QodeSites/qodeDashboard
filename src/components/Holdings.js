@@ -76,9 +76,8 @@ const Holdings = ({ strategy }) => {
   }
 
   return (
-    <div className=" bg-[#fafafa] p-16 mt-16 minion-pro-font">
-      <div className="text-3xl sophia-pro-font font-black mt-5">Current Holdings</div>
-      <p className="mb-5 mt-4  sophia-pro-font text-md text-black">Our 30 holdings.</p>
+    <div className=" bg-[#fafafa] p-16 mt-16 sophia-pro-font">
+      <div className="text-xl sophia-pro-font font-black">Current Holdings</div>
       <div className="overflow-x-auto mt-10">
         <table
           {...getTableProps()}
@@ -115,12 +114,12 @@ const Holdings = ({ strategy }) => {
             {rows.map((row, i) => {
               prepareRow(row);
               return (
-                <tr {...row.getRowProps()} key={i} className="hover:bg-gray-50">
+                <tr {...row.getRowProps()} key={i} className="hover:bg-gray-50 border-b">
                   {row.cells.map((cell, index) => (
                     <td
                       {...cell.getCellProps()}
                       key={cell.column.id}
-                      className={`px-6 py-5 whitespace-nowrap  text-md text-gray-900 ${index === 0 ? "" : "text-right"
+                      className={`px-6 py-2 whitespace-nowrap  text-md text-gray-900 ${index === 0 ? "" : "text-right"
                         }`}
                     >
                       {cell.render("Cell")}
