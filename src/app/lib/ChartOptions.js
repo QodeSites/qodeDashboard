@@ -100,7 +100,7 @@ export const getChartOptions = (chartData, scheme) => {
         name: "Drawdown",
         data: drawdownData,
         color: "rgba(250, 65, 65, 1)",
-        lineWidth: 1,
+        lineWidth: 2,
         marker: {
           enabled: false,
         },
@@ -112,8 +112,8 @@ export const getChartOptions = (chartData, scheme) => {
             y2: 1
           },
           stops: [
-            [0, "rgba(250, 65, 65, 0.8)"],  // More opaque at the top
-            [1, "rgba(250, 65, 65, 0.3)"]   // More transparent at the bottom
+            [0, "rgba(250, 65, 65, 0.2)"],  // More opaque at the top
+            [1, "rgba(250, 65, 65, 0.9)"]   // More transparent at the bottom
           ]
         },
         type: "area",
