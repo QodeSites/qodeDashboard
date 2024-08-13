@@ -31,35 +31,35 @@ const PerformanceAndDrawdownChart = () => {
   const descriptions = {
     strategy1: [
       {
-        name: "Risk-managed Quality Fund",
+        name: "Scheme A",
         description:
           "This Strategy invests 60% of your capital in The Quality Fund and 40% in short futures. The short futures make money when the market falls, reducing the loss when the market crashes.Principle - The less you lose the more you gain in the long term.",
       },
     ],
     strategy2: [
       {
-        name: "Additional Return Fund",
+        name: "Scheme B",
         description:
           "This strategy pledges your existing portfolio to get some leverage. We use that leverage for options trading and make additional returns for you. This return is above your existing portfolio return. The maximum loss is -2.6% on the leverage in this strategy.",
       },
     ],
     momentum: [
       {
-        name: "High-Return & Churn Fund",
+        name: "Qode Momentum Fund",
         description:
           "This strategy invests in 30 businesses whose stock price has grown significantly and sells it before they start falling. Principle - The stock price tells the story before the actual story unfolds.",
       },
     ],
     qgf: [
       {
-        name: "Quality Fund",
+        name: "Qode Growth Fund",
         description:
           "This strategy invests in 30 Quality businesses. (Quality Business - A company that generates a high return on invested capital). Principle - In the long run the stock price always matches the business performance.",
       },
     ],
     lowvol: [
       {
-        name: "Steady Fund",
+        name: "Qode Low Volatility Fund",
         description:
           "This strategy invests in the 30 most stable stocks in the market. This strategy outperforms the Index with considerably lower risk.",
       },
@@ -240,11 +240,11 @@ const PerformanceAndDrawdownChart = () => {
   const strategyDescription = descriptions[activeTab][0].description;
   const strategyName = descriptions[activeTab][0].name;
   let strategies = [
-    { id: "qgf", name: "Quality Fund" },
-    { id: "momentum", name: "High-Return & Churn Fund" },
-    { id: "lowvol", name: "Steady Fund" },
-    { id: "strategy1", name: "Risk-managed Quality Fund" },
-    { id: "strategy2", name: "Additional Return Fund" },
+    { id: "qgf", name: "Qode Growth Fund" },
+    { id: "momentum", name: "Qode Momentum Fund" },
+    { id: "lowvol", name: "Qode Low Volatility Fund" },
+    { id: "strategy1", name: "Scheme A" },
+    { id: "strategy2", name: "Scheme B" },
   ];
 
   return (

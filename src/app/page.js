@@ -166,9 +166,9 @@ export default function Home() {
       <div className=" p-14 mx-auto">
         {/* <div className="minion-pro-font py-28 md:py-20"> */}
         {/* <div className="flex flex-col"> */}
-        <h1 className="text-primary-dark sophia-pro-font text-4xl font-black mb-6 text-start">
+        {/* <h1 className="text-primary-dark sophia-pro-font text-4xl font-black mb-6 text-start">
           Blogs
-        </h1>
+        </h1> */}
         {/* <p className="text-gray-600 text-md md:text-lg text-start">
               Explore our collection of insightful articles and stay up-to-date
               with the latest trends and best practices in the industry.
