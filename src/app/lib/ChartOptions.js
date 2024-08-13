@@ -1,4 +1,4 @@
-import { color } from "highcharts";
+import { color, Tick } from "highcharts";
 
 export const getChartOptions = (chartData, scheme) => {
   // console.log("chartData: ", chartData);
@@ -57,7 +57,10 @@ export const getChartOptions = (chartData, scheme) => {
         },
         gridLineWidth: 1,
         height: "60%",
-        min: 0, // Start y-axis from 0
+        min: 0,
+        // max: 1500,
+        // tickPositions: [0, 50,],
+        TickAmount: 10,
       },
       {
         title: {
@@ -70,7 +73,6 @@ export const getChartOptions = (chartData, scheme) => {
         offset: 0,
         min: -30,
         max: 0,
-
       },
     ],
     series: [
@@ -103,15 +105,21 @@ export const getChartOptions = (chartData, scheme) => {
           enabled: false,
         },
         fillColor: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+          linearGradient: {
+            x1: 0,
+            y1: 0,
+            x2: 0,
+            y2: 1
+          },
           stops: [
-            [0, "rgba(250, 65, 65, 0)"], // Light red at the top
-            [1, "rgba(250, 65, 65, 0)"], // Transparent red at the bottom
-          ],
+            [0, "rgba(250, 65, 65, 0.8)"],  // More opaque at the top
+            [1, "rgba(250, 65, 65, 0.3)"]   // More transparent at the bottom
+          ]
         },
         type: "area",
         yAxis: 1,
-      },
+        threshold: 0,
+      }
     ],
     plotOptions: {
       area: {
