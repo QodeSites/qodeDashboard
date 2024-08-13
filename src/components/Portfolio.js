@@ -349,9 +349,9 @@ const PerformanceAndDrawdownChart = () => {
         </div>
       </div>
 
-      <div>
+      {/* <div>
         <Holdings strategy={activeTab} />
-      </div>
+      </div> */}
       <div>
         {/* <Top10Drawdown drawdowns={top10Drawdowns} /> */}
       </div>
