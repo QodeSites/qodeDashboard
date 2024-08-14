@@ -12,10 +12,9 @@ const Portfolio = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "loading") return; // Do nothing while loading
+    if (status === "loading") return;
     if (!session) {
-      // Redirect to sign-in page if no session is found
-      // router.push("/");
+      router.push("/auth/signin");
     } else {
       setLoading(false);
     }
