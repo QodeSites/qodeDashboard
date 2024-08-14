@@ -1,21 +1,10 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import fetchStrategyData, { useFetchData } from "@/app/lib/api";
+import fetchStrategyData from "@/app/lib/api";
 import "../app/globals.css";
-import {
-  calculateDrawdown,
-  calculateTop10Drawdown,
-  calculateMonthlyPL,
-} from "@/app/lib/Calculation";
 import { getChartOptions } from "@/app/lib/ChartOptions";
-import Top10Drawdown from "./Top10Drawdown";
-import MonthlyPLTable from "./MonthlyPLTable";
-import Holdings from "./Holdings";
-import HoldingDistribution from "./HoldingDistribution";
-import PortfolioAllocation from "./PortfolioAllocation";
-import CompoundedAnnualReturns from "./RollingReturns";
 import TrailingReturns from "./TrailingReturn";
 
 const PerformanceAndDrawdownChart = () => {
@@ -23,77 +12,65 @@ const PerformanceAndDrawdownChart = () => {
   const [endDate, setEndDate] = useState("");
   const [timeRange, setTimeRange] = useState("3Y");
   const [activeButton, setActiveButton] = useState("3Y");
-  const [activeTab, setActiveTab] = useState("strategy1");
-  const [triggerFetch, setTriggerFetch] = useState(0);
-  const { data: chartData, isLoading, error } = useFetchData("/mainData.json");
+  const [activeTab, setActiveTab] = useState("QGF");
   const [filteredData, setFilteredData] = useState([]);
+  const [chartOptions, setChartOptions] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [data, setData] = useState([]);
+  const strategies = [
+    { id: "QGF", name: "Qode Growth Fund" },
+    { id: "QMF", name: "Qode Momentum Fund" },
+    { id: "LVF", name: "Qode Low Volatility Fund" },
+    { id: "SchemeA", name: "Scheme A" },
+    { id: "SchemeB", name: "Scheme B" },
+  ];
 
   const descriptions = {
-    strategy1: [
-      {
-        name: "Scheme A",
-        description:
-          "This Strategy invests 60% of your capital in The Quality Fund and 40% in short futures. The short futures make money when the market falls, reducing the loss when the market crashes.Principle - The less you lose the more you gain in the long term.",
-      },
-    ],
-    strategy2: [
-      {
-        name: "Scheme B",
-        description:
-          "This strategy pledges your existing portfolio to get some leverage. We use that leverage for options trading and make additional returns for you. This return is above your existing portfolio return. The maximum loss is -2.6% on the leverage in this strategy.",
-      },
-    ],
-    momentum: [
-      {
-        name: "Qode Momentum Fund",
-        description:
-          "This strategy invests in 30 businesses whose stock price has grown significantly and sells it before they start falling. Principle - The stock price tells the story before the actual story unfolds.",
-      },
-    ],
-    qgf: [
-      {
-        name: "Qode Growth Fund",
-        description:
-          "This strategy invests in 30 Quality businesses. (Quality Business - A company that generates a high return on invested capital). Principle - In the long run the stock price always matches the business performance.",
-      },
-    ],
-    lowvol: [
-      {
-        name: "Qode Low Volatility Fund",
-        description:
-          "This strategy invests in the 30 most stable stocks in the market. This strategy outperforms the Index with considerably lower risk.",
-      },
-    ],
+    QGF: "This strategy invests in 30 Quality businesses. (Quality Business - A company that generates a high return on invested capital). Principle - In the long run the stock price always matches the business performance.",
+    QMF: "This strategy invests in 30 businesses whose stock price has grown significantly and sells it before they start falling. Principle - The stock price tells the story before the actual story unfolds.",
+    LVF: "This strategy invests in the 30 most stable stocks in the market. This strategy outperforms the Index with considerably lower risk.",
+    SchemeA: "This Strategy invests 60% of your capital in The Quality Fund and 40% in short futures. The short futures make money when the market falls, reducing the loss when the market crashes. Principle - The less you lose the more you gain in the long term.",
+    SchemeB: "This strategy pledges your existing portfolio to get some leverage. We use that leverage for options trading and make additional returns for you. This return is above your existing portfolio return. The maximum loss is -2.6% on the leverage in this strategy.",
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchStrategyData(
-          activeTab,
-          timeRange,
-          startDate,
-          endDate
-        );
-        const normalizedData = normalizeData(data);
-        setFilteredData(normalizedData);
-      } catch (error) {
-        console.error("Error loading data: ", error);
-      }
-    };
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchStrategyData(
+        activeTab,
+        timeRange,
+        startDate,
+        endDate
+      );
+      setData(data);
+      updateChartOptions(data);
+      setFilteredData(data);
+    } catch (error) {
+      console.error("Error loading data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTab, timeRange, startDate, endDate]);
 
+  useEffect(() => {
     loadData();
-  }, [activeTab, timeRange, startDate, endDate, triggerFetch]);
+  }, [loadData]);
+
+  const handleStrategyChange = (strategyId) => {
+    setIsLoading(true);
+    setActiveTab(strategyId);
+  };
+
   const calculateCAGR = useMemo(
     () =>
-      (data, timeRange = "3Y", portfolioType = "Total Portfolio NAV") => {
+      (data, timeRange = "3Y", portfolioType = "total_portfolio_nav") => {
         const parseDate = (dateString) => {
-          const [month, day, year] = dateString.split("/").map(Number);
+          const [year, month, day] = dateString.split("-").map(Number);
           return new Date(year, month - 1, day);
         };
 
         const sortedData = data.sort(
-          (a, b) => parseDate(a.Date) - parseDate(b.Date)
+          (a, b) => parseDate(a.date) - parseDate(b.date)
         );
 
         if (sortedData.length < 2) {
@@ -101,7 +78,7 @@ const PerformanceAndDrawdownChart = () => {
         }
 
         const latestData = sortedData[sortedData.length - 1];
-        const latestDate = parseDate(latestData.Date);
+        const latestDate = parseDate(latestData.date);
         const startDate = new Date(latestDate);
 
         switch (timeRange) {
@@ -124,7 +101,7 @@ const PerformanceAndDrawdownChart = () => {
             startDate.setFullYear(startDate.getFullYear() - 5);
             break;
           case "ALL":
-            startDate.setTime(parseDate(sortedData[0].Date).getTime());
+            startDate.setTime(parseDate(sortedData[0].date).getTime());
             break;
           case "YTD":
             startDate.setFullYear(startDate.getFullYear(), 0, 1);
@@ -134,7 +111,7 @@ const PerformanceAndDrawdownChart = () => {
         }
 
         const startIndex = sortedData.findIndex(
-          (d) => parseDate(d.Date) >= startDate
+          (d) => parseDate(d.date) >= startDate
         );
         if (startIndex === -1) return "N/A"; // No data matches the start date
 
@@ -147,7 +124,7 @@ const PerformanceAndDrawdownChart = () => {
         if (["1Y", "3Y", "5Y", "ALL"].includes(timeRange)) {
           const years =
             timeRange === "ALL"
-              ? (latestDate - parseDate(sortedData[startIndex].Date)) /
+              ? (latestDate - parseDate(sortedData[startIndex].date)) /
               (365 * 24 * 60 * 60 * 1000)
               : parseInt(timeRange.slice(0, -1));
           const cagr = (Math.pow(endValue / startValue, 1 / years) - 1) * 100;
@@ -159,227 +136,139 @@ const PerformanceAndDrawdownChart = () => {
       },
     []
   );
+  const updateChartOptions = useCallback((data) => {
+    const options = getChartOptions(data, activeTab);
+    setChartOptions(options);
+  }, [activeTab]);
 
-  // Usage example
+  const handleTimeRangeChange = useCallback((range) => {
+    setTimeRange(range);
+    setActiveButton(range);
+    if (range !== "ALL") {
+      setStartDate("");
+      setEndDate("");
+    }
+  }, []);
 
-  // normalize data
-  const normalizeData = (data) => {
-    if (data.length === 0) return [];
+  const strategyCagr = useMemo(
+    () => calculateCAGR(filteredData, timeRange, "total_portfolio_nav"),
+    [calculateCAGR, filteredData, timeRange]
+  );
 
-    const firstValue = {
-      "Total Portfolio NAV": data[0]["Total Portfolio NAV"],
-      Nifty: data[0]["Nifty"],
-    };
+  const niftyCagr = useMemo(
+    () => calculateCAGR(filteredData, timeRange, "nifty"),
+    [calculateCAGR, filteredData, timeRange]
+  );
 
-    return data.map((item) => ({
-      ...item,
-      "Total Portfolio NAV":
-        (item["Total Portfolio NAV"] / firstValue["Total Portfolio NAV"]) * 100,
-      Nifty: (item["Nifty"] / firstValue["Nifty"]) * 100,
-    }));
-  };
-
-  const calculateReturns = (data, key) => {
-    // console.log("datasss", data);
+  const calculateReturns = useCallback((data, key) => {
     if (data.length < 2) return "N/A";
     const startValue = parseFloat(data[0][key]);
     const endValue = parseFloat(data[data.length - 1][key]);
     return (((endValue - startValue) / startValue) * 100).toFixed(2) + "%";
-  };
+  }, []);
 
-  const strategyReturns = calculateReturns(filteredData, "Total Portfolio NAV");
-  const niftyReturns = calculateReturns(filteredData, "Nifty");
-  // console.log(filteredData);
-  if (isLoading || !filteredData.length) {
+  const strategyReturns = useMemo(
+    () => calculateReturns(filteredData, "total_portfolio_nav"),
+    [calculateReturns, filteredData]
+  );
+
+  const niftyReturns = useMemo(
+    () => calculateReturns(filteredData, "nifty"),
+    [calculateReturns, filteredData]
+  );
+
+  if (!filteredData.length) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-white">
-        <div className="w-16 h-16 border-t-4  rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-t-4 rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  if (error) {
-    return <div className="text-red-600">Error: {error}</div>;
-  }
-
-  const chartOptions = getChartOptions(filteredData);
-  const top10Drawdowns = calculateTop10Drawdown(filteredData);
-  const monthlyPL = calculateMonthlyPL(filteredData);
-  const strategyCagr = calculateCAGR(
-    filteredData,
-    timeRange,
-    "Total Portfolio NAV"
-  );
-  const niftyCagr = calculateCAGR(filteredData, timeRange, "Nifty");
-
-  const handleTimeRangeChange = (range) => {
-    setTimeRange(range);
-    setActiveButton(range);
-    setStartDate("");
-    setEndDate("");
-    setTriggerFetch((prev) => prev + 1);
-  };
-
-  let period;
-  if (timeRange === "ALL") {
-    period = "Since Inception";
-  } else {
-    period = `${timeRange}`;
-  }
-  let active;
-  if (activeTab === "strategy1") {
-    active = "scheme1";
-  } else if (activeTab === "strategy2") {
-    active = "scheme2";
-  } else if (activeTab === "momentum") {
-    active = "Momentum";
-  } else {
-    active = "QGF";
-  }
-
-  const strategyDescription = descriptions[activeTab][0].description;
-  const strategyName = descriptions[activeTab][0].name;
-  let strategies = [
-    { id: "qgf", name: "Qode Growth Fund" },
-    { id: "momentum", name: "Qode Momentum Fund" },
-    { id: "lowvol", name: "Qode Low Volatility Fund" },
-    { id: "strategy1", name: "Scheme A" },
-    { id: "strategy2", name: "Scheme B" },
-  ];
+  const period = timeRange === "ALL" ? "Since Inception" : timeRange;
 
   return (
-    <div className="p-8 mt-10  mx-auto  tracking-wide bg-white text-black">
+    <div className="p-8 mt-10 mx-auto tracking-wide bg-white text-black">
       <div className="mb-12 grid grid-cols-5 gap-4 max-w-full">
         {strategies.map((strategy) => (
           <button
             key={strategy.id}
-            onClick={() => setActiveTab(strategy.id)}
+            onClick={() => handleStrategyChange(strategy.id)}
             className={`py-3 text-md transition-colors duration-300 ease-in-out
-        ${activeTab === strategy.id
+      ${activeTab === strategy.id
                 ? "bg-red-600 text-white"
-                : "text-black hover:before:bg-red-600  relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+                : "text-black hover:before:bg-red-600 relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
               }`}
           >
             <span className="relative text-sm sophia-pro-font font-black z-10">{strategy.name}</span>
           </button>
         ))}
       </div>
-      <div className="">
-        <h1 className="text-3xl sophia-pro-font font-black">{strategyName}</h1>
-        <div className=" mt-5">
-          <p className="text-md">{strategyDescription}</p>
+
+      <div>
+        <h1 className="text-3xl sophia-pro-font font-black">{strategies.find(s => s.id === activeTab).name}</h1>
+        <div className="mt-5">
+          <p className="text-md">{descriptions[activeTab]}</p>
         </div>
       </div>
+
       <div className="mt-20 mb-10">
-        <TrailingReturns strategy={activeTab} />
+        <TrailingReturns data={data} />
       </div>
-      <div className="border  p-10">
 
-        <div className="grid">
-          <div className="col-span-4">
-            <div className="mb-4">
-              <h2 className="text-md ">Absolute Returns</h2>
-              <p className="text-3xl sophia-pro-font ">{strategyReturns}</p>
-            </div>
-            <div>
-              <p className="text-md sophia-pro-font ">{niftyReturns}</p>
-              <h2 className="text-md ">Nifty50</h2>
-            </div>
+      <div className="border p-10">
+        {/* Performance metrics */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h2 className="text-md">Absolute Returns</h2>
+            <p className="text-3xl sophia-pro-font">{strategyReturns}</p>
+            <p className="text-md sophia-pro-font">{niftyReturns}</p>
+            <h2 className="text-md">Nifty 50</h2>
           </div>
-          <div className="col-start-10 col-span-5 text-right">
-            <h2 className="text-md ">{period} CAGR</h2>
-            <p className="text-3xl sophia-pro-font ">{strategyCagr}</p>
-
-            <div className="col-start-10  mt-4 col-span-3">
-              <p className="text-md sophia-pro-font ">{niftyCagr}</p>
-              <h2 className="text-md ">Nifty50</h2>
-            </div>
+          <div className="text-right">
+            <h2 className="text-md">{period} CAGR</h2>
+            <p className="text-3xl sophia-pro-font">{strategyCagr}</p>
+            <p className="text-md sophia-pro-font">{niftyCagr}</p>
+            <h2 className="text-md">Nifty 50</h2>
           </div>
         </div>
-        <div className="flex flex-col space-y-4 sophia-pro-font sm:flex-row sm:space-y-0 my-10 sm:space-x-4">
-          <div className="flex flex-wrap justify-center gap-2">
-            {["YTD", "1M", "3M", "6M", "1Y", "3Y", "5Y"].map((range) => (
+
+        {/* Time range buttons */}
+        <div className="flex justify-between h-20 items-center gap-2 my-10">
+          <div className="flex flex-wrap justify-center gap-2 ">
+            {["YTD", "1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"].map((range) => (
               <button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
-                className={`px-3 py-1 text-sm ${activeButton === range
-                  ? "bg-red-600 text-white"
-                  : "border "
+                className={`px-3 py-1 text-sm ${activeButton === range ? "bg-red-600 text-white" : "border"
                   }`}
               >
                 {range}
               </button>
             ))}
-            <button
-              className={`py-2 sm:py-1 px-4 text-md sm:text-sm ${activeButton === "ALL"
-                ? "bg-primary-dark text-white bg-red-600"
-                : "border  text-gray-900"
-                }`}
-              onClick={() => handleTimeRangeChange("ALL")}
-            >
-              All
-            </button>
           </div>
 
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:space-x-4">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="date"
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="border  text-gray-900 text-xs sm:text-sm py-2 px-3"
-                />
-                <input
-                  type="date"
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="border  text-gray-900 text-xs sm:text-sm py-2 px-3"
-                />
-              </div>
-            </div>
+          {/* Date inputs */}
+          <div className="flex justify-center gap-2 ">
+            <input
+              type="date"
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border text-gray-900 text-sm py-2 px-3"
+            />
+            <input
+              type="date"
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border text-gray-900 text-sm py-2 px-3"
+            />
           </div>
         </div>
 
-
-        <div className="grid grid-cols-12 gap-12">
-
-          <div className="col-span-12">
-            <HighchartsReact highcharts={Highcharts} options={chartOptions} />
-          </div>
+        {/* Chart */}
+        <div className="w-full">
+          <HighchartsReact highcharts={Highcharts} options={chartOptions} />
         </div>
       </div>
-
-      {/* <div>
-        <Holdings strategy={activeTab} />
-      </div> */}
-      <div>
-        {/* <Top10Drawdown drawdowns={top10Drawdowns} /> */}
-      </div>
-      <div>
-        {/* <MonthlyPLTable data={monthlyPL} /> */}
-      </div>
-      {/* {(activeTab === "momentum" || activeTab === "qgf") && (
-        <div className="border  p-10 my-10">
-          <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
-            <div className="w-full">
-              <h2 className="text-3xl font-black sophia-pro-font text-black mb-2">
-                Holding Distribution
-              </h2>
-            </div>
-            <div className="w-full bg-[#fafafa] mt-16">
-              <HoldingDistribution activeStrategy={active} />
-            </div>
-          </div>
-        </div>
-      )} */}
-
-      {/* <div>
-        <PortfolioAllocation />
-      </div>
-      <div>
-        <CompoundedAnnualReturns data={filteredData} />
-      </div> */}
-    </div>
+    </div >
   );
 };
 

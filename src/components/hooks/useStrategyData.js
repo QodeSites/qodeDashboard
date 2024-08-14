@@ -64,8 +64,8 @@ const useStrategyData = (strategy) => {
     const startIndex = data.findIndex((d) => new Date(d.Date) >= startDate);
     if (startIndex === -1) return "N/A"; // No data matches the start date
 
-    const startValue = data[startIndex]["Total Portfolio NAV"];
-    const endValue = latestData["Total Portfolio NAV"];
+    const startValue = data[startIndex]["total_portfolio_nav"];
+    const endValue = latestData["total_portfolio_nav"];
 
     console.log("startvalue", data[startIndex]);
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const TrailingReturns = ({ strategy }) => {
+const TrailingReturns = ({ data }) => {
     const [returns, setReturns] = useState({
         "10D": {},
         "1W": {},
@@ -18,31 +18,13 @@ const TrailingReturns = ({ strategy }) => {
     });
 
     useEffect(() => {
-        fetchData();
-    }, [strategy]);
-
-
-
-
-    const fetchData = async () => {
-        try {
-            const response = await fetch('/mainData.json');
-            const jsonData = await response.json();
-
-            calculateReturns(jsonData[strategy]);
-            calculateDrawdowns(jsonData[strategy]);
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
-
-
-
+        calculateReturns(data);
+        calculateDrawdowns(data);
+    }, [data]);
 
     const calculateReturns = (data) => {
-        const sortedData = data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-        const latestDate = new Date(sortedData[sortedData.length - 1].Date);
-        console.log("data", latestDate);
+        const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+        const latestDate = new Date(sortedData[sortedData.length - 1].date);
 
         const periods = {
             "10D": 10,
@@ -64,10 +46,9 @@ const TrailingReturns = ({ strategy }) => {
 
         const calculatedReturns = {};
 
-
         for (const [period, days] of Object.entries(periods)) {
             const startIndex = sortedData.findIndex((item) => {
-                const itemDate = new Date(item.Date);
+                const itemDate = new Date(item.date);
                 const diffDays = (latestDate - itemDate) / (1000 * 60 * 60 * 24);
                 return diffDays <= days;
             });
@@ -77,14 +58,14 @@ const TrailingReturns = ({ strategy }) => {
                 const endValues = sortedData[sortedData.length - 1];
 
                 calculatedReturns[period] = {
-                    [strategy]: calculateReturn(
-                        startValues['Total Portfolio NAV'],
-                        endValues['Total Portfolio NAV'],
+                    strategy: calculateReturn(
+                        parseFloat(startValues['total_portfolio_nav']),
+                        parseFloat(endValues['total_portfolio_nav']),
                         period
                     ),
-                    "Nifty": calculateReturn(
-                        startValues["Nifty"],
-                        endValues["Nifty"],
+                    nifty: calculateReturn(
+                        parseFloat(startValues["nifty"]),
+                        parseFloat(endValues["nifty"]),
                         period
                     ),
                 };
@@ -104,57 +85,77 @@ const TrailingReturns = ({ strategy }) => {
     };
 
     const calculateDrawdowns = (data) => {
-        const strategies = [strategy, "Nifty"];
         const drawdowns = {
             latest: {},
             lowest: {},
         };
 
-        strategies.forEach((strat) => {
-            let peak = data[0][strat];
-            let lowestDrawdown = 0;
-            let latestPeak = data[0][strat];
-            const lastValue = data[data.length - 1][strat];
+        let peak = parseFloat(data[0]["total_portfolio_nav"]);
+        let lowestDrawdown = 0;
+        let latestPeak = parseFloat(data[0]["total_portfolio_nav"]);
+        const lastValue = parseFloat(data[data.length - 1]["total_portfolio_nav"]);
 
-            data.forEach((item) => {
-                const value = item[strat];
+        data.forEach((item) => {
+            const value = parseFloat(item["total_portfolio_nav"]);
 
-                if (value > peak) {
-                    peak = value;
-                }
+            if (value > peak) {
+                peak = value;
+            }
 
-                const drawdown = ((value - peak) / peak) * 100;
+            const drawdown = ((value - peak) / peak) * 100;
 
-                if (drawdown < lowestDrawdown) {
-                    lowestDrawdown = drawdown;
-                }
+            if (drawdown < lowestDrawdown) {
+                lowestDrawdown = drawdown;
+            }
 
-                if (value > latestPeak) {
-                    latestPeak = value;
-                }
-            });
-
-            const latestDrawdown = ((lastValue - latestPeak) / latestPeak) * 100;
-
-            drawdowns.latest[strat] = latestDrawdown;
-            drawdowns.lowest[strat] = lowestDrawdown;
+            if (value > latestPeak) {
+                latestPeak = value;
+            }
         });
+
+        const latestDrawdown = ((lastValue - latestPeak) / latestPeak) * 100;
+
+        drawdowns.latest.strategy = latestDrawdown;
+        drawdowns.lowest.strategy = lowestDrawdown;
+
+        // Calculate drawdowns for Nifty
+        peak = parseFloat(data[0]["nifty"]);
+        lowestDrawdown = 0;
+        latestPeak = parseFloat(data[0]["nifty"]);
+        const lastNiftyValue = parseFloat(data[data.length - 1]["nifty"]);
+
+        data.forEach((item) => {
+            const value = parseFloat(item["nifty"]);
+
+            if (value > peak) {
+                peak = value;
+            }
+
+            const drawdown = ((value - peak) / peak) * 100;
+
+            if (drawdown < lowestDrawdown) {
+                lowestDrawdown = drawdown;
+            }
+
+            if (value > latestPeak) {
+                latestPeak = value;
+            }
+        });
+
+        const latestNiftyDrawdown = ((lastNiftyValue - latestPeak) / latestPeak) * 100;
+
+        drawdowns.latest.nifty = latestNiftyDrawdown;
+        drawdowns.lowest.nifty = lowestDrawdown;
 
         setDrawdowns(drawdowns);
     };
 
-    const strategies = [strategy, "Nifty"];
     const periods = ["10D", "1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "YTD"];
 
     const strategyNames = [
-        { id: "qgf", name: "Quality Fund" },
-        { id: "momentum", name: "High-Return & Churn Fund" },
-        { id: "lowvol", name: "Steady Fund" },
-        { id: "strategy1", name: "Risk-managed Quality Fund" },
-        { id: "strategy2", name: "Additional Return Fund" },
-        { id: "Nifty", name: "Nifty" }, // Added Nifty to the list
+        { id: "strategy", name: "Strategy" },
+        { id: "nifty", name: "Nifty" },
     ];
-
 
     return (
         <div className="sophia-pro-font overflow-x-auto">
@@ -173,20 +174,20 @@ const TrailingReturns = ({ strategy }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {strategies.map((strat) => (
+                    {strategyNames.map((strat) => (
                         <tr
                             style={tableCellStyle}
-                            key={strat}
+                            key={strat.id}
                             className="border-b border-gray-100"
                         >
                             <td className="p-2 ">
-                                {strategyNames.filter((item) => item.id === strat).map((item) => item.name)}
+                                {strat.name}
                             </td>
 
                             {periods.map((period) => (
                                 <td style={tableCellStyle} key={period} className="p-2">
-                                    {returns[period] && returns[period][strat]
-                                        ? `${returns[period][strat].toFixed(1)}%`
+                                    {returns[period] && returns[period][strat.id]
+                                        ? `${returns[period][strat.id].toFixed(1)}%`
                                         : "0%"}
                                 </td>
                             ))}
@@ -194,16 +195,16 @@ const TrailingReturns = ({ strategy }) => {
                                 style={tableCellStyle}
                                 className="p-2 border-l-2 border-gray-100"
                             >
-                                {drawdowns.latest[strat]
-                                    ? `${drawdowns.latest[strat].toFixed(1)}%`
+                                {drawdowns.latest[strat.id]
+                                    ? `${drawdowns.latest[strat.id].toFixed(1)}%`
                                     : "0%"}
                             </td>
                             <td
                                 style={tableCellStyle}
                                 className="p-2 border-l-2 border-gray-100"
                             >
-                                {drawdowns.lowest[strat]
-                                    ? `${drawdowns.lowest[strat].toFixed(1)}%`
+                                {drawdowns.lowest[strat.id]
+                                    ? `${drawdowns.lowest[strat.id].toFixed(1)}%`
                                     : "0%"}
                             </td>
                         </tr>

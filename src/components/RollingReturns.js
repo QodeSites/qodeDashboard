@@ -21,7 +21,7 @@ export default function CompoundedAnnualReturns({ data }) {
     const sortedData = data
       .map((item) => ({
         date: new Date(item.Date.split("-").reverse().join("-")),
-        value: parseFloat(item["Total Portfolio NAV"]),
+        value: parseFloat(item["total_portfolio_nav"]),
       }))
       .sort((a, b) => a.date - b.date);
 

@@ -1,11 +1,11 @@
 export const calculateDrawdown = (data) => {
   let peak = -Infinity;
   return data.map((item) => {
-    const value = item["Total Portfolio NAV"];
+    const value = item["total_portfolio_nav"];
     peak = Math.max(peak, value);
     const drawdown = ((value - peak) / peak) * 100;
     return [
-      new Date(item.Date.split("-").reverse().join("-")).getTime(),
+      new Date(item.date.split("-").reverse().join("-")).getTime(),
       drawdown,
     ];
   });
@@ -22,16 +22,16 @@ export const calculateTop10Drawdown = (data) => {
   let currentDrawdown = null;
 
   data.forEach((item, index) => {
-    if (typeof item["Total Portfolio NAV"] !== "number") {
+    if (typeof item["total_portfolio_nav"] !== "number") {
       console.error(
         "Invalid Total Portfolio NAV:",
-        item["Total Portfolio NAV"]
+        item["total_portfolio_nav"]
       );
       return;
     }
 
-    const value = item["Total Portfolio NAV"];
-    const date = new Date(item.Date.split("-").reverse().join("-"));
+    const value = item["total_portfolio_nav"];
+    const date = new Date(item.date.split("-").reverse().join("-"));
 
     if (value > peak) {
       peak = value;
@@ -86,12 +86,12 @@ export function calculateMonthlyPL(data) {
   }
 
   // Sort data by date
-  data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+  data.sort((a, b) => new Date(a.date) - new Date(b.date));
 
   // Aggregate data by month
   const monthlyData = {};
   data.forEach((item) => {
-    const date = new Date(item.Date);
+    const date = new Date(item.date);
     const monthYearKey = `${date.getFullYear()}-${(date.getMonth() + 1)
       .toString()
       .padStart(2, "0")}`;
@@ -103,7 +103,7 @@ export function calculateMonthlyPL(data) {
       };
     }
     monthlyData[monthYearKey].totalNAV += parseFloat(
-      item["Total Portfolio NAV"]
+      item["total_portfolio_nav"]
     );
     monthlyData[monthYearKey].count++;
   });

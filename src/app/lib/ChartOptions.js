@@ -1,119 +1,111 @@
-import { color, Tick } from "highcharts";
 
-export const getChartOptions = (chartData, scheme) => {
-  // console.log("chartData: ", chartData);
+export const getChartOptions = (chartData, strategy) => {
+  console.log("chartdata", chartData);
+
   if (!chartData) {
-    // Handle the case where chartData or chartData[scheme] is not available
-    console.error("Data is not available for: ", scheme);
-    return {}; // Return an empty object or some default configuration
+    console.error("Data is not available for: ", strategy);
+    return {};
   }
 
-  const schemeData = chartData;
-  const performanceData = schemeData.map((item) => [
-    new Date(item.Date.split("-").reverse().join("-")).getTime(),
-    item["Total Portfolio NAV"],
-  ]);
+  const prepareChartData = (data) => {
+    const strategyKey = "total_portfolio_nav";
+    const initialStrategyValue = parseFloat(data[0][strategyKey]);
+    const initialNiftyValue = parseFloat(data[0]["nifty"]);
 
-  const niftyData = schemeData.map((item) => [
-    new Date(item.Date.split("-").reverse().join("-")).getTime(),
-    item["Nifty"],
-  ]);
+    return data.map((item) => {
+      console.log('Item Date:', item.date);
+
+      const parsedDate = new Date(item.date.split("-").reverse().join("-"));
+      console.log('Parsed Date:', parsedDate);
+      return {
+        date: item.date,
+        strategyValue: (parseFloat(item[strategyKey]) / initialStrategyValue) * 100,
+        niftyValue: (parseFloat(item["nifty"]) / initialNiftyValue) * 100,
+      };
+    });
+  };
+
+
+  const preparedData = prepareChartData(chartData);
+  console.log("preparedData", preparedData);
+
+  const dates = preparedData.map(item => item.date);
+  const strategyValues = preparedData.map(item => item.strategyValue);
+  const niftyValues = preparedData.map(item => item.niftyValue);
 
   const calculateDrawdown = (data) => {
     let peak = -Infinity;
     return data.map((item) => {
-      const value = item["Total Portfolio NAV"];
+      const value = item.strategyValue;
       peak = Math.max(peak, value);
       const drawdown = ((value - peak) / peak) * 100;
-      return [
-        new Date(item.Date.split("-").reverse().join("-")).getTime(),
-        drawdown,
-      ];
+      return [item.date, drawdown];
     });
   };
 
-  const drawdownData = calculateDrawdown(schemeData);
+  const drawdownData = calculateDrawdown(preparedData);
 
   return {
-    chart: {
-      type: "line",
-      zoomType: "x",
-      height: 800,
-      backgroundColor: "none",
-    },
-    title: {
-      text: "",
-    },
+    title: "",
     xAxis: {
+      categories: dates,
       type: "datetime",
-      title: {
-        text: "Date",
+      labels: {
+        formatter: function () {
+          const date = new Date(this.value);
+          return `${date.toLocaleString("default", {
+            month: "short",
+          })} ${date.getFullYear()}`;
+        },
       },
+      tickPositions: [0, Math.floor(dates.length / 2), dates.length - 1],
     },
     yAxis: [
       {
-        title: {
-          text: "Total Portfolio NAV",
-        },
-        gridLineWidth: 1,
+        title: { text: "" },
         height: "60%",
         min: 0,
-        // max: 1500,
-        // tickPositions: [0, 50,],
-        TickAmount: 10,
+        tickAmount: 10,
       },
       {
-        title: {
-          text: "Drawdown (%)",
-        },
+        title: { text: "Drawdown (%)" },
         opposite: false,
-        gridLineWidth: 1,
         top: "60%",
         height: "40%",
-        offset: 0,
-        min: -30,
+        // min: -30,
         max: 0,
       },
     ],
     series: [
       {
-        name: "Portfolio Value",
-        data: performanceData,
-        yAxis: 0,
-        type: "line",
-        marker: {
-          enabled: false,
-        },
+        name: strategy,
+        data: strategyValues,
         color: "#9ddd55",
+        lineWidth: 1,
+        marker: { enabled: false },
+        type: "line",
+        yAxis: 0,
       },
       {
-        name: "Nifty",
-        data: niftyData,
-        yAxis: 0,
-        type: "line",
-        marker: {
-          enabled: false,
-        },
+        name: "Nifty 50",
+        data: niftyValues,
         color: "#000",
+        lineWidth: 2,
+        marker: { enabled: false },
+        type: "line",
+        yAxis: 0,
       },
       {
         name: "Drawdown",
         data: drawdownData,
         color: "rgba(250, 65, 65, 1)",
         lineWidth: 2,
-        marker: {
-          enabled: false,
-        },
+        marker: { enabled: false },
         fillColor: {
-          linearGradient: {
-            x1: 0,
-            y1: 0,
-            x2: 0,
-            y2: 1
-          },
+          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
           stops: [
-            [0, "rgba(250, 65, 65, 0.2)"],  // More opaque at the top
-            [1, "rgba(250, 65, 65, 0.9)"]   // More transparent at the bottom
+            [0, "rgba(250, 65, 65, 0.2)"],
+            [1, "rgba(250, 65, 65, 0.9)"]
           ]
         },
         type: "area",
@@ -121,37 +113,25 @@ export const getChartOptions = (chartData, scheme) => {
         threshold: 0,
       }
     ],
+    chart: {
+      height: 800,
+      backgroundColor: "none",
+      zoomType: "x",
+    },
+    tooltip: { shared: true },
+    legend: { enabled: false },
+    credits: { enabled: false },
+    exporting: { enabled: true },
     plotOptions: {
       area: {
-        marker: {
-          radius: 2,
-        },
+        marker: { radius: 2 },
         lineWidth: 1,
-        states: {
-          hover: {
-            lineWidth: 1,
-          },
-        },
+        states: { hover: { lineWidth: 1 } },
         threshold: null,
       },
     },
-    legend: {
-      enabled: false,
-    },
-    tooltip: {
-      shared: true,
-    },
-    credits: {
-      enabled: false,
-    },
-    exporting: {
-      enabled: true,
-    },
     navigation: {
-      buttonOptions: {
-        enabled: true,
-      },
+      buttonOptions: { enabled: true },
     },
   };
-
 };

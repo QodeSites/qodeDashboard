@@ -1,8 +1,36 @@
-
-
+// hooks/useFetchData.js
 import { useState, useEffect } from "react";
 
+export const useFetchData = (url) => {
+  const [data, setData] = useState({ scheme1: [], scheme2: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(url);
+        const jsonData = await response.json();
+        setData({
+          scheme1: jsonData.strategy1,
+          scheme2: jsonData.strategy2,
+          momentum: jsonData.momentum,
+          qgf: jsonData.qgf,
+          lowvol: jsonData.lowvol,
+        });
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  return { data, isLoading, error };
+};
 
 export const useFetchHoldings = (url) => {
   const [holding, setHolding] = useState({
@@ -38,42 +66,26 @@ export const useFetchHoldings = (url) => {
 
   return { holding, isLoading, error };
 };
+
 const fetchStrategyData = async (strategy, timeRange, startDate, endDate) => {
   console.log(timeRange);
-  if (!strategy) {
-    throw new Error("No strategy provided");
-  } else if (strategy === "strategy1") {
-    strategy = "SchemeA";
-  } else if (strategy === "strategy2") {
-    strategy = "SchemeB";
-  } else if (strategy === "momentum") {
-    strategy = "QMF";
-  } else if (strategy === "qgf") {
-    strategy = "QGF";
-  } else if (strategy === "lowvol") {
-    strategy = "LVF"
-  }
-
   try {
-    // Replace this URL with your actual localhost URL
-    const response = await fetch(
-      `https://api.qodeinvestments.com/api/strategies/${strategy}`
-    );
+    const response = await fetch("/mainData.json");
 
     if (!response.ok) {
       throw new Error("Failed to fetch data");
     }
-    const data = await response.json();
-    console.log("dataasssss", data);
-
-    if (!data || data.length === 0) {
+    const jsonData = await response.json();
+    if (!jsonData[strategy.toLowerCase()]) {
       throw new Error(`No data found for strategy: ${strategy}`);
     }
 
+    const data = jsonData[strategy.toLowerCase()];
+
     // Find the latest date in the data to use as the reference for filtering
     const latestDate = data.reduce((latest, current) => {
-      const currentDate = new Date(current.date);
-      return currentDate > new Date(latest.date) ? current : latest;
+      const currentDate = new Date(current.Date);
+      return currentDate > new Date(latest.Date) ? current : latest;
     }, data[0]);
 
     const filteredData = filterDataByTimeRange(
@@ -81,7 +93,7 @@ const fetchStrategyData = async (strategy, timeRange, startDate, endDate) => {
       timeRange,
       startDate,
       endDate,
-      latestDate.date // Pass the latest date from your data
+      latestDate.Date // Pass the latest date from your data
     );
     return filteredData;
   } catch (error) {
@@ -96,8 +108,8 @@ const filterDataByTimeRange = (data, range, start, end, latestDataDate) => {
   if (start && end) {
     return data.filter(
       (item) =>
-        new Date(item.date) >= new Date(start) &&
-        new Date(item.date) <= new Date(end)
+        new Date(item.Date) >= new Date(start) &&
+        new Date(item.Date) <= new Date(end)
     );
   }
 
@@ -115,6 +127,11 @@ const filterDataByTimeRange = (data, range, start, end, latestDataDate) => {
         latestDate.setFullYear(latestDate.getFullYear() - 1)
       );
       break;
+    case "3Y":
+      filterDate = new Date(
+        latestDate.setFullYear(latestDate.getFullYear() - 3)
+      );
+      break;
     case "5Y":
       filterDate = new Date(
         latestDate.setFullYear(latestDate.getFullYear() - 5)
@@ -130,7 +147,8 @@ const filterDataByTimeRange = (data, range, start, end, latestDataDate) => {
       return data; // "ALL" case or undefined time range
   }
 
-  return data.filter((item) => new Date(item.date) >= filterDate);
+  return data.filter((item) => new Date(item.Date) >= filterDate);
 };
+
 
 export default fetchStrategyData;
