@@ -115,7 +115,9 @@ export default function CompoundedAnnualReturns({ data }) {
   };
 
   if (!chartOptions) {
-    return <div>Loading...</div>;
+    <div className="fixed inset-0 flex justify-center items-center bg-white">
+      <div className="w-16 h-16 border-t-4 rounded-full animate-spin"></div>
+    </div>
   }
   return (
     <div className="p-4 border rounded-lg mt-5">

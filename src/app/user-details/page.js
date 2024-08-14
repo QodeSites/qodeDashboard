@@ -20,8 +20,8 @@ const UserDetailsPage = () => {  // Renamed the function to start with an upperc
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                Loading...
+            <div className="fixed inset-0 flex justify-center items-center bg-white">
+                <div className="w-16 h-16 border-t-4 rounded-full animate-spin"></div>
             </div>
         );
     }
