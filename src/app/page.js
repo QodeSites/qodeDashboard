@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import BlogCard from "@/components/BlogCard";
+import Portfolio from "./portfolio/page";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -161,37 +162,41 @@ export default function Home() {
     },
   ];
 
+  // return (
+  //   <DefaultLayout>
+  //     <div className=" p-14 mx-auto">
+  //       {/* <div className="minion-pro-font py-28 md:py-20"> */}
+  //       {/* <div className="flex flex-col"> */}
+  //       {/* <h1 className="text-primary-dark sophia-pro-font text-4xl font-black mb-6 text-start">
+  //         Blogs
+  //       </h1> */}
+  //       {/* <p className="text-gray-600 text-md md:text-lg text-start">
+  //             Explore our collection of insightful articles and stay up-to-date
+  //             with the latest trends and best practices in the industry.
+  //           </p> */}
+  //       {/* </div> */}
+  //       {/* </div> */}
+  //       <div className=" mx-auto flex flex-wrap justify-center gap-5">
+  //         {dummyPosts.map((post) => (
+  //           <BlogCard
+  //             key={post.detailLink}
+  //             title={post.title}
+  //             summary={post.body}
+  //             mainImage={post.mainImage}
+  //             readTime={post.readTime}
+  //             detailLink={`/blogs/${post.detailLink}`}
+  //             author={post.author}
+  //             authorImage={post.author.authorImage}
+  //             bio={post.author.bio}
+  //             publishedAt={post.publishedAt}
+  //           />
+  //         ))}
+  //       </div>
+  //     </div>
+  //   </DefaultLayout>
+  // );
+
   return (
-    <DefaultLayout>
-      <div className=" p-14 mx-auto">
-        {/* <div className="minion-pro-font py-28 md:py-20"> */}
-        {/* <div className="flex flex-col"> */}
-        {/* <h1 className="text-primary-dark sophia-pro-font text-4xl font-black mb-6 text-start">
-          Blogs
-        </h1> */}
-        {/* <p className="text-gray-600 text-md md:text-lg text-start">
-              Explore our collection of insightful articles and stay up-to-date
-              with the latest trends and best practices in the industry.
-            </p> */}
-        {/* </div> */}
-        {/* </div> */}
-        <div className=" mx-auto flex flex-wrap justify-center gap-5">
-          {dummyPosts.map((post) => (
-            <BlogCard
-              key={post.detailLink}
-              title={post.title}
-              summary={post.body}
-              mainImage={post.mainImage}
-              readTime={post.readTime}
-              detailLink={`/blogs/${post.detailLink}`}
-              author={post.author}
-              authorImage={post.author.authorImage}
-              bio={post.author.bio}
-              publishedAt={post.publishedAt}
-            />
-          ))}
-        </div>
-      </div>
-    </DefaultLayout>
-  );
+    <Portfolio />
+  )
 }

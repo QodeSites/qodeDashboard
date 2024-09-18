@@ -6,6 +6,9 @@ import fetchStrategyData from "@/app/lib/api";
 import "../app/globals.css";
 import { getChartOptions } from "@/app/lib/ChartOptions";
 import TrailingReturns from "./TrailingReturn";
+import Button from "./common/Button";
+import Heading from "./common/Heading";
+import Text from "./common/Text";
 
 const PerformanceAndDrawdownChart = () => {
   const [startDate, setStartDate] = useState("");
@@ -26,12 +29,27 @@ const PerformanceAndDrawdownChart = () => {
   ];
 
   const descriptions = {
-    QGF: "This strategy invests in 30 Quality businesses. (Quality Business - A company that generates a high return on invested capital). Principle - In the long run the stock price always matches the business performance.",
-    QMF: "This strategy invests in 30 businesses whose stock price has grown significantly and sells it before they start falling. Principle - The stock price tells the story before the actual story unfolds.",
-    LVF: "This strategy invests in the 30 most stable stocks in the market. This strategy outperforms the Index with considerably lower risk.",
-    SchemeA: "This Strategy invests 60% of your capital in The Quality Fund and 40% in short futures. The short futures make money when the market falls, reducing the loss when the market crashes. Principle - The less you lose the more you gain in the long term.",
-    SchemeB: "This strategy pledges your existing portfolio to get some leverage. We use that leverage for options trading and make additional returns for you. This return is above your existing portfolio return. The maximum loss is -2.6% on the leverage in this strategy.",
+    QGF: {
+      description: "This strategy invests in 30 Quality businesses. (Quality Business - A company that generates a high return on invested capital).",
+      principle: "In the long run, the stock price always matches the business performance.",
+    },
+    QMF: {
+      description: "This strategy invests in 30 businesses whose stock price has grown significantly and sells it before they start falling.",
+      principle: "The stock price tells the story before the actual story unfolds.",
+    },
+    LVF: {
+      description: "This strategy invests in the 30 most stable stocks in the market. This strategy outperforms the Index with considerably lower risk.",
+      principle: "",
+    },
+    SchemeA: {
+      description: "This Strategy invests 60% of your capital in The Quality Fund and 40% in short futures. The short futures make money when the market falls, reducing the loss when the market crashes.",
+      principle: "The less you lose, the more you gain in the long term.",
+    },
+    SchemeB: {
+      description: "This strategy pledges your existing portfolio to get some leverage. We use that leverage for options trading and make additional returns for you. This return is above your existing portfolio return.",
+    },
   };
+
 
   const loadData = useCallback(async () => {
     try {
@@ -179,8 +197,8 @@ const PerformanceAndDrawdownChart = () => {
 
   if (!filteredData.length) {
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-white">
-        <div className="w-16 h-16 border-t-4 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex justify-center items-center bg-black">
+        <div className="w-2 h-2 border-t-4 rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -188,88 +206,102 @@ const PerformanceAndDrawdownChart = () => {
   const period = timeRange === "ALL" ? "Since Inception" : timeRange;
 
   return (
-    <div className="p-8 mt-10 mx-auto tracking-wide bg-white text-black">
-      <div className="mb-12 grid grid-cols-5 gap-4 max-w-full">
+    <div className="p-1 mx-auto tracking-wide bg-black text-white">
+      <div className="mb-5 grid grid-cols-5 gap-3 max-w-full">
         {strategies.map((strategy) => (
-          <button
+          <Button
             key={strategy.id}
             onClick={() => handleStrategyChange(strategy.id)}
-            className={`py-3 text-md transition-colors duration-300 ease-in-out
-      ${activeTab === strategy.id
-                ? "bg-red-600 text-white"
-                : "text-black hover:before:bg-red-600 relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+            className={`text-body transition-colors duration-300 ease-in-out
+              ${activeTab === strategy.id
+                ? "bg-beige text-black"
+                : "text-beige hover:before:bg-beige relative h-full overflow-hidden border border-brown bg-black transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-beige before:transition-all before:duration-500 hover:text-black hover:before:left-0 hover:before:w-full"
               }`}
           >
-            <span className="relative text-sm sophia-pro-font font-black z-10">{strategy.name}</span>
-          </button>
+            <span className="relative text-body ">{strategy.name}</span>
+          </Button>
         ))}
       </div>
 
-      <div>
-        <h1 className="text-3xl sophia-pro-font font-black">{strategies.find(s => s.id === activeTab).name}</h1>
-        <div className="mt-5">
-          <p className="text-md">{descriptions[activeTab]}</p>
+      <div className="mb-3 border border-brown p-4">
+        <Heading className="text-semiheading text-beige font-semiheading">
+          {strategies.find((s) => s.id === activeTab).name}
+        </Heading>
+        <div className="mt-18 text-lightBeige">
+          {/* Main Description */}
+          <Text className="text-body ">
+            {descriptions[activeTab]?.description}
+          </Text>
+
+          {/* Principle */}
+          {descriptions[activeTab]?.principle && (
+            <Text className="text-body  ">
+              Principle: {descriptions[activeTab].principle}
+            </Text>
+          )}
         </div>
       </div>
 
-      <div className="mt-20 mb-10">
-        <TrailingReturns data={data} />
+
+      <div className=" mb-4">
+        <TrailingReturns
+          data={data}
+          strategyName={strategies.find((s) => s.id === activeTab).name}
+        />
       </div>
 
-      <div className="border p-10">
+      <div className="border p-4  border-brown">
         {/* Performance metrics */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 text-beige gap-3">
           <div>
-            <h2 className="text-md">Absolute Returns</h2>
-            <p className="text-3xl sophia-pro-font">{strategyReturns}</p>
-            <p className="text-md sophia-pro-font">{niftyReturns}</p>
-            <h2 className="text-md">Nifty 50</h2>
+            <h2 className="text-body text-lightBeige">Absolute Returns</h2>
+            <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyReturns}</p>
+            <p className="text-body">{niftyReturns}</p>
+            <h2 className="text-body">Nifty 50</h2>
           </div>
           <div className="text-right">
-            <h2 className="text-md">{period} CAGR</h2>
-            <p className="text-3xl sophia-pro-font">{strategyCagr}</p>
-            <p className="text-md sophia-pro-font">{niftyCagr}</p>
-            <h2 className="text-md">Nifty 50</h2>
+            <h2 className="text-body text-lightBeige">{period} CAGR</h2>
+            <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyCagr}</p>
+            <p className="text-body">{niftyCagr}</p>
+            <h2 className="text-body">Nifty 50</h2>
           </div>
         </div>
 
         {/* Time range buttons */}
-        <div className="flex justify-between h-20 items-center gap-2 my-10">
-          <div className="flex flex-wrap justify-center gap-2 ">
-            {["YTD", "1M", "3M", "6M", "1Y", "3Y", "5Y", "ALL"].map((range) => (
-              <button
+        <div className="flex items-center gap-2 mt-5">
+          <div className="flex flex-wrap justify-center gap-1">
+            {["1M", "6M", "1Y", "3Y", "5Y", "ALL"].map((range) => (
+              <Button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
-                className={`px-3 py-1 text-sm ${activeButton === range ? "bg-red-600 text-white" : "border"
+                className={`text-body ${activeButton === range
+                  ? "bg-beige text-black"
+                  : "border border-beige text-beige hover:bg-beige hover:text-black"
                   }`}
               >
                 {range}
-              </button>
+              </Button>
             ))}
           </div>
 
-          {/* Date inputs */}
-          <div className="flex justify-center gap-2 ">
-            <input
-              type="date"
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border text-gray-900 text-sm py-2 px-3"
-            />
-            <input
-              type="date"
-              onChange={(e) => setEndDate(e.target.value)}
-              className="border text-gray-900 text-sm py-2 px-3"
-            />
-          </div>
+          {/* Adjusted date input */}
+          <input
+            type="date"
+            placeholder="DD/MM/YYYY"
+            onChange={(e) => setStartDate(e.target.value)}
+            className="text-beige border border-beige focus:ring-beige  bg-black text-body px-2 py-1 h-[54px] z-10"
+          />
         </div>
 
         {/* Chart */}
-        <div className="w-full">
+        <div className="mt-4">
           <HighchartsReact highcharts={Highcharts} options={chartOptions} />
         </div>
       </div>
-    </div >
+    </div>
   );
+
+
 };
 
 export default PerformanceAndDrawdownChart;

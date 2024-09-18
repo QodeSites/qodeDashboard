@@ -32,7 +32,7 @@ function BlogCard({
                 <div className="p-6 h-full group overflow-hidden relative flex flex-col">
                     <div className="transition-all duration-500 transform group-hover:-translate-y-5 flex flex-col h-full">
                         <div className="mb-auto">
-                            <span className="text-primary-dark text-sm">Blog</span>
+                            <span className="text-primary-dark text-body">Blog</span>
                             <h3 className="md:text-lg text-black group-hover:text-red-600 font-bold sophia-pro-font mb-2 relative overflow-hidden text-ellipsis">
                                 {title}
                             </h3>
@@ -45,11 +45,11 @@ function BlogCard({
                   alt={author.name}
                   className="w-8 h-8 rounded-full mr-2"
                 />
-                <span className="text-sm">{author.name}</span>
+                <span className="text-body">{author.name}</span>
               </div> */}
                             {/* <div className="flex items-center">
                 <FontAwesomeIcon icon={faClock} className="mr-1" />
-                <span className="text-sm">{readTime}</span>
+                <span className="text-body">{readTime}</span>
               </div> */}
                         </div>
                     </div>

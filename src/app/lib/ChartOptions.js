@@ -1,3 +1,4 @@
+import { color } from "highcharts";
 
 export const getChartOptions = (chartData, strategy) => {
   console.log("chartdata", chartData);
@@ -59,28 +60,60 @@ export const getChartOptions = (chartData, strategy) => {
         },
       },
       tickPositions: [0, Math.floor(dates.length / 2), dates.length - 1],
+      gridLineColor: "#fefefe",
+      labels: {
+        style: {
+          color: "#d1a47b", // Set the color of the tick labels
+          fontSize: "10px"
+        },
+      },
     },
     yAxis: [
       {
         title: { text: "" },
         height: "60%",
-        min: 0,
+        min: 5,
         tickAmount: 10,
+        labels: {
+          style: {
+            color: "#d1a47b", // Set the color of the tick labels
+            fontSize: "10px"
+          },
+        },
+        lineColor: "#d1a47b", // Optional: change the line color of the axis
+        tickColor: "#d1a47b", // Optional: change the tick color on the axis
+        gridLineColor: "#292929",
       },
       {
-        title: { text: "Drawdown (%)" },
+        title: {
+          text: "Drawdown (%)",
+          style: {
+            color: "#d1a47b"
+          }
+        },
         opposite: false,
         top: "60%",
         height: "40%",
-        // min: -30,
+        left: "3.6%",
         max: 0,
+        labels: {
+          style: {
+            color: "#d1a47b", // Set the color of the tick labels
+            fontSize: "10px"
+
+          },
+        },
+        lineColor: "#d1a47b", // Optional: change the line color of the axis
+        tickColor: "#d1a47b", // Optional: change the tick color on the axis
+        gridLineColor: "#292929",
       },
     ],
+
     series: [
       {
         name: strategy,
         data: strategyValues,
-        color: "#9ddd55",
+        color: "#fee9d6",
         lineWidth: 1,
         marker: { enabled: false },
         type: "line",
@@ -89,7 +122,7 @@ export const getChartOptions = (chartData, strategy) => {
       {
         name: "Nifty 50",
         data: niftyValues,
-        color: "#000",
+        color: "#945c39",
         lineWidth: 2,
         marker: { enabled: false },
         type: "line",
@@ -98,17 +131,11 @@ export const getChartOptions = (chartData, strategy) => {
       {
         name: "Drawdown",
         data: drawdownData,
-        color: "rgba(250, 65, 65, 1)",
+        color: "#B10606",
         lineWidth: 2,
         marker: { enabled: false },
-        fillColor: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: [
-            [0, "rgba(250, 65, 65, 0.2)"],
-            [1, "rgba(250, 65, 65, 0.9)"]
-          ]
-        },
-        type: "area",
+
+        type: "line",
         yAxis: 1,
         threshold: 0,
       }
@@ -117,6 +144,7 @@ export const getChartOptions = (chartData, strategy) => {
       height: 800,
       backgroundColor: "none",
       zoomType: "x",
+      marginLeft: 55,  // Reduce left margin to shift chart left
     },
     tooltip: { shared: true },
     legend: { enabled: false },

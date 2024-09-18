@@ -70,7 +70,7 @@ export default function Top10Drawdown({ drawdowns }) {
         Top 10 Drawdowns
       </h1>
 
-      <div className="w-full bg-white ">
+      <div className="w-full bg-black ">
         {/* Header */}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] border-b ">
           {table.getHeaderGroups()[0].headers.map((header) => (

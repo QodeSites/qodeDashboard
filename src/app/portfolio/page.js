@@ -21,7 +21,7 @@ const Portfolio = () => {
   }, [session, status, router]);
 
   if (loading) {
-    <div className="fixed inset-0 flex justify-center items-center bg-white">
+    <div className="fixed inset-0 flex justify-center items-center bg-black">
       <div className="w-16 h-16 border-t-4 rounded-full animate-spin"></div>
     </div>
   }

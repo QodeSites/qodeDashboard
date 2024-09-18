@@ -16,7 +16,7 @@ const StrategyCard = ({ strategy, name, description, slug }) => {
   return (
     <Link
       href={`/strategies/${slug}`}
-      className={`block bg-white p-10 relative`}
+      className={`block bg-black p-10 relative`}
     >
       <h1 className="text-md font-bold playfair-display-font my-5">{name}</h1>
       <p className="text-lg mb-3">{description}</p>
@@ -32,7 +32,7 @@ const StrategyCard = ({ strategy, name, description, slug }) => {
       </div>
 
       <div className="flex items-center justify-end">
-        <div className="py-3 px-5 mt-5 text-center flex justify-between items-center border  font-medium hover:bg-white/10 transition duration-300 text-black hover:before:bg-red-600 relative h-[50px] overflow-hidden before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full">
+        <div className="py-3 px-5 mt-5 text-center flex justify-between items-center border  font-medium hover:bg-black/10 transition duration-300 text-black hover:before:bg-red-600 relative h-[50px] overflow-hidden before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full">
           <span className="relative z-10">Know more</span>
         </div>
       </div>

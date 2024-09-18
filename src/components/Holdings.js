@@ -61,7 +61,7 @@ const Holdings = ({ strategy }) => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-white">
+      <div className="fixed inset-0 flex justify-center items-center bg-black">
         <div className="w-16 h-16 border-t-4 border-blue-500 rounded-full animate-spin"></div>
       </div>
     );
@@ -81,7 +81,7 @@ const Holdings = ({ strategy }) => {
       <div className="overflow-x-auto mt-10">
         <table
           {...getTableProps()}
-          className="min-w-full bg-white  "
+          className="min-w-full bg-black  "
         >
           <thead>
             {headerGroups.map((headerGroup, i) => (

@@ -55,14 +55,14 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen minion-pro-font bg-white flex flex-col justify-center py-12 sm:px-6 lg:p-10">
+    <div className="min-h-screen minion-pro-font bg-black flex flex-col justify-center py-12 sm:px-6 lg:p-10">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h1 className="mt-6 text-center text-3xl font-bold text-black">Qode Login</h1>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="border  py-8 px-4 sm:px-10">
-          {error && <p className="text-red-500 text-sm mb-4" role="alert">{error}</p>}
+          {error && <p className="text-red-500 text-body mb-4" role="alert">{error}</p>}
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div>
               <label htmlFor="email" className="block text-md font-medium text-black">
@@ -106,7 +106,7 @@ export default function SignIn() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-2 px-4 border  text-sm font-medium text-black bg-white hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
+                className="w-full flex justify-center items-center py-2 px-4 border  text-body font-medium text-black bg-black hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
                 aria-busy={isLoading}
               >
                 {isLoading ? (
@@ -126,15 +126,15 @@ export default function SignIn() {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t " />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-black">Or</span>
+              <div className="relative flex justify-center text-body">
+                <span className="px-2 bg-black text-black">Or</span>
               </div>
             </div>
 
             <div className="mt-6">
               <Link
                 href="/auth/register"
-                className="w-full flex justify-center py-2 px-4 border  text-sm font-medium text-white bg-red-600 hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
+                className="w-full flex justify-center py-2 px-4 border  text-body font-medium text-white bg-red-600 hover:bg-black hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
               >
                 Sign up
               </Link>

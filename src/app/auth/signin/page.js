@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react"; // Assuming you're using Lucide icons
+import Section from "@/components/container/Section";
+import Heading from "@/components/common/Heading";
+import Button from "@/components/common/Button";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -55,93 +58,92 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen minion-pro-font bg-white flex flex-col justify-center py-12 sm:px-6 lg:p-10">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="mt-6 text-center text-3xl playfair-disply-font font-bold text-red-600">Qode</h1>
+    <div className="bg-black mx-auto h-screen flex flex-col justify-between overflow-hidden">
+      {/* Header Section */}
+      <div className="border-b border-brown">
+        <div className="mx-auto max-w-[1386px] flex justify-between items-center bg-wh h-6">
+          <Link href="/" className="text-beige playfair-display-font text-3xl font-bold">
+            Qode
+          </Link>
+          <div className="text-center">
+            <Button
+              onClick={() => router.push("/auth/register")}
+              className="bg-transparent border-brown border text-beige hover:bg-beige hover:text-black"
+            >
+              Create account
+
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-8  sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-[#fafafa] py-8 px-4 sm:px-10">
-          {error && <p className="text-red-500 text-sm mb-4" role="alert">{error}</p>}
-          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full p-6 sm:max-w-[631px] border mt-2 border-brown bg-black">
+          <Heading className="text-semiheading font-semiheading text-beige text-center mb-4">
+            Sign In
+          </Heading>
+
+          <form className="space-y-2" onSubmit={handleSubmit} noValidate>
             <div>
-              <label htmlFor="email" className="block  text-md font-bold text-black">
-                Email address
-              </label>
+
               <div className="mt-1">
                 <input
                   id="email"
                   name="email"
                   type="email"
                   autoComplete="email"
+                  placeholder="Email address"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border  minion-pro-font"
+                  className="w-full p-18 border bg-black placeholder:text-body placeholder:text-darkGrey border-brown text-beige focus:outline-none focus:ring-1 focus:ring-beige"
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block  text-md font-bold text-black">
-                Password
-              </label>
+
               <div className="mt-1">
                 <input
                   id="password"
                   name="password"
+                  placeholder="Password"
                   type="password"
                   autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 bg-white focus:outline-none focus:ring-black sm:text-md"
+                  className="appearance-none block w-full p-18 border bg-black placeholder:text-body placeholder:text-darkGrey border-brown text-beige focus:outline-none focus:ring-1 focus:ring-beige"
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
             </div>
 
-            <div>
-              <button
+            <div className="text-center">
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-2 px-4 border my-10 text-sm font-medium text-black bg-white hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
+                className="bg-beige text-black"
                 aria-busy={isLoading}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="animate-spin h-5 w-5 mr-3" />
+                    <Loader2 className="animate-spin h-18 w-18 mr-18" />
                     Signing in...
                   </>
                 ) : (
                   'Sign in'
                 )}
-              </button>
+              </Button>
             </div>
           </form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t " />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-black">Or</span>
-              </div>
-            </div>
 
-            <div className="mt-6">
-              <Link
-                href="/auth/register"
-                className="w-full flex justify-center py-2 px-4 border text-sm font-medium text-white bg-red-600 hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition duration-150 ease-in-out"
-              >
-                Sign up
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
     </div>
+
   );
 }
