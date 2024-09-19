@@ -44,7 +44,7 @@ const MonthlyPLTable = ({ data }) => {
   return (
     <div className="overflow-x-auto minion-pro-font bg-[#fafafa]  p-10 mt-10 ">
       <h1 className="text-3xl text-start mb-10 font-black sophia-pro-font">Monthly & Yearly P&L</h1>
-      <table className="min-w-full bg-white  border-collapse">
+      <table className="min-w-full bg-black  border-collapse">
         <thead>
           <tr className="border-b  ">
             <th className="p-2 text-left  text-md sticky left-0 "></th>

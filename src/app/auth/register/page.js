@@ -1,27 +1,45 @@
-"use client";
+'use client'
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
 import { useToast } from "@/components/ui/use-toast";
+import Section from "@/components/container/Section";
+import Heading from "@/components/common/Heading";
+import CustomLink from "@/components/common/CustomLink";
+import Button from "@/components/common/Button";
+import Text from "@/components/common/Text";
+
 export default function Register() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
+    reenterPassword: "", // Added reenterPassword to state
   });
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({ ...prevState, [name]: value }));
+    setFormData((prevState) => ({ ...prevState, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (formData.password !== formData.reenterPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/register", {
@@ -36,12 +54,12 @@ export default function Register() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Registration successful. Please wait while we verify your account.",
+          description:
+            "Registration successful. Please wait while we verify your account.",
           variant: "success",
         });
         setTimeout(() => router.push("/auth/signin"), 5000);
       } else {
-        // Display the error message from the server
         toast({
           title: "Registration Failed",
           description: data.error || "An error occurred during registration",
@@ -61,67 +79,84 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen minion-pro-font bg-[#fafafa] flex flex-col justify-center py-12 sm:px-6 lg:p-10">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center playfair-disply-font text-3xl text-black">Qode</h2>
-      </div>
+    <div className="bg-black mx-auto h-screen flex flex-col justify-between overflow-hidden">
+      <div className="border-b border-brown">
+        <div className="mx-auto max-w-[1386px] flex justify-between items-center bg-wh h-6">
+          <Link href="/" className="text-beige playfair-display-font text-3xl font-bold">
+            Qode
+          </Link>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="border  py-8 px-4 sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {["username", "email", "password"].map((field) => (
+          <div className="text-center">
+            <Button
+              onClick={() => router.push("/auth/signin")}
+              className="bg-transparent border-brown border text-beige hover:bg-beige hover:text-black"
+            >
+              Sign In
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full p-6 sm:max-w-[631px] border mt-2 border-brown bg-black">
+          <Heading className="text-semiheading font-semiheading text-beige text-center mb-4">
+            Create account
+          </Heading>
+
+          <form className="space-y-2" onSubmit={handleSubmit}>
+            {["full name", "email", "password"].map((field) => (
               <div key={field}>
-                <label htmlFor={field} className="block text-md text-black font-bold capitalize">
-                  {field}
-                </label>
                 <div className="mt-1">
                   <input
                     id={field}
                     name={field}
-                    type={field === "password" ? "password" : field === "email" ? "email" : "text"}
-                    autoComplete={field === "password" ? "new-password" : field === "email" ? "email" : "off"}
+                    placeholder={field}
+                    type={
+                      field === "password" || field === "reenterPassword"
+                        ? "password"
+                        : field === "email"
+                          ? "email"
+                          : "text"
+                    }
+                    autoComplete={
+                      field === "password" || field === "reenterPassword"
+                        ? "new-password"
+                        : field === "email"
+                          ? "email"
+                          : "off"
+                    }
                     required
                     value={formData[field]}
                     onChange={handleChange}
-                    className="appearance-none block w-full px-3 py-2 border  placeholder-black-400 focus:outline-none focus:ring-black focus: sm:text-md"
+                    className="appearance-none block w-full p-18 border bg-black placeholder:text-body placeholder:text-darkGrey placeholder:capitalize border-brown focus:outline-none focus:ring-1 focus:ring-beige focus:border-beige sm:text-body text-beige"
                   />
                 </div>
               </div>
             ))}
+            <div className="mt-1">
+              <input
+                id="reenterPassword"
+                name="reenterPassword"
+                placeholder="Re-enter Password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={formData.reenterPassword}
+                onChange={handleChange}
+                className="appearance-none block w-full p-18 border bg-black placeholder:text-body placeholder:text-darkGrey placeholder:capitalize border-brown focus:outline-none focus:ring-1 focus:ring-beige focus:border-beige text-body text-beige"
+              />
+            </div>
 
-            <div>
-              <button
+            <div className="flex justify-between flex-col-reverse items-center mt-4">
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 transition px-4 border  text-sm font-medium text-black bg-white hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50"
+                className="bg-beige text-black"
               >
                 {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
-                {isLoading ? "Signing Up..." : "Sign Up"}
-              </button>
+                {isLoading ? "Please wait..." : "Create account"}
+              </Button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t " />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-black">
-                  Already have an account?
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                href="/auth/signin"
-                className="w-full flex justify-center py-2 transition px-4 border  text-sm font-medium text-white bg-red-600 hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-              >
-                Sign in
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
     </div>

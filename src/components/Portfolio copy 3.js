@@ -197,7 +197,7 @@ const PerformanceAndDrawdownChart = () => {
   // console.log(filteredData);
   if (isLoading || !filteredData.length) {
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-white">
+      <div className="fixed inset-0 flex justify-center items-center bg-black">
         <div className="w-16 h-16 border-t-4  rounded-full animate-spin"></div>
       </div>
     );
@@ -255,7 +255,7 @@ const PerformanceAndDrawdownChart = () => {
   ];
 
   return (
-    <div className="p-8 mt-10  mx-auto  tracking-wide bg-white text-black">
+    <div className="p-8 mt-10  mx-auto  tracking-wide bg-black text-black">
       <div className="mb-12 grid grid-cols-5 gap-4 max-w-full">
         {strategies.map((strategy) => (
           <button
@@ -264,10 +264,10 @@ const PerformanceAndDrawdownChart = () => {
             className={`py-3 text-md transition-colors duration-300 ease-in-out
         ${activeTab === strategy.id
                 ? "bg-red-600 text-white"
-                : "text-black hover:before:bg-red-600  relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+                : "text-black hover:before:bg-red-600  relative h-[50px] overflow-hidden border bg-black px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
               }`}
           >
-            <span className="relative text-sm sophia-pro-font font-black z-10">{strategy.name}</span>
+            <span className="relative text-body sophia-pro-font font-black z-10">{strategy.name}</span>
           </button>
         ))}
       </div>
@@ -309,7 +309,7 @@ const PerformanceAndDrawdownChart = () => {
               <button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
-                className={`px-3 py-1 text-sm ${activeButton === range
+                className={`px-3 py-1 text-body ${activeButton === range
                   ? "bg-red-600 text-white"
                   : "border "
                   }`}
@@ -318,7 +318,7 @@ const PerformanceAndDrawdownChart = () => {
               </button>
             ))}
             <button
-              className={`py-2 sm:py-1 px-4 text-md sm:text-sm ${activeButton === "ALL"
+              className={`py-2 sm:py-1 px-4 text-md sm:text-body ${activeButton === "ALL"
                 ? "bg-primary-dark text-white bg-red-600"
                 : "border  text-gray-900"
                 }`}
@@ -335,12 +335,12 @@ const PerformanceAndDrawdownChart = () => {
                 <input
                   type="date"
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="border  text-gray-900 text-xs sm:text-sm py-2 px-3"
+                  className="border  text-gray-900 text-xs sm:text-body py-2 px-3"
                 />
                 <input
                   type="date"
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="border  text-gray-900 text-xs sm:text-sm py-2 px-3"
+                  className="border  text-gray-900 text-xs sm:text-body py-2 px-3"
                 />
               </div>
             </div>

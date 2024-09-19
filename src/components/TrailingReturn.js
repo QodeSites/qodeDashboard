@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import Text from "./common/Text";
 
-const TrailingReturns = ({ data }) => {
+const TrailingReturns = ({ data, strategyName }) => {
     const [returns, setReturns] = useState({
         "10D": {},
         "1W": {},
@@ -151,58 +152,47 @@ const TrailingReturns = ({ data }) => {
     };
 
     const periods = ["10D", "1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "YTD"];
-
+    console.log(data)
     const strategyNames = [
-        { id: "strategy", name: "Strategy" },
+        { id: "strategy", name: strategyName },
         { id: "nifty", name: "Nifty" },
     ];
 
     return (
-        <div className="sophia-pro-font overflow-x-auto">
-            <h2 className="md:text-xl font-bold mb-2">Trailing Returns</h2>
+        <div className="overflow-x-auto border border-brown p-4">
+            <h2 className="text-subheading font-subheading text-beige mb-18">Trailing Returns</h2>
+            <Text className="text-body font-body text-lightBeige mb-4">Trailing returns are annualised returns from the specified period till today.</Text>
             <table className="w-full min-w-[640px]">
                 <thead>
-                    <tr style={tableHeaderStyle} className="border-b-2 border-gray-200">
-                        <th className="p-2 text-left">Strategy</th>
+                    <tr className="border text-body font-body p-3 border-brown">
+                        <th className="p-1 font-body text-body border-r border-brown text-left text-lightBeige">Strategy</th>
                         {periods.map((period) => (
-                            <th key={period} className="p-2 text-left">
+                            <th key={period} className="p-2 font-body  text-left  text-body text-lightBeige ">
                                 {period}
                             </th>
                         ))}
-                        <th className="p-2 text-left border-l-2 border-gray-100">DD</th>
-                        <th className="p-2 text-left border-l-2 border-gray-100">MDD</th>
+                        {/* <th className="p-1 text-center border-l border-brown">DD</th> */}
+                        <th className="p-1 text-center border-l border-brown font-body text-body text-lightBeige">MDD</th>
                     </tr>
                 </thead>
                 <tbody>
                     {strategyNames.map((strat) => (
-                        <tr
-                            style={tableCellStyle}
-                            key={strat.id}
-                            className="border-b border-gray-100"
-                        >
-                            <td className="p-2 ">
-                                {strat.name}
-                            </td>
+                        <tr key={strat.id} className="border border-brown text-lightBeige text-left">
+                            <td className="p-1 border-r border-brown">{strat.name}</td>
 
                             {periods.map((period) => (
-                                <td style={tableCellStyle} key={period} className="p-2">
+                                <td key={period} className="p-1 text-lightBeige">
                                     {returns[period] && returns[period][strat.id]
                                         ? `${returns[period][strat.id].toFixed(1)}%`
                                         : "0%"}
                                 </td>
                             ))}
-                            <td
-                                style={tableCellStyle}
-                                className="p-2 border-l-2 border-gray-100"
-                            >
+                            {/* <td className="p-1 border-l border-brown">
                                 {drawdowns.latest[strat.id]
                                     ? `${drawdowns.latest[strat.id].toFixed(1)}%`
                                     : "0%"}
-                            </td>
-                            <td
-                                style={tableCellStyle}
-                                className="p-2 border-l-2 border-gray-100"
-                            >
+                            </td> */}
+                            <td className="p-1 border-l text-center text-lightBeige border-brown">
                                 {drawdowns.lowest[strat.id]
                                     ? `${drawdowns.lowest[strat.id].toFixed(1)}%`
                                     : "0%"}
@@ -211,20 +201,12 @@ const TrailingReturns = ({ data }) => {
                     ))}
                 </tbody>
             </table>
+            <Text className="text-beige text-body font-body mt-1">*MDD(Maximum Drawdown) is how much money an investments loses from it's highest point to it's lowest point before it starts going up again.</Text>
+
         </div>
     );
+
 };
 
-const tableHeaderStyle = {
-    backgroundColor: "#F9FAFB",
-    padding: "8px",
-    textAlign: "left",
-    fontSize: "14px",
-};
-
-const tableCellStyle = {
-    padding: "8px",
-    fontSize: "14px",
-};
 
 export default TrailingReturns;

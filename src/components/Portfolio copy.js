@@ -133,7 +133,7 @@ const PerformanceAndDrawdownChart = () => {
 
   if (isLoading || !filteredData.length) {
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-white">
+      <div className="fixed inset-0 flex justify-center items-center bg-black">
         <div className="w-16 h-16 border-t-4  rounded-full animate-spin"></div>
       </div>
     );
@@ -178,7 +178,7 @@ const PerformanceAndDrawdownChart = () => {
     active = "QGF";
   }
   return (
-    <div className="p-8 mt-10 max-w-7xl mx-auto minion-pro-font tracking-wide bg-white text-black">
+    <div className="p-8 mt-10 max-w-7xl mx-auto minion-pro-font tracking-wide bg-black text-black">
       <h1 className="text-md mb-12">Model Portfolio</h1>
 
       <div className="mb-12 grid grid-cols-4 gap-4 max-w-full">
@@ -189,7 +189,7 @@ const PerformanceAndDrawdownChart = () => {
             className={`py-3 text-lg transition-colors duration-300 ease-in-out
               ${activeTab === tab
                 ? "bg-red-600 text-white"
-                : "text-black hover:before:bg-red-600  relative h-[50px] overflow-hidden border bg-white px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
+                : "text-black hover:before:bg-red-600  relative h-[50px] overflow-hidden border bg-black px-3 transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-red-600 before:transition-all before:duration-500 hover:text-white hover:before:left-0 hover:before:w-full"
               }`}
           >
             <span className="relative z-10">
@@ -206,14 +206,14 @@ const PerformanceAndDrawdownChart = () => {
             <button
               key={range}
               onClick={() => handleTimeRangeChange(range)}
-              className={`px-3 py-1 text-sm ${activeButton === range ? "bg-red-600 text-white" : "bg-gray-200"
+              className={`px-3 py-1 text-body ${activeButton === range ? "bg-red-600 text-white" : "bg-gray-200"
                 }`}
             >
               {range}
             </button>
           ))}
           <button
-            className={`py-2 sm:py-1 px-4 text-xs sm:text-sm ${activeButton === "ALL"
+            className={`py-2 sm:py-1 px-4 text-xs sm:text-body ${activeButton === "ALL"
               ? "bg-primary-dark text-white bg-red-600"
               : "bg-[#f7f5f5] text-gray-900"
               }`}
@@ -228,7 +228,7 @@ const PerformanceAndDrawdownChart = () => {
             <div className="flex flex-col">
               <label
                 htmlFor="startDate"
-                className="text-sm md:hidden block text-gray-600 mb-1"
+                className="text-body md:hidden block text-gray-600 mb-1"
               >
                 Start Date
               </label>
@@ -237,13 +237,13 @@ const PerformanceAndDrawdownChart = () => {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-[#f7f5f5] text-gray-900 text-xs sm:text-sm py-2 px-3"
+                className="bg-[#f7f5f5] text-gray-900 text-xs sm:text-body py-2 px-3"
               />
             </div>
             <div className="flex flex-col">
               <label
                 htmlFor="endDate"
-                className="text-sm md:hidden block text-gray-600 mb-1"
+                className="text-body md:hidden block text-gray-600 mb-1"
               >
                 End Date
               </label>
@@ -252,7 +252,7 @@ const PerformanceAndDrawdownChart = () => {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-[#f7f5f5] text-gray-900 text-xs sm:text-sm py-2 px-3"
+                className="bg-[#f7f5f5] text-gray-900 text-xs sm:text-body py-2 px-3"
               />
             </div>
           </div>
@@ -301,7 +301,7 @@ const PerformanceAndDrawdownChart = () => {
             </h2>
           </div>
 
-          <div className="w-full  bg-white  p-4 shadow-md">
+          <div className="w-full  bg-black  p-4 shadow-md">
             <HoldingDistribution activeStrategy={active} />
           </div>
         </div>
