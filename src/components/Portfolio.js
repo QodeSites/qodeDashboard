@@ -72,7 +72,9 @@ const PerformanceAndDrawdownChart = () => {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [loadData, timeRange]);
+
+
 
   const handleStrategyChange = (strategyId) => {
     setIsLoading(true);
@@ -159,6 +161,12 @@ const PerformanceAndDrawdownChart = () => {
     setChartOptions(options);
   }, [activeTab]);
 
+  useEffect(() => {
+    if (data.length > 0) {
+      updateChartOptions(data);
+    }
+  }, [data, updateChartOptions]);
+
   const handleTimeRangeChange = useCallback((range) => {
     setTimeRange(range);
     setActiveButton(range);
@@ -166,7 +174,10 @@ const PerformanceAndDrawdownChart = () => {
       setStartDate("");
       setEndDate("");
     }
-  }, []);
+    // Assuming you have access to the current data
+    // If not, you might need to fetch new data based on the new range
+    updateChartOptions(currentData);
+  }, [updateChartOptions]);
 
   const strategyCagr = useMemo(
     () => calculateCAGR(filteredData, timeRange, "total_portfolio_nav"),

@@ -1,22 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
 export default function CompoundedAnnualReturns({ data }) {
   const [chartOptions, setChartOptions] = useState(null);
   const [tableData, setTableData] = useState(null);
-  useEffect(() => {
-    if (data) {
-      const processedData = processData(data);
-      // console.log(processedData);
 
-      const options = createChartOptions(processedData);
-      setChartOptions(options);
-      setTableData(processedData);
-    }
-  }, [data]);
 
-  const processData = (data) => {
+  const processData = useCallback((data) => {
     // Convert date strings to Date objects and sort
     const sortedData = data
       .map((item) => ({
@@ -26,9 +17,9 @@ export default function CompoundedAnnualReturns({ data }) {
       .sort((a, b) => a.date - b.date);
 
     return calculateCAGR(sortedData);
-  };
+  }, []);
 
-  const calculateCAGR = (sortedData) => {
+  const calculateCAGR = useCallback((sortedData) => {
     const periods = [
       { years: 1, days: 365 },
       { years: 3, days: 3 * 365 },
@@ -64,9 +55,10 @@ export default function CompoundedAnnualReturns({ data }) {
     });
 
     return returns;
-  };
+  }, []);
 
-  const createChartOptions = (cagrData) => {
+  const createChartOptions = useCallback((cagrData) => {
+
     return {
       chart: {
         type: "column",
@@ -112,12 +104,22 @@ export default function CompoundedAnnualReturns({ data }) {
         },
       },
     };
-  };
+  }, []);
 
+  useEffect(() => {
+    if (data) {
+      const processedData = processData(data);
+      const options = createChartOptions(processedData);
+      setChartOptions(options);
+      setTableData(processedData);
+    }
+  }, [data, processData, createChartOptions]);
   if (!chartOptions) {
-    <div className="fixed inset-0 flex justify-center items-center bg-black">
-      <div className="w-16 h-16 border-t-4 rounded-full animate-spin"></div>
-    </div>
+    return (
+      <div className="fixed inset-0 flex justify-center items-center bg-black">
+        <div className="w-2 h-2 border-t-4 rounded-full animate-spin"></div>
+      </div>
+    );
   }
   return (
     <div className="p-4 border rounded-lg mt-5">

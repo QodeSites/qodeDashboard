@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Text from "./common/Text";
 
 const TrailingReturns = ({ data, strategyName }) => {
@@ -18,12 +18,9 @@ const TrailingReturns = ({ data, strategyName }) => {
         lowest: {},
     });
 
-    useEffect(() => {
-        calculateReturns(data);
-        calculateDrawdowns(data);
-    }, [data]);
 
-    const calculateReturns = (data) => {
+
+    const calculateReturns = useCallback((data) => {
         const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
         const latestDate = new Date(sortedData[sortedData.length - 1].date);
 
@@ -74,7 +71,7 @@ const TrailingReturns = ({ data, strategyName }) => {
         }
 
         setReturns(calculatedReturns);
-    };
+    }, []);
 
     const calculateReturn = (startValue, endValue, period) => {
         if (period === "3Y" || period === "5Y") {
@@ -85,7 +82,7 @@ const TrailingReturns = ({ data, strategyName }) => {
         }
     };
 
-    const calculateDrawdowns = (data) => {
+    const calculateDrawdowns = useCallback((data) => {
         const drawdowns = {
             latest: {},
             lowest: {},
@@ -149,7 +146,12 @@ const TrailingReturns = ({ data, strategyName }) => {
         drawdowns.lowest.nifty = lowestDrawdown;
 
         setDrawdowns(drawdowns);
-    };
+    }, []);
+
+    useEffect(() => {
+        calculateReturns(data);
+        calculateDrawdowns(data);
+    }, [data, calculateReturns, calculateDrawdowns]);
 
     const periods = ["10D", "1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "YTD"];
     console.log(data)
@@ -201,7 +203,9 @@ const TrailingReturns = ({ data, strategyName }) => {
                     ))}
                 </tbody>
             </table>
-            <Text className="text-beige text-body font-body mt-1">*MDD(Maximum Drawdown) is how much money an investments loses from it's highest point to it's lowest point before it starts going up again.</Text>
+            <Text className="text-beige text-body font-body mt-1">
+                *MDD(Maximum Drawdown) is how much money an investment loses from its highest point to its lowest point before it starts going up again.
+            </Text>
 
         </div>
     );
