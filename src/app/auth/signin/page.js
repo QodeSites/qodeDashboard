@@ -58,10 +58,10 @@ export default function SignIn() {
   };
 
   return (
-    <div className="bg-black mx-auto h-screen flex flex-col justify-between overflow-hidden">
+    <div className="bg-black  mx-auto h-screen flex flex-col justify-between overflow-hidden">
       {/* Header Section */}
       <div className="border-b border-brown">
-        <div className="mx-auto max-w-[1386px] flex justify-between items-center bg-wh h-6">
+        <div className="mx-auto sm:max-w-[1386px] max-w-[93%] flex justify-between items-center sm:px-0 px-2 h-6">
           <Link href="/" className="text-beige playfair-display-font text-3xl font-bold">
             Qode
           </Link>
@@ -79,7 +79,7 @@ export default function SignIn() {
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-full p-6 sm:max-w-[631px] border mt-2 border-brown bg-black">
+        <div className="w-full sm:p-6 p-2 max-w-[93%] sm:max-w-[631px] border mt-2 border-brown bg-black">
           <Heading className="text-semiheading font-semiheading text-beige text-center mb-4">
             Sign In
           </Heading>

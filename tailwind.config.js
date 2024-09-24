@@ -6,6 +6,10 @@ const config = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      screens: {
+        sm: "490px",  // Custom sm breakpoint
+        md: "700px",  // Custom md breakpoint
+      },
       colors: {
         primary: {
           DEFAULT: "#945c39",
@@ -19,19 +23,19 @@ const config = {
         brown: "#945c39",
         white: "#ffffff",
         black: "#000000",
-        darkGrey: "#807f7f",
-        lightGrey: "#e2e2e2",
       },
       borderWidth: {
         DEFAULT: '1px',
       },
       fontSize: {
         // Font sizes with line height calculated as 1.3 times the body font size
-        body: ["16px", { lineHeight: "21px" }],       // Body text
+        body: ["17px", { lineHeight: "21px" }],       // Body text
         subheading: ["26px", { lineHeight: "35px" }], // 26px * 1.3
-        semiheading: ["42px", { lineHeight: "65px" }], // 26px * 1.3
-        heading: ["67px", { lineHeight: "78px" }],    // 41px * 1.3
-        xs: ["14px", { lineHeight: "18.2px" }],         // 14px * 1.3
+        semiheading: ["42px", { lineHeight: "65px" }], // 42px * 1.3
+        heading: ["42px", { lineHeight: "60px" }],      // 67px * 1.3
+        mobileHeading: ["35px", { lineHeight: "46px" }],
+        mobileSemiHeading: ["27px", { lineHeight: "40px" }],
+        mobileSubHeading: ["21px", { lineHeight: "27px" }],
         '1xl': '16px',
         '2xl': '26px',
         '3xl': '42px',
@@ -54,25 +58,29 @@ const config = {
         '2': '27px',  // 2x spacing
         '3': '35px',  // 3x spacing
         '4': '46px',  // 4x spacing
-        '5': '60px',   // 5x spacing
-        '6': '78px', // 6x spacing
+        '5': '60px',  // 5x spacing
+        '6': '78px',  // 6x spacing
         '7': '101px', // 7x spacing
         '8': '131px', // 8x spacing
         '9': '170px', // 9x spacing
         '10': '221px',  // 10x spacing
         '11': '287px',  // 11x spacing
-        '12': '373px',// 12x spacing
-        '13': '485px',// 13x spacing
+        '12': '373px',  // 12x spacing
+        '13': '485px',  // 13x spacing
         '14': '631px',  // 14x spacing
         '15': '820px',  // 15x spacing
-        '16': '1066px',  // 16x spacing
-        '17': '1386px',  // 17x spacing
+        '16': '1066px', // 16x spacing
+        '17': '1386px', // 17x spacing
       },
     },
   },
   plugins: [addVariablesForColors],
+  corePlugins: {
+    container: false, // Disable Tailwind's default container
+  },
 };
 
+// This function generates custom CSS variables for colors
 function addVariablesForColors({ addBase, theme }) {
   const allColors = flattenColorPalette(theme("colors"));
   const newVars = Object.fromEntries(

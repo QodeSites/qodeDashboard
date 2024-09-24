@@ -72,9 +72,7 @@ const PerformanceAndDrawdownChart = () => {
 
   useEffect(() => {
     loadData();
-  }, [loadData, timeRange]);
-
-
+  }, [loadData]);
 
   const handleStrategyChange = (strategyId) => {
     setIsLoading(true);
@@ -161,12 +159,6 @@ const PerformanceAndDrawdownChart = () => {
     setChartOptions(options);
   }, [activeTab]);
 
-  useEffect(() => {
-    if (data.length > 0) {
-      updateChartOptions(data);
-    }
-  }, [data, updateChartOptions]);
-
   const handleTimeRangeChange = useCallback((range) => {
     setTimeRange(range);
     setActiveButton(range);
@@ -174,10 +166,7 @@ const PerformanceAndDrawdownChart = () => {
       setStartDate("");
       setEndDate("");
     }
-    // Assuming you have access to the current data
-    // If not, you might need to fetch new data based on the new range
-    updateChartOptions(currentData);
-  }, [updateChartOptions]);
+  }, []);
 
   const strategyCagr = useMemo(
     () => calculateCAGR(filteredData, timeRange, "total_portfolio_nav"),
@@ -217,24 +206,25 @@ const PerformanceAndDrawdownChart = () => {
   const period = timeRange === "ALL" ? "Since Inception" : timeRange;
 
   return (
-    <div className="p-1 mx-auto tracking-wide bg-black text-white">
-      <div className="mb-5 grid grid-cols-5 gap-3 max-w-full">
+    <div className="sm:p-1 mx-auto tracking-wide bg-black text-white">
+      <div className="mb-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 max-w-full">
         {strategies.map((strategy) => (
           <Button
             key={strategy.id}
             onClick={() => handleStrategyChange(strategy.id)}
             className={`text-body transition-colors duration-300 ease-in-out
-              ${activeTab === strategy.id
+        ${activeTab === strategy.id
                 ? "bg-beige text-black"
                 : "text-beige hover:before:bg-beige relative h-full overflow-hidden border border-brown bg-black transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-beige before:transition-all before:duration-500 hover:text-black hover:before:left-0 hover:before:w-full"
               }`}
           >
-            <span className="relative text-body ">{strategy.name}</span>
+            <span className="relative text-body">{strategy.name}</span>
           </Button>
         ))}
       </div>
 
-      <div className="mb-3 border border-brown p-4">
+
+      <div className="mb-3">
         <Heading className="text-semiheading text-beige font-semiheading">
           {strategies.find((s) => s.id === activeTab).name}
         </Heading>
@@ -261,7 +251,7 @@ const PerformanceAndDrawdownChart = () => {
         />
       </div>
 
-      <div className="border p-4  border-brown">
+      <div className=" ">
         {/* Performance metrics */}
         <div className="grid grid-cols-2 text-beige gap-3">
           <div>
@@ -279,7 +269,8 @@ const PerformanceAndDrawdownChart = () => {
         </div>
 
         {/* Time range buttons */}
-        <div className="flex items-center gap-2 mt-5">
+        <div className="flex flex-col md:flex-row items-center gap-2 mt-5">
+          {/* Time Range Buttons */}
           <div className="flex flex-wrap justify-center gap-1">
             {["1M", "6M", "1Y", "3Y", "5Y", "ALL"].map((range) => (
               <Button
@@ -295,12 +286,12 @@ const PerformanceAndDrawdownChart = () => {
             ))}
           </div>
 
-          {/* Adjusted date input */}
+          {/* Date Input */}
           <input
             type="date"
             placeholder="DD/MM/YYYY"
             onChange={(e) => setStartDate(e.target.value)}
-            className="text-beige border border-beige focus:ring-beige  bg-black text-body px-2 py-1 h-[54px] z-10"
+            className="text-beige border border-beige focus:ring-beige bg-black text-body px-2 py-1 h-[54px] z-10 mt-2 md:mt-0"
           />
         </div>
 
@@ -308,6 +299,7 @@ const PerformanceAndDrawdownChart = () => {
         <div className="mt-4">
           <HighchartsReact highcharts={Highcharts} options={chartOptions} />
         </div>
+
       </div>
     </div>
   );

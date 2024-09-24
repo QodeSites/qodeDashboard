@@ -13,7 +13,7 @@ export default function DefaultLayout({ children }) {
       <div className="flex-1 bg-black overflow-x-hidden overflow-y-auto text-white">
         {" "}
         {/* Ensure content area matches the theme */}
-        <Section withBorder padding="normal" className="mt-9">
+        <Section padding="none" className="mt-7">
           {children}
         </Section>
       </div>

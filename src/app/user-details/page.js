@@ -29,7 +29,7 @@ const UserDetailsPage = () => {  // Renamed the function to start with an upperc
     return (
         <DefaultLayout>
             <h1 className="text-2xl font-bold mb-4">User Details</h1>
-            <div className="bg-black p-4 rounded shadow">
+            <div className="bg-black sm:p-4 p-1 rounded shadow">
                 <h2 className="text-lg font-semibold">Name: {session.user.username}</h2>
                 <p className="text-gray-600">Your email is: {session.user.email}</p>
                 <p className="text-gray-600">Your user ID is: {session.user.id}</p>

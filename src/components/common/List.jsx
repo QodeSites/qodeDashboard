@@ -3,7 +3,7 @@ import React from "react";
 const List = ({ items = [], className = "", itemClassName = "", ...props }) => {
   return (
     <ul
-      className={`custom-list text-subheading space-y-1 ${className}`}
+      className={`custom-list sm:text-subheading text-mobileSubHeading space-y-1 ${className}`}
       {...props}
     >
       {items.map((item, index) => (

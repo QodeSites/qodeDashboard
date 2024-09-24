@@ -181,7 +181,7 @@ const PerformanceAndDrawdownChart = () => {
     <div className="p-8 mt-10 max-w-7xl mx-auto minion-pro-font tracking-wide bg-black text-black">
       <h1 className="text-md mb-12">Model Portfolio</h1>
 
-      <div className="mb-12 grid grid-cols-4 gap-4 max-w-full">
+      <div className="mb-12 grid grid-cols-4 gasm:p-4 p-1 max-w-full">
         {["strategy1", "strategy2", "momentum", "qgf"].map((tab) => (
           <button
             key={tab}
@@ -301,7 +301,7 @@ const PerformanceAndDrawdownChart = () => {
             </h2>
           </div>
 
-          <div className="w-full  bg-black  p-4 shadow-md">
+          <div className="w-full  bg-black  sm:p-4 p-1 shadow-md">
             <HoldingDistribution activeStrategy={active} />
           </div>
         </div>

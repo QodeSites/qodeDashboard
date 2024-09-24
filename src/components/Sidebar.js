@@ -10,7 +10,7 @@ const HeaderNavigation = () => {
   const dropdownRef = useRef(null);
 
   const navItems = [
-    { name: "Blogs", href: "/blogs" },
+    // { name: "Blogs", href: "/blogs" },
   ];
 
   const handleLogout = async () => {
@@ -37,10 +37,10 @@ const HeaderNavigation = () => {
 
   return (
     <>
-      <header className="w-full bg-black border-b border-brown fixed top-0 left-0 z-20 font-body">
-        <div className="flex justify-between items-center max-w-[1386px] mx-auto">
+      <header className="w-full bg-black border-b border-brown fixed top-0 left-0 z-20  font-body">
+        <div className="flex justify-between items-center sm:px-2 px-1 max-w-[1386px] mx-auto">
           <Heading href="/" className="flex items-center">
-            <p className="text-beige text-3xl font-heading">
+            <p className="text-beige sm:text-3xl text-2xl font-heading">
               Qode
             </p>
           </Heading>
@@ -66,7 +66,7 @@ const HeaderNavigation = () => {
                   x="0px"
                   y="0px"
                   viewBox="0 0 100 100"
-                  className="h-3 w-3 mr-1 "
+                  className="h-3 w-3 sm:mr-1 "
                   fill="#d1a47b"
                   stroke="#d1a47b"
                   strokeWidth="3"

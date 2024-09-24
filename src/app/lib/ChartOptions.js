@@ -1,6 +1,6 @@
 import { color } from "highcharts";
 
-export const getChartOptions = (chartData, strategy) => {
+export const getChartOptions = (chartData, strategy, isMobile) => {
   console.log("chartdata", chartData);
 
   if (!chartData) {
@@ -25,7 +25,6 @@ export const getChartOptions = (chartData, strategy) => {
       };
     });
   };
-
 
   const preparedData = prepareChartData(chartData);
   console.log("preparedData", preparedData);
@@ -54,19 +53,15 @@ export const getChartOptions = (chartData, strategy) => {
       labels: {
         formatter: function () {
           const date = new Date(this.value);
-          return `${date.toLocaleString("default", {
-            month: "short",
-          })} ${date.getFullYear()}`;
+          return `${date.getFullYear()}`;
+        },
+        style: {
+          color: "#d1a47b",
+          fontSize: "10px"
         },
       },
       tickPositions: [0, Math.floor(dates.length / 2), dates.length - 1],
       gridLineColor: "#fefefe",
-      labels: {
-        style: {
-          color: "#d1a47b", // Set the color of the tick labels
-          fontSize: "10px"
-        },
-      },
     },
     yAxis: [
       {
@@ -76,12 +71,12 @@ export const getChartOptions = (chartData, strategy) => {
         tickAmount: 10,
         labels: {
           style: {
-            color: "#d1a47b", // Set the color of the tick labels
+            color: "#d1a47b",
             fontSize: "10px"
           },
         },
-        lineColor: "#d1a47b", // Optional: change the line color of the axis
-        tickColor: "#d1a47b", // Optional: change the tick color on the axis
+        lineColor: "#d1a47b",
+        tickColor: "#d1a47b",
         gridLineColor: "#292929",
       },
       {
@@ -94,28 +89,34 @@ export const getChartOptions = (chartData, strategy) => {
         opposite: false,
         top: "60%",
         height: "40%",
-        left: "3.6%",
+        // left: isMobile ? "90px" : "3.6%",
         max: 0,
         labels: {
           style: {
-            color: "#d1a47b", // Set the color of the tick labels
+            color: "#d1a47b",
             fontSize: "10px"
-
           },
         },
-        lineColor: "#d1a47b", // Optional: change the line color of the axis
-        tickColor: "#d1a47b", // Optional: change the tick color on the axis
+        lineColor: "#d1a47b",
+        tickColor: "#d1a47b",
         gridLineColor: "#292929",
       },
     ],
-
     series: [
       {
         name: strategy,
         data: strategyValues,
         color: "#fee9d6",
         lineWidth: 1,
-        marker: { enabled: false },
+        marker: {
+          enabled: false,
+          states: {
+            hover: {
+              enabled: true,
+              radius: 5,
+            },
+          },
+        },
         type: "line",
         yAxis: 0,
       },
@@ -124,7 +125,15 @@ export const getChartOptions = (chartData, strategy) => {
         data: niftyValues,
         color: "#945c39",
         lineWidth: 2,
-        marker: { enabled: false },
+        marker: {
+          enabled: false,
+          states: {
+            hover: {
+              enabled: true,
+              radius: 5,
+            },
+          },
+        },
         type: "line",
         yAxis: 0,
       },
@@ -133,33 +142,49 @@ export const getChartOptions = (chartData, strategy) => {
         data: drawdownData,
         color: "#B10606",
         lineWidth: 2,
-        marker: { enabled: false },
-
+        marker: {
+          enabled: false,
+          states: {
+            hover: {
+              enabled: true,
+              radius: 5,
+            },
+          },
+        },
         type: "line",
         yAxis: 1,
         threshold: 0,
       }
     ],
     chart: {
-      height: 800,
+      height: isMobile ? 300 : 800,
       backgroundColor: "none",
       zoomType: "x",
-      marginLeft: 55,  // Reduce left margin to shift chart left
+      marginLeft: isMobile ? 0 : 40,
+      marginRight: isMobile ? 0 : 10,
     },
-    tooltip: { shared: true },
-    legend: { enabled: false },
+    tooltip: {
+      shared: true,
+      outside: isMobile,
+    },
+    legend: { enabled: true },
     credits: { enabled: false },
-    exporting: { enabled: true },
+    exporting: { enabled: !isMobile },
     plotOptions: {
-      area: {
-        marker: { radius: 2 },
-        lineWidth: 1,
-        states: { hover: { lineWidth: 1 } },
-        threshold: null,
+      series: {
+        animation: {
+          duration: 2000,
+        },
+        states: {
+          hover: {
+            enabled: true,
+            lineWidthPlus: 1,
+          },
+        },
       },
     },
     navigation: {
-      buttonOptions: { enabled: true },
+      buttonOptions: { enabled: !isMobile },
     },
   };
 };

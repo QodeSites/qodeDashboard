@@ -20,22 +20,22 @@ const Section = ({
   const paddingClasses = {
     none: "p-0",
     small: "p-2",
-    normal: "p-4",
+    normal: "sm:p-4 p-1",
     large: "p-5",
-    extralarge: "p-7",
+    extralarge: "sm:p-7 p-3 py-5 sm:py-7",
   };
 
   const paddingClass = paddingClasses[padding] || "";
 
   // Define width class
-  const widthClass = fullWidth ? "w-full" : "max-w-[1386px]";
+  const widthClass = fullWidth ? "w-full" : "max-w-[93%] sm:max-w-[1386px]";
 
   // Check if the className contains any explicit margin classes for top or bottom
   const hasMarginTop = /mt-\d+/.test(className);
   const hasMarginBottom = /mb-\d+/.test(className);
 
   // Default margin bottom class if not explicitly defined
-  const defaultMarginBottom = hasMarginBottom ? "" : "mb-8";
+  const defaultMarginBottom = hasMarginBottom ? "" : "sm:mb-8 mb-5 ";
 
   return (
     <BaseComponent className={`${className}`}>

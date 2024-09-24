@@ -76,7 +76,7 @@ export default function Top10Drawdown({ drawdowns }) {
           {table.getHeaderGroups()[0].headers.map((header) => (
             <div
               key={header.id}
-              className="text-md uppercase sophia-pro-font font-bold cursor-pointer transition-colors duration-300 hover:text-gray-600 p-4 last:border-r-0"
+              className="text-md uppercase sophia-pro-font font-bold cursor-pointer transition-colors duration-300 hover:text-gray-600 sm:p-4 p-1 last:border-r-0"
               onClick={header.column.getToggleSortingHandler()}
             >
               <div className="flex items-center justify-between">
@@ -106,7 +106,7 @@ export default function Top10Drawdown({ drawdowns }) {
               {row.getVisibleCells().map((cell, cellIndex) => (
                 <div
                   key={cell.id}
-                  className="text-lg p-4"
+                  className="text-lg sm:p-4 p-1"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </div>

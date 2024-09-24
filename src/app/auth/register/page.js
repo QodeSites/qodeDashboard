@@ -79,9 +79,9 @@ export default function Register() {
   };
 
   return (
-    <div className="bg-black mx-auto h-screen flex flex-col justify-between overflow-hidden">
+    <div className="bg-black mx-auto h-screen flex flex-col  justify-between overflow-hidden">
       <div className="border-b border-brown">
-        <div className="mx-auto max-w-[1386px] flex justify-between items-center bg-wh h-6">
+        <div className="mx-auto sm:max-w-[1386px] flex justify-between items-center max-w-[93%] bg-wh h-6">
           <Link href="/" className="text-beige playfair-display-font text-3xl font-bold">
             Qode
           </Link>
@@ -97,7 +97,7 @@ export default function Register() {
         </div>
       </div>
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-full p-6 sm:max-w-[631px] border mt-2 border-brown bg-black">
+        <div className="w-full sm:p-6 p-2 sm:max-w-[631px] max-w-[93%] border mt-2 border-brown bg-black">
           <Heading className="text-semiheading font-semiheading text-beige text-center mb-4">
             Create account
           </Heading>

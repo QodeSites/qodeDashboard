@@ -256,7 +256,7 @@ const PerformanceAndDrawdownChart = () => {
 
   return (
     <div className="p-8 mt-10  mx-auto  tracking-wide bg-black text-black">
-      <div className="mb-12 grid grid-cols-5 gap-4 max-w-full">
+      <div className="mb-12 grid grid-cols-5 gasm:p-4 p-1 max-w-full">
         {strategies.map((strategy) => (
           <button
             key={strategy.id}

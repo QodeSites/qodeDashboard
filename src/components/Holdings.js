@@ -68,11 +68,11 @@ const Holdings = ({ strategy }) => {
   }
 
   if (error) {
-    return <div className="text-red-600 p-4">Error: {error}</div>;
+    return <div className="text-red-600 sm:p-4 p-1">Error: {error}</div>;
   }
 
   if (!holding || !holding[strategy]) {
-    return <div className="p-4"></div>;
+    return <div className="sm:p-4 p-1"></div>;
   }
 
   return (
