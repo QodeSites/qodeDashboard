@@ -63,21 +63,3 @@ body {
 }
 
 
-
-/* Custom scrollbar styles */
-::-webkit-scrollbar {
-  height: 8px; /* Change this to modify the height of the scrollbar */
-}
-
-::-webkit-scrollbar-track {
-  background-color: black; /* Track background color */
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: brown; /* Thumb color */
-  border-radius: 4px; /* Rounded corners for the thumb */
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: darkbrown; /* Thumb color on hover */
-}
