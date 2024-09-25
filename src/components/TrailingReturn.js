@@ -161,7 +161,7 @@ const TrailingReturns = ({ data, strategyName }) => {
     ];
 
     return (
-        <div className="overflow-x-auto border border-brown sm:p-4 p-1">
+        <div className="overflow-x-auto  sm:p-4 p-1">
             <h2 className="sm:text-subheading text-mobileSubHeading font-subheading text-beige mb-18">
                 Trailing Returns
             </h2>
