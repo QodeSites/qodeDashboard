@@ -15,7 +15,7 @@ const PerformanceAndDrawdownChart = () => {
   const [endDate, setEndDate] = useState("");
   const [timeRange, setTimeRange] = useState("3Y");
   const [activeButton, setActiveButton] = useState("3Y");
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(false);
   const [fullData, setFullData] = useState([])
   const [activeTab, setActiveTab] = useState("QGF");
   const [filteredData, setFilteredData] = useState([]);
@@ -168,6 +168,22 @@ const PerformanceAndDrawdownChart = () => {
     () => calculateCAGR(filteredData, timeRange, "nifty"),
     [calculateCAGR, filteredData, timeRange]
   );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Check mobile status on first render
+    if (typeof window !== "undefined") {
+      handleResize(); // Initial check
+      window.addEventListener("resize", handleResize);
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   const getReturnLabel = useCallback((timeRange) => {
     if (["1M", "6M", "1Y"].includes(timeRange)) {
