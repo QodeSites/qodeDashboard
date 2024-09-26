@@ -42,7 +42,7 @@ export async function GET(req) {
         console.log("User verification successful:", updatedUser);
 
         // Redirect user to success page
-        return NextResponse.redirect(`${process.env.APP_URL}/user-verified`);
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/user-verified`);
     } catch (error) {
         console.error("Verification error:", error);
 

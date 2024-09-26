@@ -13,10 +13,17 @@ export const sendEmails = async (userEmail, verificationEmail, userSubject, user
             }
         });
 
-        // Ensure we have a valid base URL
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'https://dashboard.qodeinvest.com';
-        console.log(baseUrl);
+        console.log(`Base URL: ${baseUrl}`);
 
+        // Validate the base URL
+        try {
+            const verificationUrl = new URL(`${baseUrl}/api/verify?token=${user_id}&id=${id}`);
+            const declineUrl = new URL(`${baseUrl}/api/decline?token=${user_id}&id=${id}`);
+        } catch (err) {
+            console.error('Invalid base URL:', baseUrl);
+            throw new Error('Invalid base URL provided');
+        }
 
         const verificationHtml = `
             <h1>New User Registration</h1>
