@@ -16,7 +16,7 @@ export default function Register() {
     username: "",
     email: "",
     password: "",
-    reenterPassword: "", // Added reenterPassword to state
+    reenterPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -79,7 +79,7 @@ export default function Register() {
   };
 
   return (
-    <div className="bg-black mx-auto h-screen flex flex-col  justify-between overflow-hidden">
+    <div className="bg-black mx-auto h-screen flex flex-col justify-between overflow-hidden">
       <div className="border-b border-brown">
         <div className="mx-auto sm:max-w-[1386px] flex justify-between items-center max-w-[93%] bg-wh h-6">
           <Link href="/" className="text-beige playfair-display-font text-3xl font-bold">
@@ -103,13 +103,13 @@ export default function Register() {
           </Heading>
 
           <form className="space-y-2" onSubmit={handleSubmit}>
-            {["full name", "email", "password"].map((field) => (
+            {["username", "email", "password", "reenterPassword"].map((field) => (
               <div key={field}>
                 <div className="mt-1">
                   <input
                     id={field}
                     name={field}
-                    placeholder={field}
+                    placeholder={field === "reenterPassword" ? "Re-enter Password" : field}
                     type={
                       field === "password" || field === "reenterPassword"
                         ? "password"
@@ -132,19 +132,6 @@ export default function Register() {
                 </div>
               </div>
             ))}
-            <div className="mt-1">
-              <input
-                id="reenterPassword"
-                name="reenterPassword"
-                placeholder="Re-enter Password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.reenterPassword}
-                onChange={handleChange}
-                className="appearance-none block w-full p-18 border bg-black placeholder:text-body placeholder:text-darkGrey placeholder:capitalize border-brown focus:outline-none focus:ring-1 focus:ring-beige focus:border-beige text-body text-beige"
-              />
-            </div>
 
             <div className="flex justify-between flex-col-reverse items-center mt-4">
               <Button

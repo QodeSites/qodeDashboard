@@ -22,8 +22,8 @@ const PerformanceAndDrawdownChart = () => {
   const [data, setData] = useState([]);
   const strategies = [
     { id: "QGF", name: "Qode Growth Fund" },
-    { id: "QMF", name: "Qode Momentum Fund" },
-    { id: "LVF", name: "Qode Low Volatility Fund" },
+    { id: "QMF", name: "Qode Velocity Fund" },
+    { id: "LVF", name: "Qode All Weather" },
     { id: "SchemeA", name: "Scheme A" },
     { id: "SchemeB", name: "Scheme B" },
   ];
@@ -168,6 +168,7 @@ const PerformanceAndDrawdownChart = () => {
     }
   }, []);
 
+
   const strategyCagr = useMemo(
     () => calculateCAGR(filteredData, timeRange, "total_portfolio_nav"),
     [calculateCAGR, filteredData, timeRange]
@@ -286,13 +287,20 @@ const PerformanceAndDrawdownChart = () => {
             ))}
           </div>
 
-          {/* Date Input */}
-          <input
-            type="date"
-            placeholder="DD/MM/YYYY"
-            onChange={(e) => setStartDate(e.target.value)}
-            className="text-beige border border-beige focus:ring-beige bg-black text-body px-2 py-1 h-[54px] z-10 mt-2 md:mt-0"
-          />
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="text-black border border-beige focus:ring-beige bg-lightBeige text-body px-2 py-1 h-[54px] z-10 mt-2 md:mt-0"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="text-black border border-beige focus:ring-beige bg-lightBeige text-body px-2 py-1 h-[54px] z-10 mt-2 md:mt-0"
+            />
+          </div>
         </div>
 
         {/* Chart */}

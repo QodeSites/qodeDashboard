@@ -46,7 +46,7 @@ const PerformanceAndDrawdownChart = () => {
     ],
     momentum: [
       {
-        name: "Qode Momentum Fund",
+        name: "Qode Velocity Fund",
         description:
           "This strategy invests in 30 businesses whose stock price has grown significantly and sells it before they start falling. Principle - The stock price tells the story before the actual story unfolds.",
       },
@@ -60,7 +60,7 @@ const PerformanceAndDrawdownChart = () => {
     ],
     lowvol: [
       {
-        name: "Qode Low Volatility Fund",
+        name: "Qode All Weather",
         description:
           "This strategy invests in the 30 most stable stocks in the market. This strategy outperforms the Index with considerably lower risk.",
       },
@@ -293,8 +293,8 @@ const PerformanceAndDrawdownChart = () => {
   const strategyName = descriptions[activeTab][0].name;
   let strategies = [
     { id: "qgf", name: "Qode Growth Fund" },
-    { id: "momentum", name: "Qode Momentum Fund" },
-    { id: "lowvol", name: "Qode Low Volatility Fund" },
+    { id: "momentum", name: "Qode Velocity Fund" },
+    { id: "lowvol", name: "Qode All Weather" },
     { id: "strategy1", name: "Scheme A" },
     { id: "strategy2", name: "Scheme B" },
   ];
