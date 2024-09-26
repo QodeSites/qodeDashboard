@@ -18,13 +18,15 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
 
       const parsedDate = new Date(item.date.split("-").reverse().join("-"));
       console.log('Parsed Date:', parsedDate);
+
       return {
         date: item.date,
-        strategyValue: (parseFloat(item[strategyKey]) / initialStrategyValue) * 100,
-        niftyValue: (parseFloat(item["nifty"]) / initialNiftyValue) * 100,
+        strategyValue: parseFloat(((parseFloat(item[strategyKey]) / initialStrategyValue) * 100).toFixed(1)),
+        niftyValue: parseFloat(((parseFloat(item["nifty"]) / initialNiftyValue) * 100).toFixed(1)),
       };
     });
   };
+
 
   const preparedData = prepareChartData(chartData);
   console.log("preparedData", preparedData);
@@ -39,9 +41,10 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       const value = item.strategyValue;
       peak = Math.max(peak, value);
       const drawdown = ((value - peak) / peak) * 100;
-      return [item.date, drawdown];
+      return [item.date, parseFloat(drawdown.toFixed(1))];
     });
   };
+
 
   const drawdownData = calculateDrawdown(preparedData);
 
@@ -89,7 +92,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         opposite: false,
         top: "60%",
         height: "40%",
-        // left: isMobile ? "90px" : "3.6%",
+        left: isMobile ? "10%" : "2.6%",
         max: 0,
         labels: {
           style: {
@@ -157,17 +160,48 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       }
     ],
     chart: {
-      height: isMobile ? 300 : 800,
+      height: isMobile ? 900 : 800,
       backgroundColor: "none",
       zoomType: "x",
-      marginLeft: isMobile ? 0 : 40,
-      marginRight: isMobile ? 0 : 10,
+      marginLeft: isMobile ? 30 : 60,
+      marginRight: isMobile ? 10 : 10,
     },
     tooltip: {
       shared: true,
       outside: isMobile,
+      backgroundColor: '#000000', // Black background
+      borderColor: '#000000', // Black border to match the background
+      style: {
+        color: '#fee9d6', // Light beige text color
+        fontSize: '12px' // You can adjust the font size if needed
+      },
+      formatter: function () {
+        // Format date to DD/MM/YYYY
+        const date = new Date(this.x);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const year = date.getFullYear();
+        const formattedDate = `${day}/${month}/${year}`;
+
+        // Tooltip content
+        let tooltipContent = `<b>${formattedDate}</b><br/>`;
+
+        // Loop through each series to display values in the tooltip
+        this.points.forEach(point => {
+          tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${point.y.toFixed(1)}</b><br/>`;
+        });
+
+        return tooltipContent;
+      }
     },
-    legend: { enabled: true },
+
+
+    legend: {
+      enabled: true,
+      itemStyle: {
+        color: '#945c39' // Sets the color of the legend text to brown
+      }
+    },
     credits: { enabled: false },
     exporting: { enabled: !isMobile },
     plotOptions: {

@@ -83,12 +83,12 @@ const HeaderNavigation = () => {
                   ref={dropdownRef}
                   className="absolute right-2 mt-9 w-44 bg-black border-beige border z-30"
                 >
-                  <Link
+                  {/* <Link
                     href="/user-details"
                     className="block px-3 py-1 text-beige hover:bg-lightGrey transition duration-300"
                   >
                     User Menu
-                  </Link>
+                  </Link> */}
                   <hr className="border-beige" />
                   <Button
                     onClick={handleLogout}

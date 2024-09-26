@@ -15,17 +15,23 @@ const PerformanceAndDrawdownChart = () => {
   const [endDate, setEndDate] = useState("");
   const [timeRange, setTimeRange] = useState("3Y");
   const [activeButton, setActiveButton] = useState("3Y");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [fullData, setFullData] = useState([])
   const [activeTab, setActiveTab] = useState("QGF");
   const [filteredData, setFilteredData] = useState([]);
   const [chartOptions, setChartOptions] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDateInputs, setShowDateInputs] = useState(false); // To toggle the date inputs visibility
+  const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
+  const [minDate, setMinDate] = useState("");
+  const [maxDate, setMaxDate] = useState("");
   const [data, setData] = useState([]);
   const strategies = [
     { id: "QGF", name: "Qode Growth Fund" },
     { id: "QMF", name: "Qode Velocity Fund" },
     { id: "LVF", name: "Qode All Weather" },
-    { id: "SchemeA", name: "Scheme A" },
-    { id: "SchemeB", name: "Scheme B" },
+    // { id: "SchemeA", name: "Scheme A" },
+    // { id: "SchemeB", name: "Scheme B" },
   ];
 
   const descriptions = {
@@ -54,12 +60,25 @@ const PerformanceAndDrawdownChart = () => {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
+      const fullStrategyData = await fetchStrategyData(activeTab, "ALL");
+      setFullData(fullStrategyData);  // Store full data for TrailingReturns.
+      if (fullStrategyData.length > 0) {
+        const sortedDates = fullStrategyData.map(item => item.date).sort();
+        setMinDate(sortedDates[0]);
+        setMaxDate(sortedDates[sortedDates.length - 1]);
+      }
       const data = await fetchStrategyData(
         activeTab,
         timeRange,
         startDate,
         endDate
       );
+      let fetchedData;
+      if (timeRange === "Custom" && startDate && endDate) {
+        fetchedData = await fetchStrategyData(activeTab, "Custom", startDate, endDate);
+      } else {
+        fetchedData = await fetchStrategyData(activeTab, timeRange);
+      }
       setData(data);
       updateChartOptions(data);
       setFilteredData(data);
@@ -70,6 +89,18 @@ const PerformanceAndDrawdownChart = () => {
     }
   }, [activeTab, timeRange, startDate, endDate]);
 
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -79,93 +110,52 @@ const PerformanceAndDrawdownChart = () => {
     setActiveTab(strategyId);
   };
 
-  const calculateCAGR = useMemo(
-    () =>
-      (data, timeRange = "3Y", portfolioType = "total_portfolio_nav") => {
-        const parseDate = (dateString) => {
-          const [year, month, day] = dateString.split("-").map(Number);
-          return new Date(year, month - 1, day);
-        };
+  const calculateCAGR = useCallback((data, timeRange, portfolioType = "total_portfolio_nav") => {
+    const parseDate = (dateString) => {
+      const [year, month, day] = dateString.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    };
 
-        const sortedData = data.sort(
-          (a, b) => parseDate(a.date) - parseDate(b.date)
-        );
+    const sortedData = data.sort((a, b) => parseDate(a.date) - parseDate(b.date));
 
-        if (sortedData.length < 2) {
-          return "Insufficient data";
-        }
+    if (sortedData.length < 2) {
+      return "Insufficient data";
+    }
 
-        const latestData = sortedData[sortedData.length - 1];
-        const latestDate = parseDate(latestData.date);
-        const startDate = new Date(latestDate);
+    const startValue = parseFloat(sortedData[0][portfolioType]);
+    const endValue = parseFloat(sortedData[sortedData.length - 1][portfolioType]);
+    const startDate = parseDate(sortedData[0].date);
+    const endDate = parseDate(sortedData[sortedData.length - 1].date);
 
-        switch (timeRange) {
-          case "1M":
-            startDate.setMonth(startDate.getMonth() - 1);
-            break;
-          case "3M":
-            startDate.setMonth(startDate.getMonth() - 3);
-            break;
-          case "6M":
-            startDate.setMonth(startDate.getMonth() - 6);
-            break;
-          case "1Y":
-            startDate.setFullYear(startDate.getFullYear() - 1);
-            break;
-          case "3Y":
-            startDate.setFullYear(startDate.getFullYear() - 3);
-            break;
-          case "5Y":
-            startDate.setFullYear(startDate.getFullYear() - 5);
-            break;
-          case "ALL":
-            startDate.setTime(parseDate(sortedData[0].date).getTime());
-            break;
-          case "YTD":
-            startDate.setFullYear(startDate.getFullYear(), 0, 1);
-            break;
-          default:
-            return "Invalid time range";
-        }
+    if (isNaN(startValue) || isNaN(endValue)) return "N/A";
 
-        const startIndex = sortedData.findIndex(
-          (d) => parseDate(d.date) >= startDate
-        );
-        if (startIndex === -1) return "N/A"; // No data matches the start date
+    const yearsDiff = (endDate - startDate) / (365 * 24 * 60 * 60 * 1000);
 
-        const startValue = parseFloat(sortedData[startIndex][portfolioType]);
-        const endValue = parseFloat(latestData[portfolioType]);
+    if (["3Y", "5Y", "ALL", "Custom"].includes(timeRange)) {
+      const cagr = (Math.pow(endValue / startValue, 1 / yearsDiff) - 1) * 100;
+      return cagr.toFixed(2) + "%";
+    } else {
+      const returns = ((endValue - startValue) / startValue) * 100;
+      return returns.toFixed(2) + "%";
+    }
+  }, []);
 
-        if (isNaN(startValue) || isNaN(endValue)) return "N/A";
 
-        // Calculate return based on period
-        if (["1Y", "3Y", "5Y", "ALL"].includes(timeRange)) {
-          const years =
-            timeRange === "ALL"
-              ? (latestDate - parseDate(sortedData[startIndex].date)) /
-              (365 * 24 * 60 * 60 * 1000)
-              : parseInt(timeRange.slice(0, -1));
-          const cagr = (Math.pow(endValue / startValue, 1 / years) - 1) * 100;
-          return cagr.toFixed(2) + "%";
-        } else {
-          const returns = ((endValue - startValue) / startValue) * 100;
-          return returns.toFixed(2) + "%";
-        }
-      },
-    []
-  );
+
   const updateChartOptions = useCallback((data) => {
-    const options = getChartOptions(data, activeTab);
+    const options = getChartOptions(data, activeTab, isMobile);
     setChartOptions(options);
   }, [activeTab]);
 
   const handleTimeRangeChange = useCallback((range) => {
     setTimeRange(range);
     setActiveButton(range);
-    if (range !== "ALL") {
-      setStartDate("");
-      setEndDate("");
+    if (range !== "ALL" && range !== "Custom") {
+      setStartDate(null);
+      setEndDate(null);
     }
+
+    setIsCustomDateOpen(false);
   }, []);
 
 
@@ -178,6 +168,14 @@ const PerformanceAndDrawdownChart = () => {
     () => calculateCAGR(filteredData, timeRange, "nifty"),
     [calculateCAGR, filteredData, timeRange]
   );
+
+  const getReturnLabel = useCallback((timeRange) => {
+    if (["1M", "6M", "1Y"].includes(timeRange)) {
+      return "Return";
+    } else {
+      return "CAGR";
+    }
+  }, []);
 
   const calculateReturns = useCallback((data, key) => {
     if (data.length < 2) return "N/A";
@@ -196,6 +194,13 @@ const PerformanceAndDrawdownChart = () => {
     [calculateReturns, filteredData]
   );
 
+  const handleCustomDateClick = () => {
+    setIsCustomDateOpen(!isCustomDateOpen);
+    setTimeRange("Custom");
+    setActiveButton("Custom");
+  };
+
+
   if (!filteredData.length) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
@@ -206,9 +211,27 @@ const PerformanceAndDrawdownChart = () => {
 
   const period = timeRange === "ALL" ? "Since Inception" : timeRange;
 
+  const handleDateChange = (dateType, value) => {
+    if (dateType === "start") {
+      setStartDate(value);
+      // Ensure end date is not before start date
+      if (endDate && value > endDate) {
+        setEndDate(value);
+      }
+    } else {
+      setEndDate(value);
+      // Ensure start date is not after end date
+      if (startDate && value < startDate) {
+        setStartDate(value);
+      }
+    }
+    setTimeRange("Custom");
+    setActiveButton("Custom");
+  };
+
   return (
     <div className="sm:p-1 mx-auto tracking-wide bg-black text-white">
-      <div className="mb-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 max-w-full">
+      <div className="mb-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 max-w-full">
         {strategies.map((strategy) => (
           <Button
             key={strategy.id}
@@ -247,7 +270,7 @@ const PerformanceAndDrawdownChart = () => {
 
       <div className=" mb-4">
         <TrailingReturns
-          data={data}
+          data={fullData}
           strategyName={strategies.find((s) => s.id === activeTab).name}
         />
       </div>
@@ -257,12 +280,14 @@ const PerformanceAndDrawdownChart = () => {
         <div className="grid grid-cols-2 text-beige gap-3">
           <div>
             <h2 className="text-body text-lightBeige">Absolute Returns</h2>
-            <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyReturns}</p>
-            <p className="text-body">{niftyReturns}</p>
+            <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyCagr}</p>
+            <p className="text-body">{niftyCagr}</p>
             <h2 className="text-body">Nifty 50</h2>
           </div>
           <div className="text-right">
-            <h2 className="text-body text-lightBeige">{period} CAGR</h2>
+            <h2 className="text-body text-lightBeige">
+              {timeRange === "ALL" ? "Since Inception" : timeRange} {getReturnLabel(timeRange)}
+            </h2>
             <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyCagr}</p>
             <p className="text-body">{niftyCagr}</p>
             <h2 className="text-body">Nifty 50</h2>
@@ -285,22 +310,43 @@ const PerformanceAndDrawdownChart = () => {
                 {range}
               </Button>
             ))}
+            <Button
+              onClick={handleCustomDateClick}
+              className={`relative text-body ${activeButton === 'Custom' ? "bg-beige text-black" : "border border-beige text-beige hover:bg-beige hover:text-black"}`}
+            >
+              Custom
+            </Button>
           </div>
 
-          <div className="flex gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="text-black border border-beige focus:ring-beige bg-lightBeige text-body px-2 py-1 h-[54px] z-10 mt-2 md:mt-0"
-            />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="text-black border border-beige focus:ring-beige bg-lightBeige text-body px-2 py-1 h-[54px] z-10 mt-2 md:mt-0"
-            />
-          </div>
+          {/* Conditionally show date inputs when "Custom" is selected */}
+          {isCustomDateOpen && (
+            <div className="relative z-20">
+              <div className="absolute right-2 top-1 mt-2 p-18 bg-black border border-beige shadow-md">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={startDate}
+                    min={minDate}
+                    placeholder="DD/MM/YYYY"
+                    max={maxDate}
+                    onChange={(e) => handleDateChange("start", e.target.value)}
+                    className="text-black border border-beige focus:ring-beige bg-lightBeige text-body px-2 py-1 h-[40px]"
+                  />
+                  {/* <Text>To</Text> */}
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={minDate}
+                    placeholder="DD/MM/YYYY"
+                    max={maxDate}
+                    onChange={(e) => handleDateChange("end", e.target.value)}
+                    className="text-black border border-beige focus:ring-beige bg-lightBeige text-body px-2 py-1 h-[40px]"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Chart */}
