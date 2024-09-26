@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+// app/api/register/route.js
 import { hash } from "bcrypt";
+import prisma from "@/lib/prisma";
 import { sendEmails } from "@/utils/SendEmail";
+import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   try {
@@ -18,10 +19,7 @@ export async function POST(req) {
 
     if (existingUser) {
       console.log("Registration failed: User already exists");
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "User with this email already exists" }, { status: 400 });
     }
 
     // Hash the password
@@ -34,37 +32,35 @@ export async function POST(req) {
         email,
         password: hashedPassword,
         user_id,
+        is_verified: false
       },
     });
 
+
+    // Define the email subjects and bodies
+    // In your registration route
     const verificationEmail = "tech@qodeinvest.com,purnanand.kulkarni@swancapital.in";
     const userSubject = "Welcome to Qode";
     const userText = `
-      <h1>Welcome to Qode</h1>
-      <p>You have successfully registered on our platform.Please wait while we verify your account.</p>
-    `;
+  <h1>Welcome to Qode</h1>
+  <p>You have successfully registered on our platform. Please wait while we verify your account.</p>
+`;
 
     const verificationSubject = "New User Verification Required";
-    const verificationText = `
-      <h1>New User Registration</h1>
-      <p>A new user has registered and requires verification:</p>
-      <p>Username: ${username}</p>
-      <p>Email: ${email}</p>
-      <p>User ID: ${user_id}</p>
-      <p>Click <a href="${process.env.APP_URL}/api/verify?token=${user_id}">here</a> to verify the user.</p>
-    `;
+    const verificationText = {
+      username,
+      email
+    };
 
-    await sendEmails(email, verificationEmail, userSubject, userText, verificationSubject, verificationText);
 
-    return NextResponse.json(
-      { message: "User registered successfully", userId: user.id },
-      { status: 201 }
-    );
+
+    // Send the emails
+    await sendEmails(email, verificationEmail, userSubject, userText, verificationSubject, verificationText, user_id, user.id);
+
+    // Respond with success
+    return NextResponse.json({ message: "User registered successfully", userId: user.id }, { status: 201 });
   } catch (error) {
     console.error("Registration error:", error);
-    return NextResponse.json(
-      { error: "An error occurred during registration" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "An error occurred during registration" }, { status: 500 });
   }
 }

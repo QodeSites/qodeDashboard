@@ -31,6 +31,16 @@ export default function Register() {
     e.preventDefault();
     setIsLoading(true);
 
+    if (formData.username.trim() === "") {
+      toast({
+        title: "Error",
+        description: "Username is required",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.reenterPassword) {
       toast({
         title: "Error",
@@ -80,6 +90,7 @@ export default function Register() {
 
   return (
     <div className="bg-black mx-auto h-screen flex flex-col justify-between overflow-hidden">
+      {/* ... (rest of the component remains the same) ... */}
       <div className="border-b border-brown">
         <div className="mx-auto sm:max-w-[1386px] flex justify-between items-center max-w-[93%] bg-wh h-6">
           <Link href="/" className="text-beige playfair-display-font text-3xl font-bold">
@@ -96,12 +107,12 @@ export default function Register() {
           </div>
         </div>
       </div>
+
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full sm:p-6 p-2 sm:max-w-[631px] max-w-[93%] border mt-2 border-brown bg-black">
           <Heading className="text-semiheading font-semiheading text-beige text-center mb-4">
             Create account
           </Heading>
-
           <form className="space-y-2" onSubmit={handleSubmit}>
             {["username", "email", "password", "reenterPassword"].map((field) => (
               <div key={field}>
@@ -139,13 +150,26 @@ export default function Register() {
                 disabled={isLoading}
                 className="bg-beige text-black"
               >
-                {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
-                {isLoading ? "Please wait..." : "Create account"}
+                {isLoading ? (
+                  <>
+                    <span className="inline-flex items-center">
+                      Registering
+                      <span className="dot-animation">
+                        <span className="dot">.</span>
+                        <span className="dot">.</span>
+                        <span className="dot">.</span>
+                      </span>
+                    </span>
+                  </>
+                ) : (
+                  'Sign up'
+                )}
               </Button>
             </div>
           </form>
         </div>
       </div>
+
     </div>
   );
 }

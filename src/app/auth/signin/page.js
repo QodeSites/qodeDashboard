@@ -130,8 +130,14 @@ export default function SignIn() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="animate-spin h-18 w-18 mr-18" />
-                    Signing in...
+                    <span className="inline-flex items-center">
+                      Signing In
+                      <span className="dot-animation">
+                        <span className="dot">.</span>
+                        <span className="dot">.</span>
+                        <span className="dot">.</span>
+                      </span>
+                    </span>.
                   </>
                 ) : (
                   'Sign in'
