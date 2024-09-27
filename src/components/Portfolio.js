@@ -296,8 +296,8 @@ const PerformanceAndDrawdownChart = () => {
         <div className="grid grid-cols-2 text-beige gap-3">
           <div>
             <h2 className="text-body text-lightBeige">Absolute Returns</h2>
-            <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyCagr}</p>
-            <p className="text-body">{niftyCagr}</p>
+            <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyReturns}</p>
+            <p className="text-body">{niftyReturns}</p>
             <h2 className="text-body">Nifty 50</h2>
           </div>
           <div className="text-right">
