@@ -57,39 +57,6 @@ const PerformanceAndDrawdownChart = () => {
   };
 
 
-  const loadData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const fullStrategyData = await fetchStrategyData(activeTab, "ALL");
-      setFullData(fullStrategyData);  // Store full data for TrailingReturns.
-      if (fullStrategyData.length > 0) {
-        const sortedDates = fullStrategyData.map(item => item.date).sort();
-        setMinDate(sortedDates[0]);
-        setMaxDate(sortedDates[sortedDates.length - 1]);
-      }
-      const data = await fetchStrategyData(
-        activeTab,
-        timeRange,
-        startDate,
-        endDate
-      );
-      let fetchedData;
-      if (timeRange === "Custom" && startDate && endDate) {
-        fetchedData = await fetchStrategyData(activeTab, "Custom", startDate, endDate);
-      } else {
-        fetchedData = await fetchStrategyData(activeTab, timeRange);
-      }
-      setData(data);
-      updateChartOptions(data);
-      setFilteredData(data);
-    } catch (error) {
-      console.error("Error loading data: ", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [activeTab, timeRange, startDate, endDate]);
-
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -101,9 +68,7 @@ const PerformanceAndDrawdownChart = () => {
   }, []);
 
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+
 
   const handleStrategyChange = (strategyId) => {
     setIsLoading(true);
@@ -147,17 +112,50 @@ const PerformanceAndDrawdownChart = () => {
     setChartOptions(options);
   }, [activeTab]);
 
+
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const fullStrategyData = await fetchStrategyData(activeTab, "ALL");
+      setFullData(fullStrategyData);
+      if (fullStrategyData.length > 0) {
+        const sortedDates = fullStrategyData.map(item => item.date).sort();
+        setMinDate(sortedDates[0]);
+        setMaxDate(sortedDates[sortedDates.length - 1]);
+      }
+
+      let fetchedData;
+      if (timeRange === "Custom" && startDate && endDate) {
+        fetchedData = await fetchStrategyData(activeTab, "Custom", startDate, endDate);
+      } else {
+        fetchedData = await fetchStrategyData(activeTab, timeRange);
+      }
+      setData(fetchedData);
+      updateChartOptions(fetchedData);
+      setFilteredData(fetchedData);
+    } catch (error) {
+      console.error("Error loading data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTab, timeRange, startDate, endDate, updateChartOptions]);
+
+
   const handleTimeRangeChange = useCallback((range) => {
     setTimeRange(range);
     setActiveButton(range);
-    if (range !== "ALL" && range !== "Custom") {
-      setStartDate(null);
-      setEndDate(null);
+    if (range !== "Custom") {
+      setStartDate("");
+      setEndDate("");
     }
-
     setIsCustomDateOpen(false);
-  }, []);
 
+    // Trigger data reload
+    loadData();
+  }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const strategyCagr = useMemo(
     () => calculateCAGR(filteredData, timeRange, "total_portfolio_nav"),
@@ -336,9 +334,9 @@ const PerformanceAndDrawdownChart = () => {
 
           {/* Conditionally show date inputs when "Custom" is selected */}
           {isCustomDateOpen && (
-            <div className="relative z-20">
-              <div className="absolute right-2 top-1 mt-2 p-18 bg-black border border-beige shadow-md">
-                <div className="flex items-center gap-2">
+            <div className="relative z-20 w-full sm:w-auto">
+              <div className="absolute right-0 left-0 sm:right-2 sm:left-auto sm:top-1 sm:mt-2 p-1 bg-black border border-beige shadow-md mx-auto sm:mx-0 max-w-[300px] sm:max-w-none">
+                <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2">
                   <input
                     type="date"
                     value={startDate}
@@ -346,9 +344,8 @@ const PerformanceAndDrawdownChart = () => {
                     placeholder="DD/MM/YYYY"
                     max={maxDate}
                     onChange={(e) => handleDateChange("start", e.target.value)}
-                    className="text-black border border-beige focus:ring-beige bg-lightBeige text-body px-2 py-1 h-[40px]"
+                    className="w-full sm:w-auto border border-beige bg-black text-white text-body px-2 py-1 h-[40px]"
                   />
-                  {/* <Text>To</Text> */}
                   <input
                     type="date"
                     value={endDate}
@@ -356,7 +353,7 @@ const PerformanceAndDrawdownChart = () => {
                     placeholder="DD/MM/YYYY"
                     max={maxDate}
                     onChange={(e) => handleDateChange("end", e.target.value)}
-                    className="text-black border border-beige focus:ring-beige bg-lightBeige text-body px-2 py-1 h-[40px]"
+                    className="w-full sm:w-auto border border-beige bg-black text-white text-body px-2 py-1 h-[40px]"
                   />
                 </div>
               </div>
