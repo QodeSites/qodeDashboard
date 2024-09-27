@@ -199,7 +199,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
     legend: {
       enabled: true,
       itemStyle: {
-        color: '#945c39' // Sets the color of the legend text to brown
+        color: '#fee9d6' // Sets the color of the legend text to brown
       }
     },
     credits: { enabled: false },
