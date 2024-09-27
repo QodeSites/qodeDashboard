@@ -70,7 +70,7 @@ export default function SignIn() {
               onClick={() => router.push("/auth/register")}
               className="bg-transparent border-brown border text-beige hover:bg-beige hover:text-black"
             >
-              Create account
+              Create Account
 
             </Button>
           </div>
@@ -140,7 +140,7 @@ export default function SignIn() {
                     </span>.
                   </>
                 ) : (
-                  'Sign in'
+                  'Sign In'
                 )}
               </Button>
             </div>
