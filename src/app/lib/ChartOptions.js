@@ -1,5 +1,3 @@
-import { color } from "highcharts";
-
 export const getChartOptions = (chartData, strategy, isMobile) => {
   console.log("chartdata", chartData);
 
@@ -27,7 +25,6 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
     });
   };
 
-
   const preparedData = prepareChartData(chartData);
   console.log("preparedData", preparedData);
 
@@ -45,8 +42,15 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
     });
   };
 
-
   const drawdownData = calculateDrawdown(preparedData);
+
+  // Calculate the maximum value for the top y-axis
+  const maxValue = Math.max(...strategyValues, ...niftyValues);
+  const topAxisMax = Math.ceil(maxValue / 10) * 10;
+
+  // Calculate the minimum value for the bottom y-axis (drawdown)
+  const minDrawdown = Math.min(...drawdownData.map(item => item[1]));
+  const bottomAxisMin = Math.floor(minDrawdown / 10) * 10;
 
   return {
     title: "",
@@ -69,9 +73,12 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
     yAxis: [
       {
         title: { text: "" },
-        height: "60%",
-        min: 5,
-        tickAmount: 10,
+        height: "50%",
+        top: "0%",
+        offset: 0,
+        min: 0,
+        max: topAxisMax,
+        tickAmount: 5,
         labels: {
           style: {
             color: "#d1a47b",
@@ -84,16 +91,17 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       },
       {
         title: {
-          text: "Drawdown (%)",
+          text: "",
           style: {
             color: "#d1a47b"
           }
         },
-        opposite: false,
-        top: "60%",
-        height: "40%",
-        left: isMobile ? "10%" : "2.6%",
+        height: "50%",
+        top: "50%",
+        offset: 0,
         max: 0,
+        min: bottomAxisMin,
+        tickAmount: 5,
         labels: {
           style: {
             color: "#d1a47b",
@@ -163,30 +171,28 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       height: isMobile ? 900 : 800,
       backgroundColor: "none",
       zoomType: "x",
-      marginLeft: isMobile ? 30 : 60,
+      marginLeft: isMobile ? 35 : 60,
       marginRight: isMobile ? 10 : 10,
+      spacingBottom: 20,
     },
     tooltip: {
       shared: true,
       outside: isMobile,
-      backgroundColor: '#000000', // Black background
-      borderColor: '#000000', // Black border to match the background
+      backgroundColor: '#000000',
+      borderColor: '#000000',
       style: {
-        color: '#fee9d6', // Light beige text color
-        fontSize: '12px' // You can adjust the font size if needed
+        color: '#fee9d6',
+        fontSize: '12px'
       },
       formatter: function () {
-        // Format date to DD/MM/YYYY
         const date = new Date(this.x);
         const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         const formattedDate = `${day}/${month}/${year}`;
 
-        // Tooltip content
         let tooltipContent = `<b>${formattedDate}</b><br/>`;
 
-        // Loop through each series to display values in the tooltip
         this.points.forEach(point => {
           tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${point.y.toFixed(1)}</b><br/>`;
         });
@@ -194,12 +200,10 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         return tooltipContent;
       }
     },
-
-
     legend: {
       enabled: true,
       itemStyle: {
-        color: '#fee9d6' // Sets the color of the legend text to brown
+        color: '#fee9d6'
       }
     },
     credits: { enabled: false },
