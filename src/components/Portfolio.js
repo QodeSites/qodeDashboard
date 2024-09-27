@@ -334,7 +334,7 @@ const PerformanceAndDrawdownChart = () => {
 
           {/* Conditionally show date inputs when "Custom" is selected */}
           {isCustomDateOpen && (
-            <div className="relative z-20 w-full sm:w-auto">
+            <div className="relative z-10   w-full sm:w-auto">
               <div className="absolute right-0 left-0 sm:right-2 sm:left-auto sm:top-1 sm:mt-2 p-1 bg-black border border-beige shadow-md mx-auto sm:mx-0 max-w-[300px] sm:max-w-none">
                 <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2">
                   <input

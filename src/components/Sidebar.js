@@ -37,7 +37,7 @@ const HeaderNavigation = () => {
 
   return (
     <>
-      <header className="w-full bg-black border-b border-brown fixed top-0 left-0 z-20  font-body">
+      <header className="w-full bg-black border-b border-brown fixed top-0 left-0 z-40  font-body">
         <div className="flex justify-between items-center sm:px-2 px-1 max-w-[1386px] mx-auto">
           <Heading href="/" className="flex items-center">
             <p className="text-beige sm:text-3xl text-2xl font-heading">
@@ -81,7 +81,7 @@ const HeaderNavigation = () => {
               {isUserDropdownOpen && (
                 <div
                   ref={dropdownRef}
-                  className="absolute right-2 mt-9 w-44 bg-black border-beige border z-30"
+                  className="absolute right-2 mt-9 w-44 bg-black border-beige border z-50  "
                 >
                   {/* <Link
                     href="/user-details"
@@ -107,7 +107,7 @@ const HeaderNavigation = () => {
       {/* Full-screen backdrop */}
       {isUserDropdownOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-80 z-10"
+          className="fixed inset-0 bg-black bg-opacity-80 z-30"
           onClick={() => setIsUserDropdownOpen(false)}
         />
       )}
