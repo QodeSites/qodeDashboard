@@ -56,7 +56,7 @@ const PerformanceAndDrawdownChart = () => {
 
   const handleStrategyChange = useCallback((strategyId) => {
     setActiveTab(strategyId);
-  }, []);
+  }, [setActiveTab]); // Include setActiveTab in the dependency array
 
   const filteredData = useFilteredData(data, timeRange, startDate, endDate);
 
