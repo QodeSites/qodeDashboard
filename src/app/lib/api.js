@@ -39,7 +39,6 @@ export const useFetchHoldings = (url) => {
   return { holding, isLoading, error };
 };
 const fetchStrategyData = async (strategy, timeRange, startDate, endDate) => {
-  console.log(timeRange);
   if (!strategy) {
     throw new Error("No strategy provided");
   } else if (strategy === "strategy1") {
@@ -47,11 +46,11 @@ const fetchStrategyData = async (strategy, timeRange, startDate, endDate) => {
   } else if (strategy === "strategy2") {
     strategy = "SchemeB";
   } else if (strategy === "momentum") {
-    strategy = "QMF";
+    strategy = "QVF";
   } else if (strategy === "qgf") {
     strategy = "QGF";
   } else if (strategy === "lowvol") {
-    strategy = "LVF"
+    strategy = "QAW"
   }
 
   try {

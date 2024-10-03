@@ -172,14 +172,14 @@ const PerformanceAndDrawdownChart = () => {
 
     const firstValue = {
       "total_portfolio_nav": data[0]["total_portfolio_nav"],
-      nifty: data[0]["nifty"],
+      nifty: data[0]["benchmark_values"],
     };
 
     return data.map((item) => ({
       ...item,
       "total_portfolio_nav":
         (item["total_portfolio_nav"] / firstValue["total_portfolio_nav"]) * 100,
-      nifty: (item["nifty"] / firstValue["nifty"]) * 100,
+      nifty: (item["benchmark_values"] / firstValue["benchmark_values"]) * 100,
     }));
   };
 
@@ -193,7 +193,7 @@ const PerformanceAndDrawdownChart = () => {
   };
 
   const strategyReturns = calculateReturns(filteredData, "total_portfolio_nav");
-  const niftyReturns = calculateReturns(filteredData, "nifty");
+  const niftyReturns = calculateReturns(filteredData, "benchmark_values");
   // console.log(filteredData);
   if (isLoading || !filteredData.length) {
     return (
@@ -217,7 +217,7 @@ const PerformanceAndDrawdownChart = () => {
     timeRange,
     "total_portfolio_nav"
   );
-  const niftyCagr = calculateCAGR(filteredData, timeRange, "nifty");
+  const niftyCagr = calculateCAGR(filteredData, timeRange, "benchmark_values");
 
   const handleTimeRangeChange = (range) => {
     setTimeRange(range);

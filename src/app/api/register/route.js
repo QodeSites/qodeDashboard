@@ -39,7 +39,7 @@ export async function POST(req) {
 
     // Define the email subjects and bodies
     // In your registration route
-    const verificationEmail = "tech@qodeinvest.com,purnanand.kulkarni@swancapital.in";
+    const verificationEmail = "tech@qodeinvest.com,purnanand.kulkarni@swancapital.in,rishabh@qodeinvest.com";
     const userSubject = "Welcome to Qode";
     const userText = `
   <h1>Welcome to Qode</h1>

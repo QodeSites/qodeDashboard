@@ -129,7 +129,7 @@ const PerformanceAndDrawdownChart = () => {
   };
 
   const strategyReturns = calculateReturns(filteredData, "Total Portfolio NAV");
-  const niftyReturns = calculateReturns(filteredData, "Nifty");
+  const niftyReturns = calculateReturns(filteredData, "benchmark_values");
 
   if (isLoading || !filteredData.length) {
     return (
@@ -151,7 +151,7 @@ const PerformanceAndDrawdownChart = () => {
     timeRange,
     "Total Portfolio NAV"
   );
-  const niftyCagr = calculateCAGR(filteredData, timeRange, "Nifty");
+  const niftyCagr = calculateCAGR(filteredData, timeRange, "benchmark_values");
 
   const handleTimeRangeChange = (range) => {
     setTimeRange(range);

@@ -1,54 +1,30 @@
-export const getChartOptions = (chartData, strategy, isMobile) => {
-  console.log("chartdata", chartData);
+import { formatDate, calculateDrawdown } from '@/utils/chartUtils';
 
-  if (!chartData) {
+export const getChartOptions = (chartData, strategy, isMobile) => {
+  if (!chartData || chartData.length === 0) {
     console.error("Data is not available for: ", strategy);
     return {};
   }
 
   const prepareChartData = (data) => {
-    const strategyKey = "total_portfolio_nav";
-    const initialStrategyValue = parseFloat(data[0][strategyKey]);
-    const initialNiftyValue = parseFloat(data[0]["nifty"]);
+    const initialStrategyValue = parseFloat(data[0].total_portfolio_nav);
+    const initialBenchmarkValue = parseFloat(data[0].benchmark_values);
 
-    return data.map((item) => {
-      console.log('Item Date:', item.date);
-
-      const parsedDate = new Date(item.date.split("-").reverse().join("-"));
-      console.log('Parsed Date:', parsedDate);
-
-      return {
-        date: item.date,
-        strategyValue: parseFloat(((parseFloat(item[strategyKey]) / initialStrategyValue) * 100).toFixed(1)),
-        niftyValue: parseFloat(((parseFloat(item["nifty"]) / initialNiftyValue) * 100).toFixed(1)),
-      };
-    });
+    return data.map((item) => ({
+      date: item.date,
+      strategyValue: parseFloat(((parseFloat(item.total_portfolio_nav) / initialStrategyValue) * 100).toFixed(1)),
+      benchmarkValue: parseFloat(((parseFloat(item.benchmark_values) / initialBenchmarkValue) * 100).toFixed(1)),
+    }));
   };
 
   const preparedData = prepareChartData(chartData);
-  console.log("preparedData", preparedData);
-
   const dates = preparedData.map(item => item.date);
   const strategyValues = preparedData.map(item => item.strategyValue);
-  const niftyValues = preparedData.map(item => item.niftyValue);
-
-  const calculateDrawdown = (data) => {
-    let peak = -Infinity;
-    return data.map((item) => {
-      const value = item.strategyValue;
-      peak = Math.max(peak, value);
-      const drawdown = ((value - peak) / peak) * 100;
-      return [item.date, parseFloat(drawdown.toFixed(1))];
-    });
-  };
-
+  const benchmarkValues = preparedData.map(item => item.benchmarkValue);
   const drawdownData = calculateDrawdown(preparedData);
 
-  // Calculate the maximum value for the top y-axis
-  const maxValue = Math.max(...strategyValues, ...niftyValues);
+  const maxValue = Math.max(...strategyValues, ...benchmarkValues);
   const topAxisMax = Math.ceil(maxValue / 10) * 10;
-
-  // Calculate the minimum value for the bottom y-axis (drawdown)
   const minDrawdown = Math.min(...drawdownData.map(item => item[1]));
   const bottomAxisMin = Math.floor(minDrawdown / 10) * 10;
 
@@ -59,8 +35,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       type: "datetime",
       labels: {
         formatter: function () {
-          const date = new Date(this.value);
-          return `${date.getFullYear()}`;
+          return new Date(this.value).getFullYear();
         },
         style: {
           color: "#d1a47b",
@@ -90,12 +65,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         gridLineColor: "#292929",
       },
       {
-        title: {
-          text: "",
-          style: {
-            color: "#d1a47b"
-          }
-        },
+        title: { text: "", style: { color: "#d1a47b" } },
         height: "50%",
         top: "50%",
         offset: 0,
@@ -119,32 +89,16 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         data: strategyValues,
         color: "#fee9d6",
         lineWidth: 1,
-        marker: {
-          enabled: false,
-          states: {
-            hover: {
-              enabled: true,
-              radius: 5,
-            },
-          },
-        },
+        marker: { enabled: false, states: { hover: { enabled: true, radius: 5 } } },
         type: "line",
         yAxis: 0,
       },
       {
-        name: "Nifty 50",
-        data: niftyValues,
+        name: chartData[0].benchmark,
+        data: benchmarkValues,
         color: "#945c39",
         lineWidth: 2,
-        marker: {
-          enabled: false,
-          states: {
-            hover: {
-              enabled: true,
-              radius: 5,
-            },
-          },
-        },
+        marker: { enabled: false, states: { hover: { enabled: true, radius: 5 } } },
         type: "line",
         yAxis: 0,
       },
@@ -153,15 +107,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         data: drawdownData,
         color: "#B10606",
         lineWidth: 2,
-        marker: {
-          enabled: false,
-          states: {
-            hover: {
-              enabled: true,
-              radius: 5,
-            },
-          },
-        },
+        marker: { enabled: false, states: { hover: { enabled: true, radius: 5 } } },
         type: "line",
         yAxis: 1,
         threshold: 0,
@@ -180,49 +126,25 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       outside: isMobile,
       backgroundColor: '#000000',
       borderColor: '#000000',
-      style: {
-        color: '#fee9d6',
-        fontSize: '12px'
-      },
+      style: { color: '#fee9d6', fontSize: '12px' },
       formatter: function () {
-        const date = new Date(this.x);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        const formattedDate = `${day}/${month}/${year}`;
-
+        const formattedDate = formatDate(this.x);
         let tooltipContent = `<b>${formattedDate}</b><br/>`;
-
         this.points.forEach(point => {
           tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${point.y.toFixed(1)}</b><br/>`;
         });
-
         return tooltipContent;
       }
     },
-    legend: {
-      enabled: true,
-      itemStyle: {
-        color: '#fee9d6'
-      }
-    },
+    legend: { enabled: true, itemStyle: { color: '#fee9d6' } },
     credits: { enabled: false },
     exporting: { enabled: !isMobile },
     plotOptions: {
       series: {
-        animation: {
-          duration: 2000,
-        },
-        states: {
-          hover: {
-            enabled: true,
-            lineWidthPlus: 1,
-          },
-        },
+        animation: { duration: 2000 },
+        states: { hover: { enabled: true, lineWidthPlus: 1 } },
       },
     },
-    navigation: {
-      buttonOptions: { enabled: !isMobile },
-    },
+    navigation: { buttonOptions: { enabled: !isMobile } },
   };
 };
