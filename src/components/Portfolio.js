@@ -31,7 +31,6 @@ const PerformanceAndDrawdownChart = () => {
   const { data, isLoading, error } = useFetchStrategyData(activeTab);
   console.log(data);
 
-  const { calculateCAGR } = useCalculateCagr();
 
   const strategies = [
     { id: "QGF", name: "Qode Growth Fund" },
@@ -68,7 +67,7 @@ const PerformanceAndDrawdownChart = () => {
   }, [filteredData, activeTab, isMobile]);
 
   const { strategyCagr, niftyCagr, strategyReturns, niftyReturns } = useReturns(filteredData, timeRange);
-
+  let benchmark = filteredData[0].benchmark
   const getReturnLabel = useCallback((timeRange) => {
     return ["1M", "6M", "1Y"].includes(timeRange) ? "Return" : "CAGR";
   }, []);
@@ -134,7 +133,7 @@ const PerformanceAndDrawdownChart = () => {
             <h2 className="text-body text-lightBeige">Absolute Returns</h2>
             <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyReturns}</p>
             <p className="text-body">{niftyReturns}</p>
-            <h2 className="text-body">Nifty 50</h2>
+            <h2 className="text-body">{benchmark}</h2>
           </div>
           <div className="text-right">
             <h2 className="text-body text-lightBeige">
@@ -142,7 +141,7 @@ const PerformanceAndDrawdownChart = () => {
             </h2>
             <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyCagr}</p>
             <p className="text-body">{niftyCagr}</p>
-            <h2 className="text-body">Nifty 50</h2>
+            <h2 className="text-body">{benchmark}</h2>
           </div>
         </div>
 
