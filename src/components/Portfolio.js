@@ -67,7 +67,14 @@ const PerformanceAndDrawdownChart = () => {
   }, [filteredData, activeTab, isMobile]);
 
   const { strategyCagr, niftyCagr, strategyReturns, niftyReturns } = useReturns(filteredData, timeRange);
-  let benchmark = filteredData[0].benchmark
+  let benchmark
+  if (filteredData.length > 0 && filteredData[0].benchmark) {
+    benchmark = filteredData[0].benchmark;
+  } else {
+    // handle the case where benchmark is undefined
+    console.error("filteredData[0] or benchmark is undefined");
+  }
+
   const getReturnLabel = useCallback((timeRange) => {
     return ["1M", "6M", "1Y"].includes(timeRange) ? "Return" : "CAGR";
   }, []);
