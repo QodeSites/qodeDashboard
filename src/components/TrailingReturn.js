@@ -140,11 +140,11 @@ const TrailingReturns = ({ data, strategyName }) => {
                 Trailing returns are annualised returns from the specified period till today.
             </p>
 
-            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-brown scrollbar-track-black">
+            <div className="relative overflow-x-auto scrollbar-thin scrollbar-thumb-brown scrollbar-track-black">
                 <table className="w-full min-w-[640px]">
                     <thead>
                         <tr className="border text-body font-body p-3 border-brown">
-                            <th className="p-1 font-body text-body border-r border-brown text-left text-lightBeige">Strategy</th>
+                            <th className="sticky -left-18 t-0 z-10 p-1 font-body text-body border-r border-brown text-left text-lightBeige bg-black">Strategy</th>
                             {periods.map((period) => (
                                 <th key={period} className="p-2 font-body text-left text-body text-lightBeige">
                                     {period}
@@ -155,7 +155,7 @@ const TrailingReturns = ({ data, strategyName }) => {
                     </thead>
                     <tbody>
                         <tr className="border border-brown text-lightBeige text-left">
-                            <td className="p-1 border-r border-brown">{strategyName}</td>
+                            <td className="sticky -left-18 z-10 p-1 border-r border-brown bg-black">{strategyName}</td>
                             {periods.map((period) => (
                                 <td key={period} className="p-1 text-lightBeige">
                                     {returns[period]?.strategy
@@ -170,7 +170,7 @@ const TrailingReturns = ({ data, strategyName }) => {
                             </td>
                         </tr>
                         <tr className="border border-brown text-lightBeige text-left">
-                            <td className="p-1 border-r border-brown">{benchmarkName}</td>
+                            <td className="sticky -left-18 z-10 p-1 border-r border-brown bg-black">{benchmarkName}</td>
                             {periods.map((period) => (
                                 <td key={period} className="p-1 text-lightBeige">
                                     {returns[period]?.benchmark
