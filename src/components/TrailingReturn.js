@@ -132,7 +132,7 @@ const TrailingReturns = ({ data, strategyName }) => {
     const benchmarkName = data && data.length > 0 ? data[0].benchmark : "Benchmark";
 
     return (
-        <div className="overflow-x-auto sm:p-4 p-1">
+        <div className="overflow-x-auto sm:p-4 mb-4 p-1">
             <h2 className="sm:text-subheading text-mobileSubHeading font-subheading text-beige mb-18">
                 Trailing Returns
             </h2>
