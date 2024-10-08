@@ -44,6 +44,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       },
       tickPositions: [0, Math.floor(dates.length / 2), dates.length - 1],
       gridLineColor: "#fefefe",
+      tickWidth: isMobile ? 0 : 1,
     },
     yAxis: [
       {
@@ -62,6 +63,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         },
         lineColor: "#d1a47b",
         tickColor: "#d1a47b",
+        tickWidth: isMobile ? 0 : 1,
         gridLineColor: "#292929",
       },
       {
@@ -73,6 +75,9 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         min: bottomAxisMin,
         tickAmount: 5,
         labels: {
+          formatter: function () {
+            return this.value + '%';
+          },
           style: {
             color: "#d1a47b",
             fontSize: "10px"
@@ -80,6 +85,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         },
         lineColor: "#d1a47b",
         tickColor: "#d1a47b",
+        tickWidth: isMobile ? 0 : 1,
         gridLineColor: "#292929",
       },
     ],
@@ -117,8 +123,8 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       height: isMobile ? 900 : 800,
       backgroundColor: "none",
       zoomType: "x",
-      marginLeft: isMobile ? 35 : 60,
-      marginRight: isMobile ? 10 : 10,
+      marginLeft: isMobile ? 0 : 60,
+      marginRight: isMobile ? 0 : 10,
       spacingBottom: 20,
     },
     tooltip: {
@@ -131,7 +137,11 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         const formattedDate = formatDate(this.x);
         let tooltipContent = `<b>${formattedDate}</b><br/>`;
         this.points.forEach(point => {
-          tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${point.y.toFixed(1)}</b><br/>`;
+          let value = point.y.toFixed(1);
+          if (point.series.name === "Drawdown") {
+            value += '%';
+          }
+          tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${value}</b><br/>`;
         });
         return tooltipContent;
       }
