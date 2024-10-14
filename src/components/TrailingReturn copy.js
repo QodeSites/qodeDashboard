@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import useCalculateCagr from "@/hooks/useCalculateCagr";
 import { Spinner } from "@material-tailwind/react";
 
+
+
 const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
+    console.log(name);
+
     const [returns, setReturns] = useState({
         "10D": {},
         "1W": {},
@@ -56,13 +60,13 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
             const days = period === "10D" ? 10 : 7;
             const startDate = new Date(latestDate.getTime() - days * 24 * 60 * 60 * 1000);
             const filteredData = sortedData.filter((item) => new Date(item.date) >= startDate);
+            console.log(filteredData);
 
             calculatedReturns[period] = {
-                [name]: calculateCAGR(filteredData, period, "total_portfolio_nav"),
-                [data[0].benchmark]: calculateCAGR(filteredData, period, "benchmark_values"),
+                [name]: calculateCAGR(filteredData, period, "total_portfolio_nav"),  // pass period instead of "Custom"
+                [data[0].benchmark]: calculateCAGR(filteredData, period, "benchmark_values"),  // pass period instead of "Custom"
             };
         });
-
         setReturns(calculatedReturns);
     };
 
@@ -108,53 +112,51 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
 
     const ResponsiveTable = () => (
         <div className="overflow-x-auto">
-            <div className="relative overflow-x-auto scrollbar-thin scrollbar-thumb-brown scrollbar-track-black">
-                <table className="w-full min-w-[640px]">
+            <div className="min-w-[820px] relative">
+                <table className="w-full border-collapse table-fixed">
                     <thead>
-
-                        <tr className="border text-body font-body p-3 border-brown">
-
-                            <th className="sticky -left-18 t-0 z-10 p-1 font-body text-body border-r border-brown text-left text-lightBeige bg-black">
+                        <tr className="text-sm sm:text-body font-body">
+                            <th className="sticky border border-brown border-r-0 left-0 z-20 p-18 font-semibold text-start text-beige">
                                 <div className="absolute inset-y-0 right-0 w-[1px] bg-brown" />
-
                                 Strategy
                             </th>
                             {periods.map((period) => (
                                 <th
                                     key={period}
-                                    className="p-2 font-body text-left text-body text-lightBeige"
+                                    className="relative p-18 font-semibold text-start text-beige border-t border-b border-brown"
                                 >
+                                    <div className="absolute inset-y-0 right-0  bg-brown" />
                                     {period}
                                 </th>
                             ))}
-                            <th className="p-1 text-center border-l border-brown font-body text-body text-lightBeige">
+                            <th className="p-18 text-start font-body text-beige border border-brown">
                                 MDD
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         {strategies.map((strat, index) => (
-                            <tr key={strat} className="border border-brown text-lightBeige text-left">
-                                <td className="sticky  text-nowrap -left-18 z-10 p-18 border-r border-brown bg-black">
+                            <tr key={strat} className="text-beige text-start">
+                                <td className="sticky border border-brown border-r-0 left-0 z-20 p-18 font-semibold text-sm sm:text-body ">
                                     <div className="absolute inset-y-0 right-0 w-[1px] bg-brown" />
-
                                     {strat === strategy ? name : strat}
                                 </td>
                                 {periods.map((period) => (
                                     <td
                                         key={period}
-                                        className={`p-1 text-lightBeige ${index === strategies.length - 1
+                                        className={`relative p-18 text-beige font-body text-sm sm:text-body ${index === strategies.length - 1
                                             ? "border border-l-0 border-r-0 border-brown"
                                             : ""
                                             }`}
                                     >
+                                        <div className="absolute inset-y-0 right-0  bg-brown" />
                                         {returns[period] && returns[period][strat]
                                             ? `${parseFloat(returns[period][strat]).toFixed(1)}%`
                                             : "N/A"}
                                     </td>
                                 ))}
                                 <td
-                                    className={`p-1 text-center text-lightBeige border-l border-brown ${index === strategies.length - 1 ? "border-b" : ""
+                                    className={`p-18 text-start text-beige border border-brown ${index === strategies.length - 1 ? "border-b" : ""
                                         }`}
                                 >
                                     {drawdowns.lowest[strat]
@@ -174,15 +176,17 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
             <h2 className="sm:text-subheading text-mobileSubHeading font-subheading text-beige mb-18">
                 Trailing Returns
             </h2>
-            <p className="text-body font-body text-lightBeige mb-2">
+            <p className="text-body font-body text-lightBeige mb-4">
                 Trailing returns are annualised returns from the specified period till today.
             </p>
             <ResponsiveTable />
-            <p className="text-beige text-body font-body mt-1 mb-4">
-                MDD (Maximum Drawdown) is the percentage an investment loses from its highest point to its lowest point.
+            <p className="text-beige text-sm sm:text-body font-body mt-4">
+                *MDD (Maximum Drawdown) is how much money an investment loses from its
+                highest point to its lowest point before it starts going up again.
             </p>
         </div>
     );
 };
+
 
 export default TrailingReturns;

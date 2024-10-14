@@ -1,6 +1,6 @@
 import { formatDate, calculateDrawdown } from '@/utils/chartUtils';
 
-export const getChartOptions = (chartData, strategy, isMobile) => {
+export const getChartOptions = (chartData, strategy, isMobile, strategyName) => {
   if (!chartData || chartData.length === 0) {
     console.error("Data is not available for: ", strategy);
     return {};
@@ -45,6 +45,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       tickPositions: [0, Math.floor(dates.length / 2), dates.length - 1],
       gridLineColor: "#fefefe",
       tickWidth: isMobile ? 0 : 1,
+      tickPixelInterval: 150,
     },
     yAxis: [
       {
@@ -55,16 +56,24 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         min: 0,
         max: topAxisMax,
         tickAmount: 5,
+        left: isMobile ? 0 : 40,
         labels: {
           style: {
             color: "#d1a47b",
-            fontSize: "10px"
+            fontSize: "10px",
           },
         },
         lineColor: "#d1a47b",
         tickColor: "#d1a47b",
         tickWidth: isMobile ? 0 : 1,
         gridLineColor: "#292929",
+        // Add a plot line at 0 for the first axis
+        plotLines: [{
+          value: 0,
+          color: '#d1a47b',
+          width: 1,
+          zIndex: 5 // Ensure the line is on top
+        }]
       },
       {
         title: { text: "", style: { color: "#d1a47b" } },
@@ -87,11 +96,18 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
         tickColor: "#d1a47b",
         tickWidth: isMobile ? 0 : 1,
         gridLineColor: "#292929",
+        // Add a plot line at 0 for the second axis
+        plotLines: [{
+          value: 0,
+          color: '#d1a47b',
+          width: 1,
+          zIndex: 5 // Ensure the line is on top
+        }]
       },
     ],
     series: [
       {
-        name: strategy,
+        name: strategyName,
         data: strategyValues,
         color: "#fee9d6",
         lineWidth: 1,
@@ -123,7 +139,7 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
       height: isMobile ? 900 : 800,
       backgroundColor: "none",
       zoomType: "x",
-      marginLeft: isMobile ? 0 : 60,
+      marginLeft: isMobile ? 0 : 50,
       marginRight: isMobile ? 0 : 10,
       spacingBottom: 20,
     },
@@ -157,4 +173,5 @@ export const getChartOptions = (chartData, strategy, isMobile) => {
     },
     navigation: { buttonOptions: { enabled: !isMobile } },
   };
+
 };

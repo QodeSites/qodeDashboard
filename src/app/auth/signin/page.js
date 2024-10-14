@@ -131,7 +131,7 @@ export default function SignIn() {
                 {isLoading ? (
                   <>
                     <span className="inline-flex items-center">
-                      Signing In
+                      Submitting
                       <span className="dot-animation">
                         <span className="dot">.</span>
                         <span className="dot">.</span>

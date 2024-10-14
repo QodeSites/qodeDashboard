@@ -18,6 +18,12 @@ const useCalculateCagr = () => {
         startDate = parseDate(sortedData[0].date);
       } else {
         switch (timeRange) {
+          case "10D":
+            startDate.setDate(startDate.getDate() - 10);
+            break;
+          case "1W":
+            startDate.setDate(startDate.getDate() - 7);
+            break;
           case "1M":
             startDate.setMonth(startDate.getMonth() - 1);
             break;

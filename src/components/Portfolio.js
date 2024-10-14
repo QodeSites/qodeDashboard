@@ -9,7 +9,6 @@ import Heading from "./common/Heading";
 import Text from "./common/Text";
 import useCustomTimeRange from "@/hooks/useCustomRangeHook";
 import useMobileWidth from "@/hooks/useMobileWidth";
-import useCalculateCagr from "@/hooks/useCalculateCagr";
 import useFetchStrategyData from "@/hooks/useFetchStrategyData";
 import useFilteredData from "@/hooks/useFilteredData";
 import useReturns from "@/hooks/useReturns";
@@ -29,7 +28,6 @@ const PerformanceAndDrawdownChart = () => {
   } = useCustomTimeRange();
   const { isMobile } = useMobileWidth();
   const { data, isLoading, error } = useFetchStrategyData(activeTab);
-  console.log(data);
 
 
   const strategies = [
@@ -37,6 +35,7 @@ const PerformanceAndDrawdownChart = () => {
     { id: "QVF", name: "Qode Velocity Fund" },
     { id: "QAW", name: "Qode All Weather" },
   ];
+  const activeStrategy = strategies.find((strategy) => strategy.id === activeTab);
 
   const descriptions = {
     QGF: {
@@ -61,10 +60,10 @@ const PerformanceAndDrawdownChart = () => {
 
   const chartOptions = useMemo(() => {
     if (filteredData.length > 0) {
-      return getChartOptions(filteredData, activeTab, isMobile);
+      return getChartOptions(filteredData, activeTab, isMobile, activeStrategy.name);
     }
     return null;
-  }, [filteredData, activeTab, isMobile]);
+  }, [filteredData, activeTab, isMobile, activeStrategy]);
 
   const { strategyCagr, niftyCagr, strategyReturns, niftyReturns } = useReturns(filteredData, timeRange);
   let benchmark
@@ -100,13 +99,13 @@ const PerformanceAndDrawdownChart = () => {
           <Button
             key={strategy.id}
             onClick={() => handleStrategyChange(strategy.id)}
-            className={`text-body transition-colors duration-300 ease-in-out
+            className={`text-sm transition-colors duration-300 ease-in-out
               ${activeTab === strategy.id
                 ? "bg-beige text-black"
                 : "text-beige hover:before:bg-beige relative h-full overflow-hidden border border-brown bg-black transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-beige before:transition-all before:duration-500 hover:text-black hover:before:left-0 hover:before:w-full"
               }`}
           >
-            <span className="relative text-body">{strategy.name}</span>
+            <span className="relative text-sm">{strategy.name}</span>
           </Button>
         ))}
       </div>
@@ -130,7 +129,9 @@ const PerformanceAndDrawdownChart = () => {
       {data && data.length > 0 && (
         <TrailingReturns
           data={data}
-          strategyName={currentStrategy.name}
+          isLoading={isLoading}
+          error={error}
+          name={currentStrategy.name}
         />
       )}
 
@@ -138,16 +139,16 @@ const PerformanceAndDrawdownChart = () => {
         <div className="grid grid-cols-2 text-beige gap-3">
           <div>
             <h2 className="text-body text-lightBeige">Absolute Returns</h2>
-            <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyReturns}</p>
-            <p className="text-body">{niftyReturns}</p>
+            <p className="text-subheading font-subheading text-lightBeige mb-18">{parseFloat(strategyReturns).toFixed(1)}%</p>
+            <p className="text-body">{parseFloat(niftyReturns).toFixed(1)}%</p>
             <h2 className="text-body">{benchmark}</h2>
           </div>
           <div className="text-right">
             <h2 className="text-body text-lightBeige">
               {timeRange === "ALL" ? "Since Inception" : timeRange} {getReturnLabel(timeRange)}
             </h2>
-            <p className="text-subheading font-subheading text-lightBeige mb-18">{strategyCagr}</p>
-            <p className="text-body">{niftyCagr}</p>
+            <p className="text-subheading font-subheading text-lightBeige mb-18">{parseFloat(strategyCagr).toFixed(1)}%</p>
+            <p className="text-body">{parseFloat(niftyCagr).toFixed(1)}%</p>
             <h2 className="text-body">{benchmark}</h2>
           </div>
         </div>
