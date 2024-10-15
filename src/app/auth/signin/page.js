@@ -61,7 +61,7 @@ export default function SignIn() {
     <div className="bg-black  mx-auto h-screen flex flex-col justify-between overflow-hidden">
       {/* Header Section */}
       <div className="border-b border-brown">
-        <div className="mx-auto sm:max-w-[1386px] max-w-[93%] flex justify-between items-center sm:px-0  h-6">
+        <div className="mx-auto xl:max-w-[1386px] md:max-w-[1066px] max-w-[93%] flex justify-between items-center sm:px-0  h-6">
           <Link href="/" className="text-beige playfair-display-font text-3xl font-bold">
             Qode
           </Link>

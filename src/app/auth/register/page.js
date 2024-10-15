@@ -109,7 +109,7 @@ export default function Register() {
       </div>
 
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-full sm:p-6 p-2 sm:max-w-[631px] max-w-[93%] border mt-2 border-brown bg-black">
+        <div className="w-full sm:p-6 p-2 xl:max-w-[1386px] md:max-w-[1066px] max-w-[93%] border mt-2 border-brown bg-black">
           <Heading className="text-semiheading font-semiheading text-beige text-center mb-4">
             Create account
           </Heading>
