@@ -154,7 +154,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
                                     </td>
                                 ))}
                                 <td
-                                    className={`p-1 text-center text-lightBeige border-l border-brown ${index === strategies.length - 1 ? "border-b" : ""
+                                    className={`xl:p-1 text-center text-lightBeige border-l border-brown ${index === strategies.length - 1 ? "border-b" : ""
                                         }`}
                                 >
                                     {drawdowns.lowest[strat]
@@ -178,7 +178,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
                 Trailing returns are annualised returns from the specified period till today.
             </p>
             <ResponsiveTable />
-            <p className="text-beige text-body font-body mt-1 mb-4">
+            <p className="text-beige text-body font-body mt-1 mb-6">
                 MDD (Maximum Drawdown) is the percentage an investment loses from its highest point to its lowest point.
             </p>
         </div>

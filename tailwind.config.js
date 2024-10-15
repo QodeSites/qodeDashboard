@@ -9,6 +9,8 @@ const config = {
       screens: {
         sm: "490px",  // Custom sm breakpoint
         md: "700px",  // Custom md breakpoint
+        lg: "1000px",  // Custom md breakpoint
+        xl: "1300px",  // Custom md breakpoint
       },
       colors: {
         primary: {
@@ -23,16 +25,18 @@ const config = {
         brown: "#945c39",
         white: "#ffffff",
         black: "#000000",
+        lightGray: "#e2e2e2",
+        darkGray: "#807f7f"
       },
       borderWidth: {
         DEFAULT: '1px',
       },
       fontSize: {
         // Font sizes with line height calculated as 1.3 times the body font size
-        body: ["17px", { lineHeight: "21px" }],       // Body text
+        body: ["16px", { lineHeight: "21px" }],       // Body text
         subheading: ["26px", { lineHeight: "35px" }], // 26px * 1.3
         semiheading: ["42px", { lineHeight: "65px" }], // 42px * 1.3
-        heading: ["42px", { lineHeight: "60px" }],      // 67px * 1.3
+        heading: ["42px", { lineHeight: "60px" }],    // 67px * 1.3
         mobileHeading: ["35px", { lineHeight: "46px" }],
         mobileSemiHeading: ["27px", { lineHeight: "40px" }],
         mobileSubHeading: ["21px", { lineHeight: "27px" }],
@@ -47,8 +51,9 @@ const config = {
         body: ['"DM Sans"', "sans-serif"],
       },
       fontWeight: {
-        heading: "600", //Semi bold
+        heading: "500", //Semi bold
         subheading: "500", //medium
+        semibold: "500",
         body: "400", //normal
       },
       spacing: {

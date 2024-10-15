@@ -38,7 +38,7 @@ const HeaderNavigation = () => {
   return (
     <>
       <header className="w-full bg-black border-b border-brown fixed top-0 left-0 z-40  font-body">
-        <div className="flex justify-between items-center sm:px-2 px-1 max-w-[1386px] mx-auto">
+        <div className="flex justify-between items-center sm:px-1 px-1 md:max-w-[1066px] xl:max-w-[1386px] mx-auto">
           <Heading href="/" className="flex items-center">
             <p className="text-beige sm:text-3xl text-2xl font-heading">
               Qode

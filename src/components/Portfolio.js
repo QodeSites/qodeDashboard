@@ -115,11 +115,11 @@ const PerformanceAndDrawdownChart = () => {
           {strategies.find((s) => s.id === activeTab).name}
         </Heading>
         <div className="mt-18 text-lightBeige">
-          <Text className="text-body">
+          <Text className="text-sm sm:text-body">
             {descriptions[activeTab]?.description}
           </Text>
           {descriptions[activeTab]?.principle && (
-            <Text className="text-body">
+            <Text className="text-sm sm:text-body">
               Principle: {descriptions[activeTab].principle}
             </Text>
           )}
@@ -135,21 +135,21 @@ const PerformanceAndDrawdownChart = () => {
         />
       )}
 
-      <div>
+      <div className="">
         <div className="grid grid-cols-2 text-beige gap-3">
           <div>
-            <h2 className="text-body text-lightBeige">Absolute Returns</h2>
+            <h2 className="text-sm sm:text-body text-lightBeige">Absolute Returns</h2>
             <p className="text-subheading font-subheading text-lightBeige mb-18">{parseFloat(strategyReturns).toFixed(1)}%</p>
-            <p className="text-body">{parseFloat(niftyReturns).toFixed(1)}%</p>
-            <h2 className="text-body">{benchmark}</h2>
+            <p className="text-sm sm:text-body">{parseFloat(niftyReturns).toFixed(1)}%</p>
+            <h2 className="text-sm sm:text-body">{benchmark}</h2>
           </div>
           <div className="text-right">
-            <h2 className="text-body text-lightBeige">
+            <h2 className="text-sm sm:text-body text-lightBeige">
               {timeRange === "ALL" ? "Since Inception" : timeRange} {getReturnLabel(timeRange)}
             </h2>
             <p className="text-subheading font-subheading text-lightBeige mb-18">{parseFloat(strategyCagr).toFixed(1)}%</p>
-            <p className="text-body">{parseFloat(niftyCagr).toFixed(1)}%</p>
-            <h2 className="text-body">{benchmark}</h2>
+            <p className="text-sm sm:text-body">{parseFloat(niftyCagr).toFixed(1)}%</p>
+            <h2 className="text-sm sm:text-body">{benchmark}</h2>
           </div>
         </div>
 
@@ -159,7 +159,7 @@ const PerformanceAndDrawdownChart = () => {
               <Button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
-                className={`text-body ${activeButton === range
+                className={`text-sm sm:text-body ${activeButton === range
                   ? "bg-beige text-black"
                   : "border border-beige text-beige hover:bg-beige hover:text-black"
                   }`}
@@ -169,7 +169,7 @@ const PerformanceAndDrawdownChart = () => {
             ))}
             <Button
               onClick={handleCustomDateClick}
-              className={`relative text-body ${activeButton === 'Custom' ? "bg-beige text-black" : "border border-beige text-beige hover:bg-beige hover:text-black"}`}
+              className={`relative text-sm sm:text-body ${activeButton === 'Custom' ? "bg-beige text-black" : "border border-beige text-beige hover:bg-beige hover:text-black"}`}
             >
               Custom
             </Button>
@@ -183,13 +183,13 @@ const PerformanceAndDrawdownChart = () => {
                     type="date"
                     value={startDate}
                     onChange={(e) => setCustomDateRange(e.target.value, endDate)}
-                    className="w-full sm:w-auto border border-beige bg-black text-white text-body px-2 py-1 h-[40px]"
+                    className="w-full sm:w-auto border border-beige bg-black text-white text-sm sm:text-body px-2 py-1 h-[40px]"
                   />
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setCustomDateRange(startDate, e.target.value)}
-                    className="w-full sm:w-auto border border-beige bg-black text-white text-body px-2 py-1 h-[40px]"
+                    className="w-full sm:w-auto border border-beige bg-black text-white text-sm sm:text-body px-2 py-1 h-[40px]"
                   />
                 </div>
               </div>
