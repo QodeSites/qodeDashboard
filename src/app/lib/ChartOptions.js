@@ -7,15 +7,16 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
   }
 
   const prepareChartData = (data) => {
-    const initialStrategyValue = parseFloat(data[0].total_portfolio_nav);
-    const initialBenchmarkValue = parseFloat(data[0].benchmark_values);
+    const initialStrategyValue = data[0].total_portfolio_nav;
+    const initialBenchmarkValue = data[0].benchmark_values;
 
     return data.map((item) => ({
       date: item.date,
-      strategyValue: parseFloat(((parseFloat(item.total_portfolio_nav) / initialStrategyValue) * 100).toFixed(1)),
-      benchmarkValue: parseFloat(((parseFloat(item.benchmark_values) / initialBenchmarkValue) * 100).toFixed(1)),
+      strategyValue: Math.round((item.total_portfolio_nav / initialStrategyValue) * 100), // Returns a whole number
+      benchmarkValue: Math.round((item.benchmark_values / initialBenchmarkValue) * 100), // Returns a whole number
     }));
   };
+
 
   const preparedData = prepareChartData(chartData);
   const dates = preparedData.map(item => item.date);
@@ -58,6 +59,9 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
         tickAmount: 5,
         left: isMobile ? 0 : 40,
         labels: {
+          formatter: function () {
+            return Math.round(this.value);  // Round the label values to remove decimals
+          },
           style: {
             color: "#d1a47b",
             fontSize: "10px",
@@ -85,7 +89,7 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
         tickAmount: 5,
         labels: {
           formatter: function () {
-            return this.value + '%';
+            return Math.round(this.value) + '%';  // Round the label values to remove decimals
           },
           style: {
             color: "#d1a47b",
@@ -153,10 +157,7 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
         const formattedDate = formatDate(this.x);
         let tooltipContent = `<b>${formattedDate}</b><br/>`;
         this.points.forEach(point => {
-          let value = point.y.toFixed(1);
-          if (point.series.name === "Drawdown") {
-            value += '%';
-          }
+          let value = point.series.name === "Drawdown" ? point.y.toFixed(1) + '%' : Math.round(point.y);
           tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${value}</b><br/>`;
         });
         return tooltipContent;
