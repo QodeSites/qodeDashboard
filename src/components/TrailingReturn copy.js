@@ -16,7 +16,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
         "1Y": {},
         "3Y": {},
         "5Y": {},
-        "All": {},
+        "Inception": {},
     });
     const [drawdowns, setDrawdowns] = useState({
         latest: {},
@@ -40,7 +40,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
             "1Y": "1Y",
             "3Y": "3Y",
             "5Y": "5Y",
-            "All": "ALL",
+            "Inception": "Inception",
         };
 
         const calculatedReturns = {};
@@ -108,7 +108,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
 
     const benchmark = data[0]?.benchmark || "Default Benchmark";
     const strategies = [name, benchmark];
-    const periods = ["10D", "1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "All"];
+    const periods = ["10D", "1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "Inception"];
 
     const ResponsiveTable = () => (
         <div className="overflow-x-auto">
@@ -152,7 +152,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
                                         <div className="absolute inset-y-0 right-0  bg-brown" />
                                         {returns[period] && returns[period][strat]
                                             ? `${parseFloat(returns[period][strat]).toFixed(1)}%`
-                                            : "N/A"}
+                                            : "0"}
                                     </td>
                                 ))}
                                 <td
@@ -161,7 +161,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
                                 >
                                     {drawdowns.lowest[strat]
                                         ? `${drawdowns.lowest[strat].toFixed(1)}%`
-                                        : "N/A"}
+                                        : "0"}
                                 </td>
                             </tr>
                         ))}

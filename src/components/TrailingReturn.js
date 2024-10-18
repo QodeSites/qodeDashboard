@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import useCalculateCagr from "@/hooks/useCalculateCagr";
 import { Spinner } from "@material-tailwind/react";
+import Text from "./common/Text";
+import Heading from "./common/Heading";
 
 const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
     const [returns, setReturns] = useState({
@@ -12,7 +14,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
         "1Y": {},
         "3Y": {},
         "5Y": {},
-        "All": {},
+        "Inception": {},
     });
     const [drawdowns, setDrawdowns] = useState({
         latest: {},
@@ -36,7 +38,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
             "1Y": "1Y",
             "3Y": "3Y",
             "5Y": "5Y",
-            "All": "ALL",
+            "Inception": "Inception",
         };
 
         const calculatedReturns = {};
@@ -104,7 +106,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
 
     const benchmark = data[0]?.benchmark || "Default Benchmark";
     const strategies = [name, benchmark];
-    const periods = ["10D", "1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "All"];
+    const periods = ["10D", "1W", "1M", "3M", "6M", "1Y", "3Y", "5Y", "Inception"];
 
     const ResponsiveTable = () => (
         <div className="overflow-x-auto">
@@ -150,7 +152,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
                                     >
                                         {returns[period] && returns[period][strat]
                                             ? `${parseFloat(returns[period][strat]).toFixed(1)}%`
-                                            : "N/A"}
+                                            : "0"}
                                     </td>
                                 ))}
                                 <td
@@ -159,7 +161,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
                                 >
                                     {drawdowns.lowest[strat]
                                         ? `${drawdowns.lowest[strat].toFixed(1)}%`
-                                        : "N/A"}
+                                        : "0"}
                                 </td>
                             </tr>
                         ))}
@@ -169,18 +171,47 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
         </div>
     );
 
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const options = { day: "numeric", month: "long", year: "numeric" };
+        return date.toLocaleDateString("en-GB", options);
+    };
+
+    // Extract the earliest and latest dates from the data
+    const extractDateRange = (data) => {
+        if (!data || data.length === 0) return { startDate: "0", endDate: "0" };
+
+        const dates = data.map((entry) => new Date(entry.date));
+        const startDate = new Date(Math.min(...dates));
+        const endDate = new Date(Math.max(...dates));
+
+        return {
+            startDate: formatDate(startDate),
+            endDate: formatDate(endDate),
+        };
+    };
+
+    const { startDate, endDate } = extractDateRange(data);
+
+
     return (
         <div>
-            <h2 className="sm:text-subheading text-mobileSubHeading font-subheading text-beige mb-18">
+            <Text className="sm:text-subheading text-mobileSubHeading font-subheading text-beige mb-18">
                 Trailing Returns
-            </h2>
-            <p className="text-body font-body text-lightBeige mb-2">
-                Trailing returns are annualised returns from the specified period till today.
-            </p>
+            </Text>
+            <div className="flex justify-between flex-col sm:flex-row">
+                <Text className="text-body font-body text-lightBeige mb-2">
+                    Trailing returns indicate an investment's performance over a fixed
+                    past period, ending at a specific date.
+                </Text>
+                <Text className="text-xs text-right sm:text-xs font-body mb-18 text-beige italic ">
+                    *Data from {startDate} to {endDate}.
+                </Text>
+            </div>
             <ResponsiveTable />
-            <p className="text-beige text-body font-body mt-1 mb-6">
+            <Text className="text-beige text-body font-body mt-1 mb-6">
                 MDD (Maximum Drawdown) is the percentage an investment loses from its highest point to its lowest point.
-            </p>
+            </Text>
         </div>
     );
 };

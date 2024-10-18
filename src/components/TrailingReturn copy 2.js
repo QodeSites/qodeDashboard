@@ -160,13 +160,13 @@ const TrailingReturns = ({ data, name }) => {
                                 <td key={period} className="p-1 text-lightBeige">
                                     {returns[period]?.strategy
                                         ? `${returns[period].strategy.toFixed(1)}%`
-                                        : "N/A"}
+                                        : "0"}
                                 </td>
                             ))}
                             <td className="p-1 border-l text-center text-lightBeige border-brown">
                                 {drawdowns.lowest.strategy
                                     ? `${drawdowns.lowest.strategy.toFixed(1)}%`
-                                    : "N/A"}
+                                    : "0"}
                             </td>
                         </tr>
                         <tr className="border border-brown text-lightBeige text-left">
@@ -175,13 +175,13 @@ const TrailingReturns = ({ data, name }) => {
                                 <td key={period} className="p-1 text-lightBeige">
                                     {returns[period]?.benchmark
                                         ? `${returns[period].benchmark.toFixed(1)}%`
-                                        : "N/A"}
+                                        : "0"}
                                 </td>
                             ))}
                             <td className="p-1 border-l text-center text-lightBeige border-brown">
                                 {drawdowns.lowest.benchmark
                                     ? `${drawdowns.lowest.benchmark.toFixed(1)}%`
-                                    : "N/A"}
+                                    : "0"}
                             </td>
                         </tr>
                     </tbody>

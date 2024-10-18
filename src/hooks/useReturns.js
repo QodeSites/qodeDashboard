@@ -5,7 +5,7 @@ const useReturns = (filteredData, timeRange) => {
     const { calculateCAGR } = useCalculateCagr();
 
     const calculateReturns = (data, key) => {
-        if (data.length < 2) return "N/A";
+        if (data.length < 2) return "0";
         const startValue = parseFloat(data[0][key]);
         const endValue = parseFloat(data[data.length - 1][key]);
         return (((endValue - startValue) / startValue) * 100).toFixed(2) + "%";

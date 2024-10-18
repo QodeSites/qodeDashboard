@@ -2,7 +2,7 @@ import { useCallback } from "react";
 
 const useCalculateCagr = () => {
   const calculateCAGR = useCallback(
-    (data, timeRange = "ALL", portfolioType = "total_portfolio_nav") => {
+    (data, timeRange = "Inception", portfolioType = "total_portfolio_nav") => {
       const parseDate = (dateString) => new Date(dateString);
       const sortedData = [...data].sort(
         (a, b) => parseDate(a.date) - parseDate(b.date)
@@ -42,7 +42,7 @@ const useCalculateCagr = () => {
           case "5Y":
             startDate.setFullYear(startDate.getFullYear() - 5);
             break;
-          case "ALL":
+          case "Inception":
             startDate = parseDate(sortedData[0].date);
             break;
           case "YTD":
@@ -56,12 +56,12 @@ const useCalculateCagr = () => {
       const startIndex = sortedData.findIndex(
         (d) => parseDate(d.date) >= startDate
       );
-      if (startIndex === -1) return "N/A";
+      if (startIndex === -1) return "0";
 
       const startValue = parseFloat(sortedData[startIndex][portfolioType]);
       const endValue = parseFloat(latestData[portfolioType]);
 
-      if (isNaN(startValue) || isNaN(endValue)) return "N/A";
+      if (isNaN(startValue) || isNaN(endValue)) return "0";
 
       const days =
         (latestDate - parseDate(sortedData[startIndex].date)) /

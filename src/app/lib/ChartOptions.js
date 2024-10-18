@@ -1,6 +1,8 @@
 import { formatDate, calculateDrawdown } from '@/utils/chartUtils';
 
 export const getChartOptions = (chartData, strategy, isMobile, strategyName) => {
+  console.log(chartData);
+
   if (!chartData || chartData.length === 0) {
     console.error("Data is not available for: ", strategy);
     return {};
@@ -113,7 +115,7 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
       {
         name: strategyName,
         data: strategyValues,
-        color: "#fee9d6",
+        color: "#d1a47b",
         lineWidth: 1,
         marker: { enabled: false, states: { hover: { enabled: true, radius: 5 } } },
         type: "line",

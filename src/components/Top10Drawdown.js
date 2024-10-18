@@ -35,12 +35,12 @@ const columns = [
   {
     header: "Recovery Period (days)",
     accessorKey: "recoveryPeriod",
-    cell: ({ getValue }) => (getValue() ? Math.round(getValue()) : "N/A"),
+    cell: ({ getValue }) => (getValue() ? Math.round(getValue()) : "0"),
   },
   {
     header: "Peak to Peak (days)",
     accessorKey: "peakToPeak",
-    cell: ({ getValue }) => (getValue() ? Math.round(getValue()) : "N/A"),
+    cell: ({ getValue }) => (getValue() ? Math.round(getValue()) : "0"),
   },
 ];
 

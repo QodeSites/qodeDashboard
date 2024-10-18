@@ -127,7 +127,7 @@ const PerformanceAndDrawdownChart = () => {
           case "5Y":
             startDate.setFullYear(startDate.getFullYear() - 5);
             break;
-          case "ALL":
+          case "Inception":
             startDate.setTime(parseDate(sortedData[0].Date).getTime());
             break;
           case "YTD":
@@ -140,17 +140,17 @@ const PerformanceAndDrawdownChart = () => {
         const startIndex = sortedData.findIndex(
           (d) => parseDate(d.Date) >= startDate
         );
-        if (startIndex === -1) return "N/A"; // No data matches the start date
+        if (startIndex === -1) return "0"; // No data matches the start date
 
         const startValue = parseFloat(sortedData[startIndex][portfolioType]);
         const endValue = parseFloat(latestData[portfolioType]);
 
-        if (isNaN(startValue) || isNaN(endValue)) return "N/A";
+        if (isNaN(startValue) || isNaN(endValue)) return "0";
 
         // Calculate return based on period
-        if (["1Y", "3Y", "5Y", "ALL"].includes(timeRange)) {
+        if (["1Y", "3Y", "5Y", "Inception"].includes(timeRange)) {
           const years =
-            timeRange === "ALL"
+            timeRange === "Inception"
               ? (latestDate - parseDate(sortedData[startIndex].Date)) /
               (365 * 24 * 60 * 60 * 1000)
               : parseInt(timeRange.slice(0, -1));
@@ -186,7 +186,7 @@ const PerformanceAndDrawdownChart = () => {
 
   const calculateReturns = (data, key) => {
     // console.log("datasss", data);
-    if (data.length < 2) return "N/A";
+    if (data.length < 2) return "0";
     const startValue = parseFloat(data[0][key]);
     const endValue = parseFloat(data[data.length - 1][key]);
     return (((endValue - startValue) / startValue) * 100).toFixed(2) + "%";
@@ -228,7 +228,7 @@ const PerformanceAndDrawdownChart = () => {
   };
 
   let period;
-  if (timeRange === "ALL") {
+  if (timeRange === "Inception") {
     period = "Since Inception";
   } else {
     period = `${timeRange}`;
@@ -318,13 +318,13 @@ const PerformanceAndDrawdownChart = () => {
               </button>
             ))}
             <button
-              className={`py-2 sm:py-1 px-4 text-md sm:text-body ${activeButton === "ALL"
+              className={`py-2 sm:py-1 px-4 text-md sm:text-body ${activeButton === "Inception"
                 ? "bg-primary-dark text-white bg-red-600"
                 : "border  text-gray-900"
                 }`}
-              onClick={() => handleTimeRangeChange("ALL")}
+              onClick={() => handleTimeRangeChange("Inception")}
             >
-              All
+              Inception
             </button>
           </div>
 

@@ -41,7 +41,7 @@ export default function filterDataByCustomRange(data, range, start, end, latestD
                 filterDate = new Date(latestDate.setMonth(latestDate.getMonth() - 1));
                 break;
             default:
-                return data; // "ALL" case or undefined time range
+                return data; // "Inception" case or undefined time range
         }
 
         return data.filter((item) => new Date(item.date) >= filterDate);

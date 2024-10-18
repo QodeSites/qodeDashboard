@@ -12,7 +12,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("All fields are required");
+          throw new Error("Inception fields are required");
         }
 
         try {

@@ -1,16 +1,16 @@
 import { useCallback, useState } from "react";
 
 const useCustomTimeRange = () => {
-    const [timeRange, setTimeRange] = useState("ALL");
+    const [timeRange, setTimeRange] = useState("Inception");
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
-    const [activeButton, setActiveButton] = useState("ALL");
+    const [activeButton, setActiveButton] = useState("Inception");
 
     const handleTimeRangeChange = useCallback((range) => {
         setTimeRange(range);
         setActiveButton(range);
-        if (range !== "ALL" && range !== "Custom") {
+        if (range !== "Inception" && range !== "Custom") {
             setStartDate(null);
             setEndDate(null);
         }

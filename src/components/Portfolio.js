@@ -145,7 +145,7 @@ const PerformanceAndDrawdownChart = () => {
           </div>
           <div className="text-right">
             <h2 className="text-sm sm:text-body text-lightBeige">
-              {timeRange === "ALL" ? "Since Inception" : timeRange} {getReturnLabel(timeRange)}
+              {timeRange === "Inception" ? "Since Inception" : timeRange} {getReturnLabel(timeRange)}
             </h2>
             <p className="text-subheading font-subheading text-lightBeige mb-18">{parseFloat(strategyCagr).toFixed(1)}%</p>
             <p className="text-sm sm:text-body">{parseFloat(niftyCagr).toFixed(1)}%</p>
@@ -155,7 +155,7 @@ const PerformanceAndDrawdownChart = () => {
 
         <div className="flex flex-col md:flex-row items-center gap-2 mt-5">
           <div className="flex flex-wrap justify-center gap-1">
-            {["1M", "6M", "1Y", "3Y", "5Y", "ALL"].map((range) => (
+            {["1M", "6M", "1Y", "3Y", "5Y", "Inception"].map((range) => (
               <Button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}

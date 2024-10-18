@@ -14,7 +14,7 @@ export const columns = [
     header: "Drawdown (%)",
     cell: ({ getValue }) => {
       const value = parseFloat(getValue());
-      return isNaN(value) ? "N/A" : `${value.toFixed(2)}%`;
+      return isNaN(value) ? "0" : `${value.toFixed(2)}%`;
     },
   }),
 ];

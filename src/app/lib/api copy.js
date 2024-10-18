@@ -144,7 +144,7 @@ const filterDataByTimeRange = (data, range, start, end, latestDataDate) => {
       filterDate = new Date(latestDate.setMonth(latestDate.getMonth() - 1));
       break;
     default:
-      return data; // "ALL" case or undefined time range
+      return data; // "Inception" case or undefined time range
   }
 
   return data.filter((item) => new Date(item.Date) >= filterDate);
