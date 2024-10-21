@@ -117,7 +117,11 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
         data: strategyValues,
         color: "#d1a47b",
         lineWidth: 1,
-        marker: { enabled: false, states: { hover: { enabled: true, radius: 5 } } },
+        marker: {
+          enabled: false,
+          symbol: 'circle',
+          states: { hover: { enabled: true, radius: 5 } }
+        },
         type: "line",
         yAxis: 0,
       },
@@ -126,7 +130,11 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
         data: benchmarkValues,
         color: "#945c39",
         lineWidth: 2,
-        marker: { enabled: false, states: { hover: { enabled: true, radius: 5 } } },
+        marker: {
+          enabled: false,
+          symbol: 'circle',
+          states: { hover: { enabled: true, radius: 5 } }
+        },
         type: "line",
         yAxis: 0,
       },
@@ -135,7 +143,11 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
         data: drawdownData,
         color: "#B10606",
         lineWidth: 2,
-        marker: { enabled: false, states: { hover: { enabled: true, radius: 5 } } },
+        marker: {
+          enabled: false,
+          symbol: 'circle',
+          states: { hover: { enabled: true, radius: 5 } }
+        },
         type: "line",
         yAxis: 1,
         threshold: 0,

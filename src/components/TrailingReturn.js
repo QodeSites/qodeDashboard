@@ -136,7 +136,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
                     </thead>
                     <tbody>
                         {strategies.map((strat, index) => (
-                            <tr key={strat} className="border border-brown text-lightBeige text-left">
+                            <tr key={strat} className="border border-brown text-lightBeige text-center">
                                 <td className="sticky  text-nowrap -left-18 z-10 p-18 border-r border-brown bg-black">
                                     <div className="absolute inset-y-0 right-0 w-[1px] bg-brown" />
 
@@ -196,9 +196,9 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
 
     return (
         <div>
-            <Text className="sm:text-subheading text-mobileSubHeading font-subheading text-beige mb-18">
+            <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-beige mb-18">
                 Trailing Returns
-            </Text>
+            </Heading>
             <div className="flex justify-between flex-col sm:flex-row">
                 <Text className="text-body font-body text-lightBeige mb-2">
                     Trailing returns indicate an investment's performance over a fixed

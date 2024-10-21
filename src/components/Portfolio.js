@@ -39,15 +39,15 @@ const PerformanceAndDrawdownChart = () => {
 
   const descriptions = {
     QGF: {
-      description: "This strategy invests in 30 Quality businesses. (Quality Business - A company that generates a high return on invested capital).",
-      principle: "In the long run, the stock price always matches the business performance.",
+      description: "Strategy focusing on high-quality small and midcap companies, driving sustainable growth through a factor-based investment approach.",
+      principle: "In the long run the stock price always reflects the business performance.",
     },
     QVF: {
-      description: "This strategy invests in 30 businesses whose stock price has grown significantly and sells it before they start falling.",
+      description: "This strategy combines momentum investing with a built-in derivative hedge to protect against significant drawdowns.",
       principle: "The stock price tells the story before the actual story unfolds.",
     },
     QAW: {
-      description: "This strategy invests in the 30 most stable stocks in the market. This strategy outperforms the Index with considerably lower risk.",
+      description: "This is a resilient investment strategy to weather all market fluctuations. Designed for minimal drawdowns and superior returns, providing consistent growth in all market conditions.",
       principle: "",
     },
   };
@@ -139,8 +139,8 @@ const PerformanceAndDrawdownChart = () => {
         <div className="grid grid-cols-2 text-beige gap-3">
           <div>
             <h2 className="text-sm sm:text-body text-lightBeige">Absolute Returns</h2>
-            <p className="text-subheading font-subheading text-lightBeige mb-18">{parseFloat(strategyReturns).toFixed(1)}%</p>
-            <p className="text-sm sm:text-body">{parseFloat(niftyReturns).toFixed(1)}%</p>
+            <p className="text-subheading font-subheading text-lightBeige mb-18">{(parseFloat(strategyReturns) / 100 + 1).toFixed(1)}x</p>
+            <p className="text-sm sm:text-body">{(parseFloat(niftyReturns) / 100 + 1).toFixed(1)}x</p>
             <h2 className="text-sm sm:text-body">{benchmark}</h2>
           </div>
           <div className="text-right">
