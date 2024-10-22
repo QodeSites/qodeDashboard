@@ -42,7 +42,6 @@ export async function POST(req) {
       const adminEmails = [
         'tech@qodeinvest.com',
         'purnanand.kulkarni@swancapital.in',
-        'rishabh@qodeinvest.com'
       ];
 
       const adminTemplate = emailService.getAdminNotificationTemplate({
