@@ -6,9 +6,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   try {
-    console.log("Received registration request");
     const { username, email, password } = await req.json();
-    console.log("Parsed request body:", { username, email });
 
     // Generate user_id
     const user_id = Math.floor(Math.random() * 1000000);
@@ -66,7 +64,6 @@ export async function POST(req) {
         ...userTemplate
       });
 
-      console.log("Registration emails sent successfully");
     } catch (emailError) {
       console.error("Error sending registration emails:", emailError);
       // Continue with registration even if emails fail

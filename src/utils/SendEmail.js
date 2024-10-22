@@ -80,9 +80,6 @@ class EmailService {
                 </head>
                 <body>
                     <div class="email-container">
-                        <div class="email-header">
-                            ${title}
-                        </div>
                         <div class="email-content">
                             ${content}
                         </div>
@@ -154,11 +151,13 @@ class EmailService {
                 <p>Congratulations! Your Qode account has been successfully verified.</p>
                 <p>You can now access dashboard.</p>
                 <div style="text-align: center;">
-                    <a style="color: white; text-decoration: none;" href="${this.baseUrl}" class="cta-button">
+                    <a style="color: white; text-decoration: none;margin-bottom: 10px;" href="${this.baseUrl}" class="cta-button">
                         Login to Dashboard
                     </a>
                 </div>
-                <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                <p>If you have any questions or need assistance, please don't hesitate to contact our support team at 
+                    <a href="mailto:operations@qodeinvest.com" style="color: #1a73e8;">operations@qodeinvest.com</a>.
+                </p>
                 <p style="margin-top: 20px;">Best regards,<br>The Qode Team</p>
             `
         };
