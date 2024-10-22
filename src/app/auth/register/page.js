@@ -2,14 +2,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
 
 import { useToast } from "@/components/ui/use-toast";
-import Section from "@/components/container/Section";
 import Heading from "@/components/common/Heading";
-import CustomLink from "@/components/common/CustomLink";
 import Button from "@/components/common/Button";
-import Text from "@/components/common/Text";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -109,7 +105,7 @@ export default function Register() {
       </div>
 
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-full sm:p-6 p-2 xl:max-w-[1386px] md:max-w-[1066px] max-w-[93%] border mt-2 border-brown bg-black">
+        <div className="w-full sm:p-6 p-2 xl:max-w-[700px] md:max-w-[1066px] max-w-[93%] border mt-2 border-brown bg-black">
           <Heading className="text-semiheading font-semiheading text-beige text-center mb-4">
             Create account
           </Heading>

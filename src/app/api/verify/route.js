@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import emailService from "@/utils/SendEmail";
 
 export async function GET(req) {
     const { searchParams } = new URL(req.url);
@@ -10,7 +11,7 @@ export async function GET(req) {
         return NextResponse.json({ error: "Token is required" }, { status: 400 });
     }
 
-    const user_id = parseInt(token, 10); // Parse if the token is numeric
+    const user_id = parseInt(token, 10);
 
     if (isNaN(user_id)) {
         return NextResponse.json({ error: "Invalid token format" }, { status: 400 });
@@ -21,7 +22,7 @@ export async function GET(req) {
 
         // Fetch the user by id first
         const user = await prisma.tblusers.findUnique({
-            where: { id: parseInt(id, 10) }, // Ensure id is a number
+            where: { id: parseInt(id, 10) },
         });
 
         if (!user) {
@@ -41,6 +42,18 @@ export async function GET(req) {
 
         console.log("User verification successful:", updatedUser);
 
+        // Send verification confirmation email
+        try {
+            await emailService.sendEmail({
+                to: user.email,
+                ...emailService.getVerificationConfirmationTemplate(user.username)
+            });
+            console.log("Verification confirmation email sent successfully");
+        } catch (emailError) {
+            // Log email error but don't fail the verification process
+            console.error("Failed to send verification confirmation email:", emailError);
+        }
+
         // Redirect user to success page
         return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/user-verified`);
     } catch (error) {
@@ -50,6 +63,9 @@ export async function GET(req) {
             return NextResponse.json({ error: "Invalid or expired token" }, { status: 404 });
         }
 
-        return NextResponse.json({ error: "An error occurred during verification", details: error.message }, { status: 500 });
+        return NextResponse.json({
+            error: "An error occurred during verification",
+            details: error.message
+        }, { status: 500 });
     }
 }

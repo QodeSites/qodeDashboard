@@ -1,7 +1,7 @@
 // app/api/register/route.js
 import { hash } from "bcrypt";
 import prisma from "@/lib/prisma";
-import { sendEmails } from "@/utils/SendEmail";
+import emailService from "@/utils/SendEmail";
 import { NextResponse } from 'next/server';
 
 export async function POST(req) {
@@ -9,23 +9,25 @@ export async function POST(req) {
     console.log("Received registration request");
     const { username, email, password } = await req.json();
     console.log("Parsed request body:", { username, email });
+
+    // Generate user_id
     const user_id = Math.floor(Math.random() * 1000000);
 
-    // Check if user already exists
+    // Check for existing user
     const existingUser = await prisma.tblusers.findUnique({
       where: { email: email },
     });
-    console.log("Existing user check:", existingUser ? "User exists" : "User does not exist");
 
     if (existingUser) {
       console.log("Registration failed: User already exists");
-      return NextResponse.json({ error: "User with this email already exists" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User with this email already exists" },
+        { status: 400 }
+      );
     }
 
-    // Hash the password
+    // Hash password and create user
     const hashedPassword = await hash(password, 10);
-
-    // Create new user
     const user = await prisma.tblusers.create({
       data: {
         username,
@@ -36,31 +38,49 @@ export async function POST(req) {
       },
     });
 
+    // Send emails
+    try {
+      // 1. Send admin notification
+      const adminEmails = [
+        'tech@qodeinvest.com',
+        'purnanand.kulkarni@swancapital.in',
+        'rishabh@qodeinvest.com'
+      ];
 
-    // Define the email subjects and bodies
-    // In your registration route
-    const verificationEmail = "tech@qodeinvest.com,purnanand.kulkarni@swancapital.in,rishabh@qodeinvest.com";
-    const userSubject = "Welcome to Qode";
-    const userText = `
-  <h1>Welcome to Qode</h1>
-  <p>You have successfully registered on our platform. Please wait while we verify your account.</p>
-`;
+      const adminTemplate = emailService.getAdminNotificationTemplate({
+        username,
+        email,
+        user_id,
+        id: user.id
+      });
 
-    const verificationSubject = "New User Verification Required";
-    const verificationText = {
-      username,
-      email
-    };
+      await emailService.sendEmail({
+        to: adminEmails.join(','),
+        ...adminTemplate
+      });
 
+      // 2. Send user welcome email
+      const userTemplate = emailService.getUserWelcomeTemplate(username);
+      await emailService.sendEmail({
+        to: email,
+        ...userTemplate
+      });
 
+      console.log("Registration emails sent successfully");
+    } catch (emailError) {
+      console.error("Error sending registration emails:", emailError);
+      // Continue with registration even if emails fail
+    }
 
-    // Send the emails
-    await sendEmails(email, verificationEmail, userSubject, userText, verificationSubject, verificationText, user_id, user.id);
-
-    // Respond with success
-    return NextResponse.json({ message: "User registered successfully", userId: user.id }, { status: 201 });
+    return NextResponse.json(
+      { message: "User registered successfully", userId: user.id },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Registration error:", error);
-    return NextResponse.json({ error: "An error occurred during registration" }, { status: 500 });
+    return NextResponse.json(
+      { error: "An error occurred during registration" },
+      { status: 500 }
+    );
   }
 }

@@ -201,7 +201,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
             </Heading>
             <div className="flex justify-between flex-col sm:flex-row">
                 <Text className="text-body font-body text-lightBeige mb-2">
-                    Trailing returns indicate an investment's performance over a fixed
+                    Trailing returns indicate an investment&apos;s performance over a fixed
                     past period, ending at a specific date.
                 </Text>
                 <Text className="text-xs text-right sm:text-xs font-body mb-18 text-beige italic ">
