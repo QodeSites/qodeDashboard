@@ -111,12 +111,12 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
     const ResponsiveTable = () => (
         <div className="overflow-x-auto">
             <div className="relative overflow-x-auto scrollbar-thin scrollbar-thumb-brown scrollbar-track-black">
-                <table className="w-full min-w-[640px]">
+                <table className="w-full text-center min-w-[640px]">
                     <thead>
 
                         <tr className="border text-body font-body p-3 border-brown">
 
-                            <th className="sticky -left-18 t-0 z-10 p-1 font-body text-body border-r border-brown text-left text-lightBeige bg-black">
+                            <th className="sticky -left-18 t-0 z-10 p-1 font-body text-body border-r border-brown  text-lightBeige bg-black">
                                 <div className="absolute inset-y-0 right-0 w-[1px] bg-brown" />
 
                                 Strategy
@@ -124,7 +124,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
                             {periods.map((period) => (
                                 <th
                                     key={period}
-                                    className="p-2 font-body text-left text-body text-lightBeige"
+                                    className="p-2 font-body  text-body text-lightBeige"
                                 >
                                     {period}
                                 </th>
