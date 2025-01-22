@@ -15,10 +15,9 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
       background: 'none',
       tooltipBg: '#000000',
       tooltipBorder: '#000000',
-      // Updated darker reds (slightly more contrast, smoother transitions)
       drawdownGradient: [
-        [0, 'rgba(150, 30, 30, 0.7)'],  // Deeper red with some transparency
-        [1, 'rgba(255, 69, 58, 0.9)']   // Slightly lighter red but less transparent
+        [0, 'rgba(150, 30, 30, 0.7)'],  // deeper red with some transparency
+        [1, 'rgba(255, 69, 58, 0.9)']   // lighter red but less transparent
       ]
     },
     light: {
@@ -28,31 +27,43 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
       background: '#ffffff',
       tooltipBg: '#ffffff',
       tooltipBorder: '#cccccc',
-      // Updated lighter reds (still noticeable but subtler for light theme)
       drawdownGradient: [
-        [0, 'rgba(200, 40, 40, 0.6)'],  // A moderate red with some transparency
-        [1, 'rgba(255, 70, 70, 0.8)']   // Lighter red with less transparency
+        [0, 'rgba(200, 40, 40, 0.6)'],
+        [1, 'rgba(255, 70, 70, 0.8)']
       ]
     }
   };
-  
 
   const colors = themeColors[theme];
 
+  /**
+   * Convert item.date (string) into a numeric timestamp.
+   * We also calculate the strategyValue as a percentage of the first NAV,
+   * and parse the drawdown as a float.
+   */
   const prepareChartData = (data) => {
     const initialNav = parseFloat(data[0].nav);
-    return data.map((item) => ({
-      date: item.date,
-      strategyValue: (parseFloat(item.nav) / initialNav) * 100,
-      drawdown: parseFloat(item.drawdown)
-    }));
+    return data.map((item) => {
+      // Convert date string to a numeric timestamp
+      const xValue = new Date(item.date).getTime(); // e.g., 1695177600000
+      return {
+        x: xValue,
+        strategyValue: (parseFloat(item.nav) / initialNav) * 100,
+        drawdown: parseFloat(item.drawdown),
+      };
+    });
   };
 
+  // Prepare data
   const preparedData = prepareChartData(chartData);
-  const dates = preparedData.map(item => item.date);
-  const strategyValues = preparedData.map(item => item.strategyValue);
-  const drawdownValues = preparedData.map(item => [item.date, item.drawdown]);
 
+  // Extract values for the strategy line
+  const strategySeries = preparedData.map((item) => [item.x, item.strategyValue]);
+  // Extract values for drawdown
+  const drawdownSeries = preparedData.map((item) => [item.x, item.drawdown]);
+
+  // Compute min/max/interval for the main (strategy) axis
+  const strategyValues = preparedData.map((item) => item.strategyValue);
   const maxValue = Math.max(...strategyValues);
   const minValue = Math.min(...strategyValues);
   const range = maxValue - minValue;
@@ -61,24 +72,26 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
   const bottomAxisMin = Math.floor((minValue - padding) / 10) * 10;
   const tickInterval = range <= 10 ? 1 : Math.ceil(range / 5);
 
+  // For drawdown axis
+  const minDrawdown = Math.min(...preparedData.map(item => item.drawdown));
+  const drawdownMin = Math.floor(minDrawdown / 10) * 10; // e.g., -30 => -30
+
   return {
     title: "",
     xAxis: {
-      categories: dates,
       type: "datetime",
       labels: {
         formatter: function () {
-          return new Date(this.value).getFullYear();
+          return Highcharts.dateFormat('%Y', this.value);
         },
         style: {
           color: colors.accent,
-          fontSize: "10px"
+          fontSize: "10px",
         },
       },
-      tickPositions: [0, Math.floor(dates.length / 2), dates.length - 1],
       gridLineColor: colors.gridLines,
       tickWidth: isMobile ? 0 : 1,
-      tickPixelInterval: 10,
+      // tickPixelInterval: 15,
     },
     yAxis: [
       {
@@ -87,7 +100,7 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
         top: "0%",
         min: bottomAxisMin,
         max: topAxisMax,
-        tickInterval: tickInterval,
+        tickInterval,
         tickAmount: 5,
         left: isMobile ? 0 : 40,
         labels: {
@@ -103,12 +116,14 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
         tickColor: colors.accent,
         tickWidth: isMobile ? 0 : 1,
         gridLineColor: colors.gridLines,
-        plotLines: [{
-          value: 0,
-          color: colors.accent,
-          width: 1,
-          zIndex: 5
-        }]
+        plotLines: [
+          {
+            value: 0,
+            color: colors.accent,
+            width: 1,
+            zIndex: 5,
+          },
+        ],
       },
       {
         title: { text: "", style: { color: colors.accent } },
@@ -116,7 +131,7 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
         top: "50%",
         offset: 0,
         max: 0,
-        min: Math.floor(Math.min(...preparedData.map(item => item.drawdown)) / 10) * 10,
+        min: drawdownMin,
         tickAmount: 5,
         labels: {
           formatter: function () {
@@ -124,25 +139,27 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
           },
           style: {
             color: colors.accent,
-            fontSize: "10px"
+            fontSize: "10px",
           },
         },
         lineColor: colors.accent,
         tickColor: colors.accent,
         tickWidth: isMobile ? 0 : 1,
         gridLineColor: colors.gridLines,
-        plotLines: [{
-          value: 0,
-          color: colors.accent,
-          width: 1,
-          zIndex: 5
-        }]
+        plotLines: [
+          {
+            value: 0,
+            color: colors.accent,
+            width: 1,
+            zIndex: 5,
+          },
+        ],
       },
     ],
     series: [
       {
         name: strategyName,
-        data: strategyValues,
+        data: strategySeries,     // [ [timestamp, value], ... ]
         color: colors.accent,
         lineWidth: 2,
         marker: {
@@ -155,14 +172,14 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
       },
       {
         name: "Drawdown",
-        data: drawdownValues,
+        data: drawdownSeries,     // [ [timestamp, value], ... ]
         type: "area",
         yAxis: 1,
         threshold: 0,
         lineWidth: 1,
         color: {
           linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: colors.drawdownGradient
+          stops: colors.drawdownGradient,
         },
         fillOpacity: 1,
         marker: {
@@ -187,17 +204,21 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
       borderColor: colors.tooltipBorder,
       style: { color: colors.text, fontSize: '12px' },
       formatter: function () {
+        // Use your existing formatDate function which should accept numeric timestamps
         const formattedDate = formatDate(this.x);
         let tooltipContent = `<b>${formattedDate}</b><br/>`;
         this.points.forEach(point => {
-          let value = point.series.name === "Drawdown" ? point.y.toFixed(1) + '%' : Math.round(point.y);
+          let value =
+            point.series.name === "Drawdown"
+              ? point.y.toFixed(1) + '%'
+              : Math.round(point.y);
           tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${value}</b><br/>`;
         });
         return tooltipContent;
       }
     },
-    legend: { 
-      enabled: true, 
+    legend: {
+      enabled: true,
       itemStyle: { color: colors.text },
       itemHoverStyle: { color: colors.accent }
     },
@@ -209,8 +230,8 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
         states: { hover: { enabled: true, lineWidthPlus: 1 } },
       },
     },
-    navigation: { 
-      buttonOptions: { 
+    navigation: {
+      buttonOptions: {
         enabled: !isMobile,
         theme: {
           fill: colors.background,
@@ -219,15 +240,15 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
             hover: {
               fill: colors.accent,
               style: {
-                color: colors.background
-              }
-            }
+                color: colors.background,
+              },
+            },
           },
           style: {
-            color: colors.accent
-          }
-        }
-      } 
+            color: colors.accent,
+          },
+        },
+      },
     },
   };
 };
