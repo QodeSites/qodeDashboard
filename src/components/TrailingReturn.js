@@ -104,7 +104,7 @@ const TrailingReturns = ({ data, isLoading, error }) => {
         <tbody className="bg-white dark:bg-black">
           {/* Strategy row */}
           <tr className="border-b border-brown dark:border-brown bg-lightBeige">
-            <td className="p-1 text-xs border-r border-brown text-gray-500 dark:text-gray-400 w-1/2">
+            <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
               Strategy
             </td>
             <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
@@ -118,7 +118,7 @@ const TrailingReturns = ({ data, isLoading, error }) => {
               key={key}
               className="border-b  border-brown dark:border-gray-700"
             >
-              <td className="p-1 text-xs border-r border-brown text-gray-500 dark:text-gray-400 w-1/2">
+              <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
                 {label}
               </td>
               <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
@@ -129,7 +129,7 @@ const TrailingReturns = ({ data, isLoading, error }) => {
 
           {/* MDD row */}
           <tr className="border-b border-brown dark:border-gray-700">
-            <td className="p-1 text-xs border-r border-brown text-gray-500 dark:text-gray-400 w-1/2">
+            <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
               MDD
             </td>
             <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
