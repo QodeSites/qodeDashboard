@@ -6,12 +6,14 @@ import Heading from './common/Heading';
 const PortfolioDetails = ({ data, isCumulative = false }) => {
   if (!data) return null;
 
-  const formatNumber = (num) => {
+  const formatNumber = (num, showNegative = false) => {
+    const isNegative = num < 0;
     return new Intl.NumberFormat('en-IN', {
       maximumFractionDigits: 2,
       minimumFractionDigits: 2,
       style: 'currency',
-      currency: 'INR'
+      currency: 'INR',
+      signDisplay: showNegative ? 'auto' : 'never'
     }).format(num);
   };
 
@@ -35,7 +37,7 @@ const PortfolioDetails = ({ data, isCumulative = false }) => {
     {
       icon: <TrendingUp className="w-1 h-1" />,
       title: "Profit/Loss",
-      value: formatNumber(Math.abs(profit)),
+      value: formatNumber(profit, true),
       subtext: `${profit >= 0 ? '+' : '-'}${Math.abs(profitPercentage).toFixed(2)}%`,
       className: "col-span-1",
       valueColor: profit >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
@@ -75,13 +77,12 @@ const PortfolioDetails = ({ data, isCumulative = false }) => {
               </Text>
             </div>
             <div className="mt-2">
-            <Text className={`text-lg font-semibold ${kpi.valueColor || 'text-gray-900 dark:text-white'}`}>
-
-              {kpi.value}
-              {kpi.subtext && (
-                <span className="text-gray-400 text-xs font-normal ml-1">{kpi.subtext}</span>
-              )}
-            </Text>
+              <Text className={`text-lg font-semibold ${kpi.valueColor || 'text-gray-900 dark:text-white'}`}>
+                {kpi.value}
+                {kpi.subtext && (
+                  <span className="text-gray-400 text-xs font-normal ml-1">{kpi.subtext}</span>
+                )}
+              </Text>
             </div>
           </div>
         ))}
