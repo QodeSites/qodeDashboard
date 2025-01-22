@@ -54,7 +54,7 @@ const TrailingReturns = ({ data, isLoading, error, name }) => {
                     </thead>
                     <tbody>
                         <tr className="border border-gray-200 dark:border-gray-700 text-xs text-center">
-                            <td className="sticky text-nowrap -left-18 p-18 bg-white dark:bg-black">
+                            <td className="sticky  -left-18 p-18 bg-white dark:bg-black">
                                 <div className="absolute inset-y-0 right-0 w-[1px] bg-gray-200 dark:bg-gray-700" />
                                 {data.name}
                             </td>
