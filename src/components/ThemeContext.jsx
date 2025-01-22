@@ -1,4 +1,3 @@
-// ThemeContext.jsx
 "use client";
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -10,10 +9,8 @@ export const CustomThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('light');
 
   useEffect(() => {
-    // Check for saved theme preference or system preference
     const savedTheme = localStorage.getItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = savedTheme || systemTheme;
+    const initialTheme = savedTheme || 'light';
     
     setTheme(initialTheme);
     document.documentElement.classList.toggle('dark', initialTheme === 'dark');
