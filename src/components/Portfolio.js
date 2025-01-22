@@ -1,208 +1,135 @@
-"use client";
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Highcharts from "highcharts";
-import HighchartsReact from "highcharts-react-official";
-import "../app/globals.css";
 import { getChartOptions } from "@/app/lib/ChartOptions";
 import Button from "./common/Button";
-import Heading from "./common/Heading";
 import Text from "./common/Text";
 import useCustomTimeRange from "@/hooks/useCustomRangeHook";
 import useMobileWidth from "@/hooks/useMobileWidth";
 import useFetchStrategyData from "@/hooks/useFetchStrategyData";
 import useFilteredData from "@/hooks/useFilteredData";
-import useReturns from "@/hooks/useReturns";
-import TrailingReturns from "./TrailingReturn";
+import Heading from "./common/Heading";
+import { useTheme } from "@/components/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+const TrailingReturns = dynamic(() => import("./TrailingReturn"), {
+    ssr: false
+});
+
+const PortfolioDetails = dynamic(() => import("./PortfolioDetails"), {
+    ssr: false
+});
+
+const HighchartsReact = dynamic(() => import("highcharts-react-official"), {
+    ssr: false,
+    loading: () => <div className="h-80 bg-gray-200 dark:bg-gray-800 animate-pulse" />
+});
 
 const PerformanceAndDrawdownChart = () => {
-  const [activeTab, setActiveTab] = useState("QGF");
-  const {
-    timeRange,
-    startDate,
-    endDate,
-    activeButton,
-    isCustomDateOpen,
-    handleCustomDateClick,
-    handleTimeRangeChange,
-    setCustomDateRange,
-  } = useCustomTimeRange();
-  const { isMobile } = useMobileWidth();
-  const { data, isLoading, error } = useFetchStrategyData(activeTab);
+    const [activeTab, setActiveTab] = useState("QGF");
+    const { data, isLoading, error, selectedNuvama, setSelectedNuvama, viewMode, handleViewModeChange } = useFetchStrategyData();
+    const { timeRange, startDate, endDate } = useCustomTimeRange();
+    const { isMobile } = useMobileWidth();
+    const { theme } = useTheme();
 
-
-  const strategies = [
-    { id: "QGF", name: "Qode Growth Fund" },
-    { id: "QVF", name: "Qode Velocity Fund" },
-    { id: "QAW", name: "Qode All Weather" },
-  ];
-  const activeStrategy = strategies.find((strategy) => strategy.id === activeTab);
-
-  const descriptions = {
-    QGF: {
-      description: "Strategy focusing on high-quality small and midcap companies, driving sustainable growth through a factor-based investment approach.",
-      principle: "In the long run the stock price always reflects the business performance.",
-    },
-    QVF: {
-      description: "This strategy combines momentum investing with a built-in derivative hedge to protect against significant drawdowns.",
-      principle: "The stock price tells the story before the actual story unfolds.",
-    },
-    QAW: {
-      description: "This is a resilient investment strategy to weather all market fluctuations. Designed for minimal drawdowns and superior returns, providing consistent growth in all market conditions.",
-      principle: "",
-    },
-  };
-
-  const handleStrategyChange = useCallback((strategyId) => {
-    setActiveTab(strategyId);
-  }, [setActiveTab]); // Include setActiveTab in the dependency array
-
-  const filteredData = useFilteredData(data, timeRange, startDate, endDate);
-
-  const chartOptions = useMemo(() => {
-    if (filteredData.length > 0) {
-      return getChartOptions(filteredData, activeTab, isMobile, activeStrategy.name);
-    }
-    return null;
-  }, [filteredData, activeTab, isMobile, activeStrategy]);
-
-  const { strategyCagr, niftyCagr, strategyReturns, niftyReturns } = useReturns(filteredData, timeRange);
-  let benchmark
-  if (filteredData.length > 0 && filteredData[0].benchmark) {
-    benchmark = filteredData[0].benchmark;
-  } else {
-    // handle the case where benchmark is undefined
-    console.error("filteredData[0] or benchmark is undefined");
-  }
-
-  const getReturnLabel = useCallback((timeRange) => {
-    return ["1M", "6M", "1Y"].includes(timeRange) ? "Return" : "CAGR";
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 flex justify-center items-center bg-black">
-        <div className="w-2 h-2 border-t-4 rounded-full animate-spin"></div>
-      </div>
+    const filteredData = useFilteredData(
+        viewMode === "individual" ? data?.dailyNAV || [] : [],
+        timeRange,
+        startDate,
+        endDate
     );
-  }
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+    const chartOptions = useMemo(() => {
+        if (typeof window === 'undefined') return null;
+        if (filteredData.length > 0 && viewMode === "individual") {
+            const options = getChartOptions(filteredData, activeTab, isMobile, "Performance Chart", theme);
+            // Add theme-specific chart colors
+            options.chart.backgroundColor = theme === 'dark' ? '#000' : '#fefefe';
+            options.xAxis.labels = { style: { color: theme === 'dark' ? '#ffffff' : '#000000' } };
+            options.yAxis.labels = { style: { color: theme === 'dark' ? '#ffffff' : '#000000' } };
+            return options;
+        }
+        return null;
+    }, [filteredData, activeTab, isMobile, viewMode, theme]);
 
-  const currentStrategy = strategies.find((s) => s.id === activeTab);
+    return (
+        <div className="p-18 tracking-wide bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
+            <div className="flex justify-between items-center mb-2">
+                <div>
+                    <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-18 mt-4">
+                        {data?.usernames?.[0]
+                            ? `Welcome, ${data.usernames[0].charAt(0).toUpperCase()}${data.usernames[0].slice(1).toLowerCase()}`
+                            : "Welcome, Guest"}
+                    </Heading>
 
-  return (
-    <div className="sm:p-1 mx-auto tracking-wide bg-black text-white">
-      <div className="mb-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 max-w-full">
-        {strategies.map((strategy) => (
-          <Button
-            key={strategy.id}
-            onClick={() => handleStrategyChange(strategy.id)}
-            className={`text-sm transition-colors duration-300 ease-in-out
-              ${activeTab === strategy.id
-                ? "bg-beige text-black"
-                : "text-beige hover:before:bg-beige relative h-full overflow-hidden border border-brown bg-black transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-beige before:transition-all before:duration-500 hover:text-black hover:before:left-0 hover:before:w-full"
-              }`}
-          >
-            <span className="relative text-sm">{strategy.name}</span>
-          </Button>
-        ))}
-      </div>
-
-      <div className="mb-3">
-        <Heading className="text-semiheading text-beige font-semiheading">
-          {strategies.find((s) => s.id === activeTab).name}
-        </Heading>
-        <div className="mt-18 text-lightBeige">
-          <Text className="text-sm sm:text-body">
-            {descriptions[activeTab]?.description}
-          </Text>
-          {descriptions[activeTab]?.principle && (
-            <Text className="text-sm sm:text-body">
-              Principle: {descriptions[activeTab].principle}
-            </Text>
-          )}
-        </div>
-      </div>
-
-      {data && data.length > 0 && (
-        <TrailingReturns
-          data={data}
-          isLoading={isLoading}
-          error={error}
-          name={currentStrategy.name}
-        />
-      )}
-
-      <div className="">
-        <div className="grid grid-cols-2 text-beige gap-3">
-          <div>
-            <h2 className="text-sm sm:text-body text-lightBeige">Absolute Returns</h2>
-            <p className="text-subheading font-subheading text-lightBeige mb-18">{(parseFloat(strategyReturns) / 100 + 1).toFixed(1)}x</p>
-            <p className="text-sm sm:text-body">{(parseFloat(niftyReturns) / 100 + 1).toFixed(1)}x</p>
-            <h2 className="text-sm sm:text-body">{benchmark}</h2>
-          </div>
-          <div className="text-right">
-            <h2 className="text-sm sm:text-body text-lightBeige">
-              {timeRange === "Inception" ? "Since Inception" : timeRange} {getReturnLabel(timeRange)}
-            </h2>
-            <p className="text-subheading font-subheading text-lightBeige mb-18">{parseFloat(strategyCagr).toFixed(1)}%</p>
-            <p className="text-sm sm:text-body">{parseFloat(niftyCagr).toFixed(1)}%</p>
-            <h2 className="text-sm sm:text-body">{benchmark}</h2>
-          </div>
-        </div>
-
-        <div className="flex flex-col md:flex-row items-center gap-2 mt-5">
-          <div className="flex flex-wrap justify-center gap-1">
-            {["1M", "6M", "1Y", "3Y", "5Y", "Inception"].map((range) => (
-              <Button
-                key={range}
-                onClick={() => handleTimeRangeChange(range)}
-                className={`text-sm sm:text-body ${activeButton === range
-                  ? "bg-beige text-black"
-                  : "border border-beige text-beige hover:bg-beige hover:text-black"
-                  }`}
-              >
-                {range}
-              </Button>
-            ))}
-            <Button
-              onClick={handleCustomDateClick}
-              className={`relative text-sm sm:text-body ${activeButton === 'Custom' ? "bg-beige text-black" : "border border-beige text-beige hover:bg-beige hover:text-black"}`}
-            >
-              Custom
-            </Button>
-          </div>
-
-          {isCustomDateOpen && (
-            <div className="relative z-10 w-full sm:w-auto">
-              <div className="absolute right-0 left-0 sm:right-2 sm:left-auto sm:top-1 sm:mt-2 p-1 bg-black border border-beige shadow-md mx-auto sm:mx-0 max-w-[300px] sm:max-w-none">
-                <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setCustomDateRange(e.target.value, endDate)}
-                    className="w-full sm:w-auto border border-beige bg-black text-white text-sm sm:text-body px-2 py-1 h-[40px]"
-                  />
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setCustomDateRange(startDate, e.target.value)}
-                    className="w-full sm:w-auto border border-beige bg-black text-white text-sm sm:text-body px-2 py-1 h-[40px]"
-                  />
+                    <Text className="text-xs text-gray-600 dark:text-gray-400">
+                        View your portfolio performance and details
+                    </Text>
                 </div>
-              </div>
             </div>
-          )}
-        </div>
 
-        <div className="mt-4">
-          {chartOptions && <HighchartsReact highcharts={Highcharts} options={chartOptions} />}
+            {data?.nuvama_codes?.length > 1 && (
+                <div className="flex gap-2 mb-2">
+                    <Button 
+                        onClick={() => handleViewModeChange("individual")}
+                        className={`p-1 text-xs ${viewMode === "individual" 
+                            ? "bg-brown text-white" 
+                            : "border border-brown dark:border-beige"}`}
+                    >
+                        Individual Portfolio
+                    </Button>
+                    <Button 
+                        onClick={() => handleViewModeChange("cumulative")}
+                        className={`p-1 text-xs ${viewMode === "cumulative" 
+                            ? "bg-brown text-white" 
+                            : "border border-brown dark:border-beige"}`}
+                    >
+                        Total Portfolio
+                    </Button>
+                </div>
+            )}
+
+            {viewMode === "individual" && data?.nuvama_codes?.length > 1 && (
+                <div className="mb-2">
+                    <select 
+                        value={selectedNuvama || ""} 
+                        onChange={(e) => setSelectedNuvama(e.target.value)}
+                        className="border border-brown dark:border-beige bg-white dark:bg-black text-gray-900 dark:text-white p-18 w-full sm:w-auto text-xs transition-colors duration-300"
+                    >
+                        {data.nuvama_codes.map((code, index) => (
+                            <option key={code} value={code}>{data.usernames[index]} ({code})</option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
+            <div suppressHydrationWarning>
+                <PortfolioDetails data={data?.portfolioDetails} isCumulative={viewMode === "cumulative"} />
+            </div>
+
+            {isLoading ? (
+                <div className="flex justify-center items-center p-4">
+                    <div className="w-1 h-1 border-t-4 border-brown dark:border-beige rounded-full animate-spin" />
+                </div>
+            ) : error ? (
+                <div className="text-red-500 p-1 text-xs">{error}</div>
+            ) : (
+                viewMode === "individual" && (
+                    <>
+                        <div suppressHydrationWarning className="mb-4">
+                            <TrailingReturns data={data?.trailingReturns} isLoading={isLoading} error={error} name={selectedNuvama} />
+                            <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-18 mt-4">
+                                Performance Chart
+                            </Heading>
+                            {typeof window !== 'undefined' && chartOptions && (
+                                <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+                            )}
+                        </div>
+                    </>
+                )
+            )}
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default PerformanceAndDrawdownChart;

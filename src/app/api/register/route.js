@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 export async function POST(req) {
   try {
     const { username, email, password } = await req.json();
-
+    
     // Generate user_id
     const user_id = Math.floor(Math.random() * 1000000);
 

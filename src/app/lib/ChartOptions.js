@@ -1,35 +1,65 @@
-import { formatDate, calculateDrawdown } from '@/utils/chartUtils';
+import { formatDate } from '@/utils/chartUtils';
 
-export const getChartOptions = (chartData, strategy, isMobile, strategyName) => {
-  console.log(chartData);
-
+export const getChartOptions = (chartData, strategy, isMobile, strategyName, theme) => {
   if (!chartData || chartData.length === 0) {
     console.error("Data is not available for: ", strategy);
     return {};
   }
 
-  const prepareChartData = (data) => {
-    const initialStrategyValue = data[0].total_portfolio_nav;
-    const initialBenchmarkValue = data[0].benchmark_values;
+  // Theme-specific colors
+  const themeColors = {
+    dark: {
+      text: '#fee9d6',
+      accent: '#d1a47b',
+      gridLines: '#292929',
+      background: 'none',
+      tooltipBg: '#000000',
+      tooltipBorder: '#000000',
+      // Updated darker reds (slightly more contrast, smoother transitions)
+      drawdownGradient: [
+        [0, 'rgba(150, 30, 30, 0.7)'],  // Deeper red with some transparency
+        [1, 'rgba(255, 69, 58, 0.9)']   // Slightly lighter red but less transparent
+      ]
+    },
+    light: {
+      text: '#333333',
+      accent: '#d1a47b',
+      gridLines: '#d3d3d3',
+      background: '#ffffff',
+      tooltipBg: '#ffffff',
+      tooltipBorder: '#cccccc',
+      // Updated lighter reds (still noticeable but subtler for light theme)
+      drawdownGradient: [
+        [0, 'rgba(200, 40, 40, 0.6)'],  // A moderate red with some transparency
+        [1, 'rgba(255, 70, 70, 0.8)']   // Lighter red with less transparency
+      ]
+    }
+  };
+  
 
+  const colors = themeColors[theme];
+
+  const prepareChartData = (data) => {
+    const initialNav = parseFloat(data[0].nav);
     return data.map((item) => ({
       date: item.date,
-      strategyValue: Math.round((item.total_portfolio_nav / initialStrategyValue) * 100), // Returns a whole number
-      benchmarkValue: Math.round((item.benchmark_values / initialBenchmarkValue) * 100), // Returns a whole number
+      strategyValue: (parseFloat(item.nav) / initialNav) * 100,
+      drawdown: parseFloat(item.drawdown)
     }));
   };
-
 
   const preparedData = prepareChartData(chartData);
   const dates = preparedData.map(item => item.date);
   const strategyValues = preparedData.map(item => item.strategyValue);
-  const benchmarkValues = preparedData.map(item => item.benchmarkValue);
-  const drawdownData = calculateDrawdown(preparedData);
+  const drawdownValues = preparedData.map(item => [item.date, item.drawdown]);
 
-  const maxValue = Math.max(...strategyValues, ...benchmarkValues);
-  const topAxisMax = Math.ceil(maxValue / 10) * 10;
-  const minDrawdown = Math.min(...drawdownData.map(item => item[1]));
-  const bottomAxisMin = Math.floor(minDrawdown / 10) * 10;
+  const maxValue = Math.max(...strategyValues);
+  const minValue = Math.min(...strategyValues);
+  const range = maxValue - minValue;
+  const padding = range * 0.1;
+  const topAxisMax = Math.ceil((maxValue + padding) / 10) * 10;
+  const bottomAxisMin = Math.floor((minValue - padding) / 10) * 10;
+  const tickInterval = range <= 10 ? 1 : Math.ceil(range / 5);
 
   return {
     title: "",
@@ -41,73 +71,71 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
           return new Date(this.value).getFullYear();
         },
         style: {
-          color: "#d1a47b",
+          color: colors.accent,
           fontSize: "10px"
         },
       },
       tickPositions: [0, Math.floor(dates.length / 2), dates.length - 1],
-      gridLineColor: "#fefefe",
+      gridLineColor: colors.gridLines,
       tickWidth: isMobile ? 0 : 1,
-      tickPixelInterval: 150,
+      tickPixelInterval: 10,
     },
     yAxis: [
       {
         title: { text: "" },
         height: "50%",
         top: "0%",
-        offset: 0,
-        min: 0,
+        min: bottomAxisMin,
         max: topAxisMax,
+        tickInterval: tickInterval,
         tickAmount: 5,
         left: isMobile ? 0 : 40,
         labels: {
           formatter: function () {
-            return Math.round(this.value);  // Round the label values to remove decimals
+            return Math.round(this.value);
           },
           style: {
-            color: "#d1a47b",
+            color: colors.accent,
             fontSize: "10px",
           },
         },
-        lineColor: "#d1a47b",
-        tickColor: "#d1a47b",
+        lineColor: colors.accent,
+        tickColor: colors.accent,
         tickWidth: isMobile ? 0 : 1,
-        gridLineColor: "#292929",
-        // Add a plot line at 0 for the first axis
+        gridLineColor: colors.gridLines,
         plotLines: [{
           value: 0,
-          color: '#d1a47b',
+          color: colors.accent,
           width: 1,
-          zIndex: 5 // Ensure the line is on top
+          zIndex: 5
         }]
       },
       {
-        title: { text: "", style: { color: "#d1a47b" } },
+        title: { text: "", style: { color: colors.accent } },
         height: "50%",
         top: "50%",
         offset: 0,
         max: 0,
-        min: bottomAxisMin,
+        min: Math.floor(Math.min(...preparedData.map(item => item.drawdown)) / 10) * 10,
         tickAmount: 5,
         labels: {
           formatter: function () {
-            return Math.round(this.value) + '%';  // Round the label values to remove decimals
+            return Math.round(this.value) + '%';
           },
           style: {
-            color: "#d1a47b",
+            color: colors.accent,
             fontSize: "10px"
           },
         },
-        lineColor: "#d1a47b",
-        tickColor: "#d1a47b",
+        lineColor: colors.accent,
+        tickColor: colors.accent,
         tickWidth: isMobile ? 0 : 1,
-        gridLineColor: "#292929",
-        // Add a plot line at 0 for the second axis
+        gridLineColor: colors.gridLines,
         plotLines: [{
           value: 0,
-          color: '#d1a47b',
+          color: colors.accent,
           width: 1,
-          zIndex: 5 // Ensure the line is on top
+          zIndex: 5
         }]
       },
     ],
@@ -115,20 +143,7 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
       {
         name: strategyName,
         data: strategyValues,
-        color: "#d1a47b",
-        lineWidth: 1,
-        marker: {
-          enabled: false,
-          symbol: 'circle',
-          states: { hover: { enabled: true, radius: 5 } }
-        },
-        type: "line",
-        yAxis: 0,
-      },
-      {
-        name: chartData[0].benchmark,
-        data: benchmarkValues,
-        color: "#945c39",
+        color: colors.accent,
         lineWidth: 2,
         marker: {
           enabled: false,
@@ -140,33 +155,37 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
       },
       {
         name: "Drawdown",
-        data: drawdownData,
-        color: "#B10606",
-        lineWidth: 2,
+        data: drawdownValues,
+        type: "area",
+        yAxis: 1,
+        threshold: 0,
+        lineWidth: 1,
+        color: {
+          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+          stops: colors.drawdownGradient
+        },
+        fillOpacity: 1,
         marker: {
           enabled: false,
           symbol: 'circle',
           states: { hover: { enabled: true, radius: 5 } }
-        },
-        type: "line",
-        yAxis: 1,
-        threshold: 0,
+        }
       }
     ],
     chart: {
       height: isMobile ? 900 : 800,
-      backgroundColor: "none",
+      backgroundColor: colors.background,
       zoomType: "x",
-      marginLeft: isMobile ? 0 : 50,
-      marginRight: isMobile ? 0 : 10,
+      marginLeft: isMobile ? 0 : 10,
+      marginRight: isMobile ? 0 : 2,
       spacingBottom: 20,
     },
     tooltip: {
       shared: true,
       outside: isMobile,
-      backgroundColor: '#000000',
-      borderColor: '#000000',
-      style: { color: '#fee9d6', fontSize: '12px' },
+      backgroundColor: colors.tooltipBg,
+      borderColor: colors.tooltipBorder,
+      style: { color: colors.text, fontSize: '12px' },
       formatter: function () {
         const formattedDate = formatDate(this.x);
         let tooltipContent = `<b>${formattedDate}</b><br/>`;
@@ -177,7 +196,11 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
         return tooltipContent;
       }
     },
-    legend: { enabled: true, itemStyle: { color: '#fee9d6' } },
+    legend: { 
+      enabled: true, 
+      itemStyle: { color: colors.text },
+      itemHoverStyle: { color: colors.accent }
+    },
     credits: { enabled: false },
     exporting: { enabled: !isMobile },
     plotOptions: {
@@ -186,7 +209,25 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName) => 
         states: { hover: { enabled: true, lineWidthPlus: 1 } },
       },
     },
-    navigation: { buttonOptions: { enabled: !isMobile } },
+    navigation: { 
+      buttonOptions: { 
+        enabled: !isMobile,
+        theme: {
+          fill: colors.background,
+          stroke: colors.accent,
+          states: {
+            hover: {
+              fill: colors.accent,
+              style: {
+                color: colors.background
+              }
+            }
+          },
+          style: {
+            color: colors.accent
+          }
+        }
+      } 
+    },
   };
-
 };

@@ -1,6 +1,6 @@
 import CredentialsProvider from "next-auth/providers/credentials";
-import prisma from "./prisma";
-import { compare } from "bcrypt";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcrypt";
 
 export const authOptions = {
   providers: [
@@ -10,46 +10,65 @@ export const authOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
+
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Inception fields are required");
+          throw new Error("Both email and password are required.");
         }
 
         try {
-          const user = await prisma.tblusers.findUnique({
+          console.log("Authenticating user:", credentials.email);
+
+          const user = await prisma.user_master.findUnique({
             where: { email: credentials.email.toLowerCase() },
             select: {
               id: true,
               email: true,
-              username: true,
               password: true,
-              is_verified: true,
+              hasaccess: true,
             },
           });
 
           if (!user) {
-            throw new Error("User not registered, please sign up");
+            console.error("User not found:", credentials.email);
+            throw new Error("User not found. Please sign up.");
           }
 
-
-          const isPasswordValid = await compare(credentials.password, user.password);
-          if (!isPasswordValid) {
-            throw new Error("Invalid email or password");
+          if (credentials.password !== user.password) {
+            console.error("Invalid password for user:", user.email);
+            throw new Error("Invalid email or password.");
           }
 
-          if (!user.is_verified) {
-            throw new Error("Please wait while we approve your request.");
+          if (!user.hasaccess) {
+            console.error("User has no access:", user.email);
+            throw new Error("Access denied. Please contact support.");
           }
 
+          // Fetch all clients with their nuvama_code and username
+          const clients = await prisma.client_master.findMany({
+            where: { user_id: user.id },
+            select: { 
+              nuvama_code: true,
+              username: true 
+            },
+          });
+
+          // Create arrays for both nuvama codes and usernames
+          const nuvamaCodes = clients.map((client) => client.nuvama_code);
+          const usernames = clients.map((client) => client.username);
+
+          console.log("User authenticated:", user.email);
 
           return {
             id: user.id.toString(),
             email: user.email,
-            username: user.username,
+            hasaccess: user.hasaccess,
+            nuvama_codes: nuvamaCodes,
+            usernames: usernames, // Add usernames to the return object
           };
         } catch (error) {
           console.error("Authentication error:", error);
-          throw new Error(error.message || "An unexpected error occurred");
+          throw new Error("Login failed. Please try again.");
         }
       },
     }),
@@ -59,34 +78,32 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
-  jwt: {
-    secret: process.env.JWT_SECRET,
-  },
   callbacks: {
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.username = token.username;
-        session.user.email = token.email;
-      }
-      return session;
+      return {
+        ...session,
+        user: {
+          id: token.id,
+          email: token.email,
+          hasaccess: token.hasaccess,
+          nuvama_codes: token.nuvama_codes,
+          usernames: token.usernames, // Add usernames to session
+        },
+      };
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.username = user.username;
-      }
-      if (account) {
-        token.accessToken = account.access_token;
+        return {
+          ...token,
+          id: user.id,
+          hasaccess: user.hasaccess,
+          nuvama_codes: user.nuvama_codes,
+          usernames: user.usernames, // Add usernames to JWT
+        };
       }
       return token;
     },
   },
-  pages: {
-    signIn: "/auth/signin",
-    signOut: "/auth/signout",
-    error: "/auth/error",
-  },
-  debug: process.env.NODE_ENV === "development",
+
   secret: process.env.NEXTAUTH_SECRET,
 };

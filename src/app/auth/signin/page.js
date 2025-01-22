@@ -4,8 +4,6 @@ import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react"; // Assuming you're using Lucide icons
-import Section from "@/components/container/Section";
 import Heading from "@/components/common/Heading";
 import Button from "@/components/common/Button";
 
@@ -28,7 +26,7 @@ export default function SignIn() {
         email,
         password,
       });
-
+      
       if (result?.error) {
         setError(result.error);
         toast({
@@ -41,7 +39,7 @@ export default function SignIn() {
           title: "Success",
           description: "Logged in successfully",
         });
-        router.push('/'); // Redirect to dashboard on success
+        router.push('/');
       } else {
         throw new Error('An unexpected error occurred');
       }
@@ -58,35 +56,42 @@ export default function SignIn() {
   };
 
   return (
-    <div className="bg-black  mx-auto h-screen flex flex-col justify-between overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 mx-auto h-screen flex flex-col justify-between overflow-hidden">
       {/* Header Section */}
-      <div className="border-b border-brown">
-        <div className="mx-auto xl:max-w-[1386px] md:max-w-[1066px] max-w-[93%] flex justify-between items-center sm:px-0  h-6">
-          <Link href="/" className="text-beige playfair-display-font text-3xl font-bold">
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="mx-auto xl:max-w-[1386px] md:max-w-[1066px] max-w-[93%] flex justify-center items-center sm:px-0 h-6">
+          <Link 
+            href="/" 
+            className="text-brown dark:text-brown playfair-display-font text-3xl font-bold"
+          >
             Qode
           </Link>
-          <div className="text-center">
+          {/* <div className="text-center">
             <Button
               onClick={() => router.push("/auth/register")}
-              className="bg-transparent border-brown border text-beige hover:bg-beige hover:text-black"
+              className="bg-transparent border-gray-200 dark:border-gray-700 border 
+                       text-brown dark:text-brown 
+                       hover:bg-gray-100 dark:hover:bg-gray-800 
+                       transition-colors duration-200"
             >
               Create Account
-
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-full sm:p-6 p-2 max-w-[93%] sm:max-w-[631px] border mt-2 border-brown bg-black">
-          <Heading className="text-semiheading font-semiheading text-beige text-center mb-4">
+        <div className="w-full sm:p-6 p-2 max-w-[93%] sm:max-w-[631px] 
+                     border border-gray-200 dark:border-gray-700 
+                     bg-white dark:bg-gray-900 
+                     rounded-lg shadow-sm">
+          <Heading className="text-semiheading font-semiheading text-brown dark:text-brown text-center mb-4">
             Sign In
           </Heading>
 
           <form className="space-y-2" onSubmit={handleSubmit} noValidate>
             <div>
-
               <div className="mt-1">
                 <input
                   id="email"
@@ -97,14 +102,20 @@ export default function SignIn() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-18 border bg-black placeholder:text-body placeholder:text-darkGrey border-brown text-beige focus:outline-none focus:ring-1 focus:ring-beige"
+                  className="w-full p-18 
+                         border border-gray-200 dark:border-gray-700
+                         bg-white dark:bg-gray-900
+                         text-brown dark:text-brown
+                         placeholder:text-gray-500 dark:placeholder:text-gray-400
+                         focus:outline-none focus:ring-1 
+                         focus:ring-gray-400 dark:focus:ring-gray-500
+                         rounded-md transition-colors"
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
             </div>
 
             <div>
-
               <div className="mt-1">
                 <input
                   id="password"
@@ -115,7 +126,14 @@ export default function SignIn() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full p-18 border bg-black placeholder:text-body placeholder:text-darkGrey border-brown text-beige focus:outline-none focus:ring-1 focus:ring-beige"
+                  className="appearance-none block w-full p-18 
+                         border border-gray-200 dark:border-gray-700
+                         bg-white dark:bg-gray-900
+                         text-brown dark:text-brown
+                         placeholder:text-gray-500 dark:placeholder:text-gray-400
+                         focus:outline-none focus:ring-1 
+                         focus:ring-gray-400 dark:focus:ring-gray-500
+                         rounded-md transition-colors"
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
@@ -125,31 +143,29 @@ export default function SignIn() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-beige text-black"
+                className="bg-beige dark:bg-beige 
+                         text-white dark:text-brown
+                         hover:bg-gray-800 dark:hover:bg-gray-200
+                         transition-colors duration-200"
                 aria-busy={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <span className="inline-flex items-center">
-                      Submitting
-                      <span className="dot-animation">
-                        <span className="dot">.</span>
-                        <span className="dot">.</span>
-                        <span className="dot">.</span>
-                      </span>
-                    </span>.
-                  </>
+                  <span className="inline-flex items-center">
+                    Submitting
+                    <span className="dot-animation">
+                      <span className="dot">.</span>
+                      <span className="dot">.</span>
+                      <span className="dot">.</span>
+                    </span>
+                  </span>
                 ) : (
                   'Sign In'
                 )}
               </Button>
             </div>
           </form>
-
-
         </div>
       </div>
     </div>
-
   );
 }

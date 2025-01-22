@@ -7,56 +7,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model tblusers {
-  id          Int       @id @default(autoincrement())
+model client_master {
+  id          Int         @id @default(autoincrement())
   user_id     Int
-  username    String    @db.VarChar(50)
-  password    String    @db.VarChar(255)
-  email       String    @unique @db.VarChar(100)
-  created_at  DateTime? @default(now()) @db.Timestamp(6)
-  last_login  DateTime? @db.Timestamp(6)
-  is_verified Boolean?  @default(true)
+  username    String      @db.VarChar(100)
+  nuvama_code String      @unique @db.VarChar(100)
+  qcode       String?     @unique @db.VarChar(100)
+  user_master user_master @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model strategies {
-  strategyid          String   @db.VarChar(255)
-  strategyname        String   @db.VarChar(100)
-  total_portfolio_nav Decimal  @db.Decimal(15, 2)
-  nifty               Decimal  @db.Decimal(15, 2)
-  date                DateTime @db.Date
-  id                  Int      @id @default(autoincrement())
+model daily_nav {
+  date        String? @db.VarChar
+  nav         String? @db.VarChar
+  drawdown    String? @db.VarChar
+  nuvama_code String? @db.VarChar
+  id          Int     @id @default(autoincrement())
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model blog_posts {
-  id               Int            @id @default(autoincrement())
-  title            String         @db.VarChar(255)
-  slug             String         @unique @db.VarChar(255)
-  content          Json
-  excerpt          String?
-  author_id        Int
-  status           String         @db.VarChar(20)
-  published_at     DateTime?      @db.Timestamptz(6)
-  blog_strategy_id Int?
-  created_at       DateTime?      @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?      @default(now()) @db.Timestamptz(6)
-  read_time        Int?
-  tblstrategies    tblstrategies? @relation(fields: [blog_strategy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+model portfolio_details {
+  name                   String? @db.VarChar
+  nuvama_code            String? @db.VarChar
+  account                String? @db.VarChar
+  portfolio_value        String? @db.VarChar
+  cash                   String? @db.VarChar
+  cash_percentage        String? @db.VarChar
+  derivatives_percentage String? @db.VarChar
+  strategy               String? @db.VarChar
+  id                     Int     @id @default(autoincrement())
+  initial_investment     String? @db.VarChar
 }
 
-model migrations_lock {
-  lock_key    String    @id @db.VarChar(191)
-  locked      Boolean?  @default(false)
-  acquired_at DateTime? @db.Timestamptz(6)
-  released_at DateTime? @db.Timestamptz(6)
+model trailing_returns {
+  name             String? @db.VarChar
+  nuvama_code      String? @db.VarChar
+  account          String? @db.VarChar
+  d10              String? @db.VarChar
+  m1               String? @db.VarChar
+  m3               String? @db.VarChar
+  m6               String? @db.VarChar
+  y1               String? @db.VarChar
+  y2               String? @db.VarChar
+  y5               String? @db.VarChar
+  since_inception  String? @db.VarChar
+  mdd              String? @db.VarChar
+  current_drawdown String? @db.VarChar
+  id               Int     @id @default(autoincrement())
 }
 
-model tblstrategies {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique @db.VarChar(50)
-  slug        String       @unique @db.VarChar(50)
-  description String?
-  created_at  DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime?    @default(now()) @db.Timestamptz(6)
-  blog_posts  blog_posts[]
+model user_master {
+  id              Int             @id @default(autoincrement())
+  email           String          @unique @db.VarChar(255)
+  alternate_email String?         @unique @db.VarChar(255)
+  password        String          @db.VarChar(255)
+  hasaccess       Boolean?        @default(true)
+  created_at      DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at      DateTime        @updatedAt @db.Timestamp(6) // Automatically updates on modification
+  reset_token     String?         @unique @db.VarChar(255)  // Stores reset token
+  reset_expires   DateTime?       // Stores expiration time of reset token
+  
+  client_master   client_master[]
 }
