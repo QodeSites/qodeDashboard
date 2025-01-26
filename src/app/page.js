@@ -1,23 +1,24 @@
+// pages/index.jsx
 "use client";
-import DefaultLayout from "@/components/Layouts/Layouts";
-import PerformanceAndDrawdownChart from "@/components/Portfolio";
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import BlogCard from "@/components/BlogCard";
 import Portfolio from "./portfolio/page";
+import ManagedAccountDashboard from "@/components/ManagedAccountDashboard"; // Import the alternative component
 
 export default function Home() {
   const { data: session, status } = useSession();
+  console.log(session);
+  
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "loading") return;
+    if (status === "loading") return; // Do nothing while loading
     if (!session) {
-      router.push("/auth/signin");
+      router.push("/auth/signin"); // Redirect to sign-in if not authenticated
     } else {
-      setLoading(false);
+      setLoading(false); // Stop loading once session is available
     }
   }, [session, status, router]);
 
@@ -28,7 +29,11 @@ export default function Home() {
       </div>
     );
   }
-  return (
-    <Portfolio />
-  )
+
+  // Check if managed_account_codes exists and has at least one entry
+  const hasManagedAccounts =
+    session?.user?.managed_account_codes &&
+    session.user.managed_account_codes.length > 0;
+
+  return hasManagedAccounts ? <ManagedAccountDashboard /> : <Portfolio />;
 }

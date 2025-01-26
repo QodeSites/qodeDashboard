@@ -1,5 +1,5 @@
 import { formatDate } from '@/utils/chartUtils';
-
+import Highcharts from 'highcharts';
 export const getChartOptions = (chartData, strategy, isMobile, strategyName, theme) => {
   if (!chartData || chartData.length === 0) {
     console.error("Data is not available for: ", strategy);

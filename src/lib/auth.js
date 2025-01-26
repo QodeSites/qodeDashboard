@@ -17,8 +17,6 @@ export const authOptions = {
         }
 
         try {
-          console.log("Authenticating user:", credentials.email);
-
           const user = await prisma.user_master.findUnique({
             where: { email: credentials.email.toLowerCase() },
             select: {
@@ -30,21 +28,18 @@ export const authOptions = {
           });
 
           if (!user) {
-            console.error("User not found:", credentials.email);
             throw new Error("User not found. Please sign up.");
           }
 
           if (credentials.password !== user.password) {
-            console.error("Invalid password for user:", user.email);
             throw new Error("Invalid email or password.");
           }
 
           if (!user.hasaccess) {
-            console.error("User has no access:", user.email);
             throw new Error("Access denied. Please contact support.");
           }
 
-          // Fetch all clients with their nuvama_code and username
+          // First check client_master
           const clients = await prisma.client_master.findMany({
             where: { user_id: user.id },
             select: { 
@@ -53,18 +48,33 @@ export const authOptions = {
             },
           });
 
-          // Create arrays for both nuvama codes and usernames
-          const nuvamaCodes = clients.map((client) => client.nuvama_code);
-          const usernames = clients.map((client) => client.username);
+          // If no clients in client_master, check managed_account_clients
+          if (clients.length === 0) {
+            const managedClients = await prisma.managed_account_clients.findMany({
+              where: { user_id: user.id },
+              select: {
+                id: true,
+                client_name: true,
+                account_code: true
+              },
+            });
 
-          console.log("User authenticated:", user.email);
+            return {
+              master_id: user.id.toString(),
+              email: user.email,
+              hasaccess: user.hasaccess,
+              managed_client_names: managedClients.map(client => client.client_name),
+              managed_account_codes: managedClients.map(client => client.account_code),
+              id: managedClients[0].id.toString(),
+            };
+          }
 
           return {
             id: user.id.toString(),
             email: user.email,
             hasaccess: user.hasaccess,
-            nuvama_codes: nuvamaCodes,
-            usernames: usernames, // Add usernames to the return object
+            nuvama_codes: clients.map(client => client.nuvama_code),
+            usernames: clients.map(client => client.username),
           };
         } catch (error) {
           console.error("Authentication error:", error);
@@ -75,8 +85,8 @@ export const authOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60, // 24 hours
+    maxAge: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
   },
   callbacks: {
     async session({ session, token }) {
@@ -86,8 +96,8 @@ export const authOptions = {
           id: token.id,
           email: token.email,
           hasaccess: token.hasaccess,
-          nuvama_codes: token.nuvama_codes,
-          usernames: token.usernames, // Add usernames to session
+          ...(token.nuvama_codes ? { nuvama_codes: token.nuvama_codes, usernames: token.usernames } : 
+           { managed_client_names: token.managed_client_names, managed_account_codes: token.managed_account_codes })
         },
       };
     },
@@ -97,8 +107,8 @@ export const authOptions = {
           ...token,
           id: user.id,
           hasaccess: user.hasaccess,
-          nuvama_codes: user.nuvama_codes,
-          usernames: user.usernames, // Add usernames to JWT
+          ...(user.nuvama_codes ? { nuvama_codes: user.nuvama_codes, usernames: user.usernames } : 
+           { managed_client_names: user.managed_client_names, managed_account_codes: user.managed_account_codes })
         };
       }
       return token;

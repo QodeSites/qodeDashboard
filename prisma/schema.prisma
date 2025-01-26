@@ -67,3 +67,57 @@ model user_master {
   
   client_master   client_master[]
 }
+
+model managed_account_clients {
+  id          Int      @id @default(autoincrement())
+  user_id     Int?
+  client_name String   @db.VarChar(100)
+  account_code String? @db.VarChar(50)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now())
+}
+
+
+model master_sheet {
+  vlookup_helper           String?
+  date                     DateTime?
+  system_tag               String?
+  portfolio_value          Float?
+  capital_in_out           Float?
+  previous_date            DateTime?
+  prev_value               Float?
+  daily_pl                 Float?
+  long_options_total_prev_portfolio Float?
+  daily_pl_percent         Float?   @map("daily_pl_%")
+  nav                      Float?
+  prev_nav                 Float?
+  drawdown                 Float?
+  leverage                 Float?
+  unlevered_nav            Float?
+  unlevered_prev_nav       Float?
+  account_names            String?
+  account_tag              String?
+  scheme_tag               String?
+  strategy_labels          String?
+  strategy_tags            String?
+  id              Int             @id @default(autoincrement())
+}
+
+model scheme {
+  id          Int      @id @default(autoincrement())
+  client_id   Int
+  scheme_name String   @db.VarChar(100)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now())
+  strategy_name String? @db.VarChar(100)
+  system_tag    String? @db.VarChar(100)
+}
+
+model strategy {
+  id          Int      @id @default(autoincrement())
+  scheme_id   Int
+  strategy_name String @db.VarChar(100)
+  system_tag    String @db.VarChar(100)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @default(now())
+}
