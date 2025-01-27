@@ -174,7 +174,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
     );
 
     const latestPortfolioValue = strategiesData.reduce(
-      (sum, entry) => sum + (entry.portfolio_value || 0),
+      (sum, entry) => entry.portfolio_value || 0,
       0
     );
 
