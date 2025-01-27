@@ -16,7 +16,12 @@ const SidebarNavigation = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut({ callbackUrl: "/auth/signin" });
+      // Use window.location.origin to get the current domain
+      const baseUrl = window.location.origin;
+      await signOut({ 
+        callbackUrl: `${baseUrl}/auth/signin`,
+        redirect: true
+      });
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -26,9 +31,10 @@ const SidebarNavigation = () => {
     setIsOpen(!isOpen);
   };
 
+  // Rest of the component remains the same
   return (
     <>
-      {/* Hamburger Button: Position it top-left, above the content */}
+      {/* Hamburger Button */}
       <div className="absolute top-1 left-1 md:hidden z-50">
         <button
           onClick={toggleSidebar}
@@ -38,7 +44,7 @@ const SidebarNavigation = () => {
         </button>
       </div>
 
-      {/* Sidebar itself: fixed, so it overlays the content */}
+      {/* Sidebar */}
       <aside
         className={`
           fixed top-0 left-0 w-64
@@ -105,7 +111,7 @@ const SidebarNavigation = () => {
         </div>
       </aside>
 
-      {/* Dark overlay when sidebar is open on mobile */}
+      {/* Dark overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 dark:bg-black/70 
