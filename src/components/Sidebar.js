@@ -16,8 +16,7 @@ const SidebarNavigation = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut({ redirect: false });
-      router.push("/auth/signin");
+      await signOut({ callbackUrl: "/auth/signin" });
     } catch (error) {
       console.error("Logout error:", error);
     }
