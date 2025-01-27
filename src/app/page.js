@@ -35,5 +35,5 @@ export default function Home() {
     session?.user?.managed_account_codes &&
     session.user.managed_account_codes.length > 0;
 
-  return hasManagedAccounts ? <ManagedAccountDashboard /> : <Portfolio />;
+  return hasManagedAccounts ? <ManagedAccountDashboard accountCodes={session.user.managed_account_codes} /> : <Portfolio />;
 }

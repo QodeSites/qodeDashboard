@@ -5,7 +5,7 @@ import useManagedAccounts from "@/hooks/useManagedAccounts";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
-const ManagedAccountDashboard = () => {
+const ManagedAccountDashboard = ({ accountCodes }) => {
   // State Hooks
   const [activeScheme, setActiveScheme] = useState("Scheme Total");
   const [theme, setTheme] = useState("light");
@@ -41,20 +41,37 @@ const ManagedAccountDashboard = () => {
   const colors = themeColors[theme];
 
   // Function to determine the strategy name based on the active scheme
+  // Function to determine the strategy name based on the active scheme
   const getStrategyName = (schemeName) => {
     if (schemeName === "Scheme Total") {
-      return "AC5 Zerodha Total Portfolio";
+      return `${accountCodes} Zerodha Total Portfolio`;
     }
-    // Extract the last character (A, B, C, etc.) from the scheme name
+
+    // Check if the scheme name contains a letter (e.g., "Scheme A", "Scheme B")
     const match = schemeName.match(/Scheme\s+([A-Z])/);
     if (match && match[1]) {
-      return `AC5 Zerodha Total Portfolio ${match[1]}`;
+      // First check if data exists for portfolio name with letter suffix
+      const portfolioWithLetter = `${accountCodes} Zerodha Total Portfolio ${match[1]}`;
+      const portfolioWithoutLetter = `${accountCodes} Zerodha Total Portfolio`;
+
+      // Return the appropriate portfolio name based on what exists in the data
+      if (data && Array.isArray(data)) {
+        const schemeData = data.find(scheme => scheme.schemeName === schemeName);
+        if (schemeData?.strategies?.some(s => s.strategy === portfolioWithLetter)) {
+          return portfolioWithLetter;
+        }
+      }
+
+      // If no match found with letter suffix, return without letter
+      return portfolioWithoutLetter;
     }
-    // Fallback in case the scheme name doesn't match the expected pattern
-    return "AC5 Zerodha Total Portfolio";
+
+    // Default case
+    return `${accountCodes} Zerodha Total Portfolio`;
   };
 
   const strategyName = useMemo(() => getStrategyName(activeScheme), [activeScheme]);
+  console.log(strategyName);
 
   // Find active scheme data
   const activeSchemeData = useMemo(() => {
@@ -68,6 +85,8 @@ const ManagedAccountDashboard = () => {
       (strategy) => strategy.strategy === strategyName
     )?.masterSheetData || [];
   }, [activeSchemeData, strategyName]);
+
+  console.log(ac5ZerodhaData);
 
   // Sort the data by date
   const sortedData = useMemo(() => {
@@ -495,9 +514,8 @@ const ManagedAccountDashboard = () => {
           <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-lg font-medium">Total Profit</h3>
             <p
-              className={`mt-2 text-2xl ${
-                totalProfit >= 0 ? "text-green-500" : "text-red-500"
-              }`}
+              className={`mt-2 text-2xl ${totalProfit >= 0 ? "text-green-500" : "text-red-500"
+                }`}
             >
               ₹
               {totalProfit.toLocaleString("en-IN", {
@@ -521,8 +539,6 @@ const ManagedAccountDashboard = () => {
           )}
         </div>
 
-
-
         {/* Drawdown Chart */}
         <div className="mb-6 bg-white p-4 rounded-lg shadow">
           {drawdownData.length ? (
@@ -535,8 +551,8 @@ const ManagedAccountDashboard = () => {
           )}
         </div>
 
-                {/* Donut Chart for Strategy-wise Allocation */}
-                <div className="mb-6 bg-white p-4 rounded-lg shadow">
+        {/* Donut Chart for Strategy-wise Allocation */}
+        <div className="mb-6 bg-white p-4 rounded-lg shadow">
           {allocationData.length ? (
             <HighchartsReact
               highcharts={Highcharts}
