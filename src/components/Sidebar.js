@@ -16,12 +16,8 @@ const SidebarNavigation = () => {
 
   const handleLogout = async () => {
     try {
-      // Use window.location.origin to get the current domain
-      const baseUrl = window.location.origin;
-      await signOut({ 
-        callbackUrl: `${baseUrl}/auth/signin`,
-        redirect: true
-      });
+      await signOut({ redirect: false });
+      router.push('/auth/signin');
     } catch (error) {
       console.error("Logout error:", error);
     }
