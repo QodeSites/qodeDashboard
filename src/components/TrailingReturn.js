@@ -11,11 +11,16 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
       </div>
     );
   if (error) return <div>Error: {error}</div>;
-  if (!data || !data.dailyNAV) return null;
+  if (!data || !data.dailyNAV || !benchmarkData ) return null;
 
   // Extract NAV values
   const navValues = data.dailyNAV.map((entry) => parseFloat(entry.nav));
-  const benchmarkValues = benchmarkData?.map((entry) => parseFloat(entry.nav)) || [];
+  const benchmarkValues = Array.isArray(benchmarkData)
+  ? benchmarkData.map((entry) => parseFloat(entry.nav))
+  : benchmarkData && typeof benchmarkData.nav !== 'undefined'
+  ? [parseFloat(benchmarkData.nav)]
+  : [];
+
 
   // Helper function to calculate trailing returns
   const calculateTrailingReturn = (values, periodInDays) => {
