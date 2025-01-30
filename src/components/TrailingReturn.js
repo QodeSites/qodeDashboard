@@ -72,11 +72,11 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
   const basePeriods = [
     { key: "d10", label: "10D", days: 10 },
     { key: "m1", label: "1M", days: 30 },
-    { key: "m3", label: "3M", days: 90 },
-    { key: "m6", label: "6M", days: 180 },
-    { key: "y1", label: "1Y", days: 365 },
-    { key: "y2", label: "2Y", days: 730 },
-    { key: "y5", label: "5Y", days: 1825 },
+    // { key: "m3", label: "3M", days: 90 },
+    // { key: "m6", label: "6M", days: 180 },
+    // { key: "y1", label: "1Y", days: 365 },
+    // { key: "y2", label: "2Y", days: 730 },
+    // { key: "y5", label: "5Y", days: 1825 },
   ];
 
   // Add since inception period for portfolio and benchmark separately
@@ -113,10 +113,10 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
   // Horizontal Table (Desktop/Tablet)
   const HorizontalTable = () => (
     <div className="overflow-x-auto">
-      <div className="relative rounded-lg overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400  dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
-        <table className="w-full  text-center min-w-[640px] border-collapse">
+      <div className="relative rounded-lg border border-brown overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
+        <table className="w-full text-center min-w-[640px] border-collapse">
           <thead>
-            <tr className="border   border-brown dark:border-gray-700 bg-lightBeige dark:bg-gray-900">
+            <tr className="border border-brown dark:border-gray-700 bg-lightBeige dark:bg-gray-900">
               <th className="sticky -left-18 p-1 font-body text-sm text-gray-900 dark:text-gray-100 bg-lightBeige dark:bg-black">
                 <div className="absolute inset-y-0 right-0 w-[1px] bg-lightBeige " />
                 Strategy
@@ -124,21 +124,21 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
               {displayPeriods.map(({ label }) => (
                 <th
                   key={label}
-                  className="p-1 font-body text-sm text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700"
+                  className="p-1 font-body text-sm text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
                 >
                   {label}
                 </th>
               ))}
-              <th className="p-1 text-center font-body text-sm text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700">
+              <th className="p-1 text-center font-body text-sm text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700">
                 MDD
               </th>
-              <th className="p-1 text-center font-body text-sm text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700">
+              <th className="p-1 text-center font-body text-sm text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700">
                 Current Drawdown
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border  border-brown dark:border-gray-700 text-xs text-center">
+            <tr className="border border-brown dark:border-gray-700 text-xs text-center">
               <td className="sticky -left-18 p-1 bg-white dark:bg-black">
                 <div className="absolute inset-y-0 right-0 w-[1px] bg-gray-200 dark:bg-gray-700" />
                 Portfolio
@@ -146,20 +146,20 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
               {portfolioReturns.map(({ key, value }) => (
                 <td
                   key={key}
-                  className="p-1 text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700"
+                  className="p-1 text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
                 >
                   {formatValue(value)}
                 </td>
               ))}
-              <td className="p-1 text-center text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700">
+              <td className="p-1 text-center text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700">
                 {formatValue(portfolioDrawdowns.maxDrawdown)}
               </td>
-              <td className="p-1 text-center text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700">
+              <td className="p-1 text-center text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700">
                 {formatValue(portfolioDrawdowns.currentDrawdown)}
               </td>
             </tr>
             {benchmarkData && (
-              <tr className="border  border-brown dark:border-gray-700 text-xs text-center">
+              <tr className="border border-brown dark:border-gray-700 text-xs text-center">
                 <td className="sticky -left-18 p-1 bg-white dark:bg-black">
                   <div className="absolute inset-y-0 right-0 w-[1px] bg-gray-200 dark:bg-gray-700" />
                   {benchmarkData[0]?.indices || 'Benchmark'}
@@ -169,16 +169,16 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
                   return (
                     <td
                       key={period.key}
-                      className="p-1 text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700"
+                      className="p-1 text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
                     >
                       {formatValue(benchmarkReturn?.value)}
                     </td>
                   );
                 })}
-                <td className="p-1 text-center text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700">
+                <td className="p-1 text-center text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700">
                   {formatValue(benchmarkDrawdowns.maxDrawdown)}
                 </td>
-                <td className="p-1 text-center text-gray-900 dark:text-gray-100 border-l  border-brown dark:border-gray-700">
+                <td className="p-1 text-center text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700">
                   {formatValue(benchmarkDrawdowns.currentDrawdown)}
                 </td>
               </tr>
@@ -188,6 +188,7 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
       </div>
     </div>
   );
+  
 
   // Mobile Table (Vertical)
   const MobileTable = () => (

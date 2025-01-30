@@ -64,23 +64,31 @@ export async function GET(request) {
         const initialInvestment = parseFloat(portfolio.initial_investment) || 0;
         const portfolioValue = parseFloat(portfolio.portfolio_value) || 0;
         const cash = parseFloat(portfolio.cash) || 0;
+        const name = userEmail === "hiren@prithvigroup.biz"
+          ? "HIREN ZAVERCHAND GALA"
+          : portfolio.name;
+
 
         console.log('Processing portfolio:', {
           nuvama_code: portfolio.nuvama_code,
           initialInvestment,
           portfolioValue,
-          cash
+          cash,
+          name: name, // Add name to cumulative details
         });
 
         return {
           initial_investment: acc.initial_investment + initialInvestment,
           portfolio_value: acc.portfolio_value + portfolioValue,
           cash: acc.cash + cash,
+          name: name, // Add name to cumulative details
         };
       }, {
         initial_investment: 0,
         portfolio_value: 0,
         cash: 0,
+        name: userEmail === "hiren@prithvigroup.biz" ? "HIREN ZAVERCHAND GALA" : allPortfolioDetails[0]?.name || "",
+
       });
 
       // Fetch daily NAV for all nuvama codes
