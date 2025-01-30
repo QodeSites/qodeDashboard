@@ -16,7 +16,7 @@ import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData"; // Import the
 import { getChartOptions } from "@/app/lib/ChartOptions";
 
 // Initialize Highcharts modules
-HighchartsMore(Highcharts);
+// HighchartsMore(Highcharts);
 
 // Dynamically import components
 const TrailingReturns = dynamic(() => import("./TrailingReturn"), {

@@ -4,8 +4,6 @@ import PerformanceAndDrawdownChart from "@/components/Portfolio";
 import React, { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Heading from "@/components/common/Heading";
-import Text from "@/components/common/Text";
 
 const Portfolio = () => {
   const { data: session, status } = useSession();
