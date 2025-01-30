@@ -1,12 +1,33 @@
-import { formatDate } from '@/utils/chartUtils';
 import Highcharts from 'highcharts';
-export const getChartOptions = (chartData, strategy, isMobile, strategyName, theme) => {
+
+export const formatDate = (timestamp) => {
+  return new Date(timestamp).toLocaleDateString('en-GB');
+};
+
+// Helper function to calculate drawdown
+const calculateDrawdown = (data) => {
+  let peak = data[0][1];
+  return data.map(point => {
+    const value = point[1];
+    peak = Math.max(peak, value);
+    const drawdown = ((value - peak) / peak) * 100;
+    return [point[0], drawdown];
+  });
+};
+
+export const getChartOptions = (
+  chartData, 
+  strategy, 
+  isMobile, 
+  strategyName, 
+  theme, 
+  benchmarkSeries = []
+) => {
   if (!chartData || chartData.length === 0) {
     console.error("Data is not available for: ", strategy);
     return {};
   }
 
-  // Theme-specific colors
   const themeColors = {
     dark: {
       text: '#fee9d6',
@@ -16,8 +37,12 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
       tooltipBg: '#000000',
       tooltipBorder: '#000000',
       drawdownGradient: [
-        [0, 'rgba(150, 30, 30, 0.7)'],  // deeper red with some transparency
-        [1, 'rgba(255, 69, 58, 0.9)']   // lighter red but less transparent
+        [0, 'rgba(150, 30, 30, 0.7)'],
+        [1, 'rgba(255, 69, 58, 0.9)']
+      ],
+      benchmarkDrawdownGradient: [
+        [0, 'rgba(30, 30, 150, 0.7)'],
+        [1, 'rgba(58, 69, 255, 0.9)']
       ]
     },
     light: {
@@ -30,53 +55,116 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
       drawdownGradient: [
         [0, 'rgba(200, 40, 40, 0.6)'],
         [1, 'rgba(255, 70, 70, 0.8)']
+      ],
+      benchmarkDrawdownGradient: [
+        [0, 'rgba(200, 40, 40, 0.6)'],
+        [1, 'rgba(255, 70, 70, 0.8)']
       ]
     }
   };
 
   const colors = themeColors[theme];
 
-  /**
-   * Convert item.date (string) into a numeric timestamp.
-   * We also calculate the strategyValue as a percentage of the first NAV,
-   * and parse the drawdown as a float.
-   */
   const prepareChartData = (data) => {
     const initialNav = parseFloat(data[0].nav);
-    return data.map((item) => {
-      // Convert date string to a numeric timestamp
-      const xValue = new Date(item.date).getTime(); // e.g., 1695177600000
-      return {
-        x: xValue,
-        strategyValue: (parseFloat(item.nav) / initialNav) * 100,
-        drawdown: parseFloat(item.drawdown),
-      };
-    });
+    return data.map((item) => ({
+      x: new Date(item.date).getTime(),
+      strategyValue: (parseFloat(item.nav) / initialNav) * 100,
+      drawdown: parseFloat(item.drawdown),
+    }));
   };
 
-  // Prepare data
   const preparedData = prepareChartData(chartData);
-
-  // Extract values for the strategy line
   const strategySeries = preparedData.map((item) => [item.x, item.strategyValue]);
-  // Extract values for drawdown
   const drawdownSeries = preparedData.map((item) => [item.x, item.drawdown]);
 
-  // Compute min/max/interval for the main (strategy) axis
-  const strategyValues = preparedData.map((item) => item.strategyValue);
-  const maxValue = Math.max(...strategyValues);
-  const minValue = Math.min(...strategyValues);
+  // Calculate benchmark drawdowns
+  const benchmarkDrawdowns = benchmarkSeries.map(series => ({
+    name: `${series.name} Drawdown`,
+    data: calculateDrawdown(series.data),
+    type: 'area',
+    yAxis: 1,
+    threshold: 0,
+    strokeWidth: 1,
+    lineWidth: 1,
+    color: {
+      linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+      stops: colors.benchmarkDrawdownGradient,
+    },
+    fillOpacity: 0.2,
+    marker: {
+      enabled: false,
+      symbol: 'circle',
+      states: { hover: { enabled: true, radius: 5 } }
+    }
+  }));
+
+  // Calculate all value ranges including benchmark data
+  const allSeriesValues = [
+    ...preparedData.map((item) => item.strategyValue),
+    ...benchmarkSeries.flatMap(series => series.data.map(point => point[1]))
+  ];
+
+  const maxValue = Math.max(...allSeriesValues);
+  const minValue = Math.min(...allSeriesValues);
   const range = maxValue - minValue;
   const padding = range * 0.1;
   const topAxisMax = Math.ceil((maxValue + padding) / 10) * 10;
   const bottomAxisMin = Math.floor((minValue - padding) / 10) * 10;
   const tickInterval = range <= 10 ? 1 : Math.ceil(range / 5);
 
-  // For drawdown axis
-  const minDrawdown = Math.min(...preparedData.map(item => item.drawdown));
-  const drawdownMin = Math.floor(minDrawdown / 10) * 10; // e.g., -30 => -30
+  // Calculate minimum drawdown including benchmark drawdowns
+  const allDrawdowns = [
+    ...preparedData.map(item => item.drawdown),
+    ...benchmarkDrawdowns.flatMap(series => series.data.map(point => point[1]))
+  ];
+  const minDrawdown = Math.min(...allDrawdowns);
+  const drawdownMin = Math.floor(minDrawdown / 10) * 10;
+
+  // Prepare all series data
+  const allSeries = [
+    {
+      name: strategyName,
+      data: strategySeries,
+      color: colors.accent,
+      lineWidth: 2,
+      marker: {
+        enabled: false,
+        symbol: 'circle',
+        states: { hover: { enabled: true, radius: 5 } }
+      },
+      type: "line",
+      yAxis: 0,
+      zIndex: 2,
+    },
+    {
+      name: "Strategy Drawdown",
+      data: drawdownSeries,
+      type: "area",
+      yAxis: 1,
+      threshold: 0,
+      lineWidth: 1,
+      color: {
+        linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+        stops: colors.drawdownGradient,
+      },
+      fillOpacity: 0.31,
+      marker: {
+        enabled: false,
+        symbol: 'circle',
+        states: { hover: { enabled: true, radius: 5 } }
+      }
+    },
+    ...benchmarkSeries.map(series => ({
+      ...series,
+      yAxis: 0,
+      zIndex: 1,
+    })),
+    ...benchmarkDrawdowns
+  ];
 
   return {
+    // ... rest of the chart options remain the same ...
     title: "",
     xAxis: {
       type: "datetime",
@@ -91,7 +179,6 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
       },
       gridLineColor: colors.gridLines,
       tickWidth: isMobile ? 0 : 1,
-      // tickPixelInterval: 15,
     },
     yAxis: [
       {
@@ -116,14 +203,13 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
         tickColor: colors.accent,
         tickWidth: isMobile ? 0 : 1,
         gridLineColor: colors.gridLines,
-        plotLines: [
-          {
-            value: 0,
-            color: colors.accent,
-            width: 1,
-            zIndex: 5,
-          },
-        ],
+        plotLines: [{
+          value: 100,
+          color: colors.accent,
+          width: 1,
+          zIndex: 5,
+          dashStyle: 'dot'
+        }],
       },
       {
         title: { text: "", style: { color: colors.accent } },
@@ -146,51 +232,11 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
         tickColor: colors.accent,
         tickWidth: isMobile ? 0 : 1,
         gridLineColor: colors.gridLines,
-        plotLines: [
-          {
-            value: 0,
-            color: colors.accent,
-            width: 1,
-            zIndex: 5,
-          },
-        ],
       },
     ],
-    series: [
-      {
-        name: strategyName,
-        data: strategySeries,     // [ [timestamp, value], ... ]
-        color: colors.accent,
-        lineWidth: 2,
-        marker: {
-          enabled: false,
-          symbol: 'circle',
-          states: { hover: { enabled: true, radius: 5 } }
-        },
-        type: "line",
-        yAxis: 0,
-      },
-      {
-        name: "Drawdown",
-        data: drawdownSeries,     // [ [timestamp, value], ... ]
-        type: "area",
-        yAxis: 1,
-        threshold: 0,
-        lineWidth: 1,
-        color: {
-          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-          stops: colors.drawdownGradient,
-        },
-        fillOpacity: 1,
-        marker: {
-          enabled: false,
-          symbol: 'circle',
-          states: { hover: { enabled: true, radius: 5 } }
-        }
-      }
-    ],
+    series: allSeries,
     chart: {
-      height: isMobile ? 900 : 800,
+      height: isMobile ? 500 : 800,
       backgroundColor: colors.background,
       zoomType: "x",
       marginLeft: isMobile ? 0 : 10,
@@ -204,14 +250,11 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
       borderColor: colors.tooltipBorder,
       style: { color: colors.text, fontSize: '12px' },
       formatter: function () {
-        // Use your existing formatDate function which should accept numeric timestamps
         const formattedDate = formatDate(this.x);
         let tooltipContent = `<b>${formattedDate}</b><br/>`;
         this.points.forEach(point => {
-          let value =
-            point.series.name === "Drawdown"
-              ? point.y.toFixed(1) + '%'
-              : Math.round(point.y);
+          const isDrawdown = point.series.name.includes('Drawdown');
+          const value = isDrawdown ? point.y.toFixed(1) + '%' : point.y.toFixed(2);
           tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${value}</b><br/>`;
         });
         return tooltipContent;
@@ -220,7 +263,12 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
     legend: {
       enabled: true,
       itemStyle: { color: colors.text },
-      itemHoverStyle: { color: colors.accent }
+      itemHoverStyle: { color: colors.accent },
+      align: 'left',
+      verticalAlign: 'top',
+      layout: 'horizontal',
+      x: 0,
+      y: 0
     },
     credits: { enabled: false },
     exporting: { enabled: !isMobile },
@@ -239,14 +287,10 @@ export const getChartOptions = (chartData, strategy, isMobile, strategyName, the
           states: {
             hover: {
               fill: colors.accent,
-              style: {
-                color: colors.background,
-              },
+              style: { color: colors.background },
             },
           },
-          style: {
-            color: colors.accent,
-          },
+          style: { color: colors.accent },
         },
       },
     },

@@ -28,6 +28,9 @@ export async function GET(request) {
             }
         });
 
+        console.log("Schemes:", schemes);
+        
+
         // Group schemes by scheme_name and then by system_tag (strategy)
         const groupedSchemes = schemes.reduce((acc, scheme) => {
             if (!acc[scheme.scheme_name]) {
@@ -42,6 +45,9 @@ export async function GET(request) {
             return acc;
         }, {});
 
+
+        console.log("Grouped schemes:", groupedSchemes);
+
         // Fetch master sheet data for each group of system tags, ordered by date
         const groupedMasterSheetData = {};
 
@@ -49,6 +55,7 @@ export async function GET(request) {
             groupedMasterSheetData[schemeName] = {};
 
             for (const [strategy, systemTags] of Object.entries(strategies)) {
+                console.log("Fetching data for:", schemeName, strategy, systemTags);
                 const masterSheetData = await prisma.master_sheet.findMany({
                     where: { 
                         system_tag: { in: systemTags }

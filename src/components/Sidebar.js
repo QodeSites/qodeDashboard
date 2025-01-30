@@ -47,14 +47,14 @@ const SidebarNavigation = () => {
           bg-white dark:bg-black
           border-r border-gray-200 dark:border-brown
           transform transition-transform duration-300
-          z-50 p-1
+          z-50
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
           flex flex-col min-h-screen
         `}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between px-2 py-2">
+          <div className="flex items-center justify-between p-1">
             <Heading href="/" className="text-brown dark:text-beige">
               Qode
             </Heading>
@@ -63,11 +63,11 @@ const SidebarNavigation = () => {
               onClick={toggleSidebar}
               aria-label="Close menu"
             >
-              <X className="w-1 h-1" />
+              <X className="w-1 h-1 sm:hidden" />
             </button>
           </div>
 
-          <nav className="flex-grow mt-2 overflow-y-auto px-2">
+          <nav className="flex-grow mt-2 overflow-y-auto px-18">
             <ul className="space-y-1">
               <li>
                 <Link
@@ -80,17 +80,17 @@ const SidebarNavigation = () => {
                   Portfolio
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   href="/profile"
-                  className="block p-2 text-gray-700 dark:text-beige 
+                  className="block p-1 text-gray-700 dark:text-beige 
                              hover:bg-gray-100 dark:hover:bg-gray-800 
                              hover:text-gray-900 dark:hover:text-white rounded-sm"
                   onClick={() => setIsOpen(false)}
                 >
                   Profile
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </nav>
 
@@ -99,7 +99,7 @@ const SidebarNavigation = () => {
               onClick={handleLogout}
               className="w-full text-gray-900 dark:text-beige 
                          border border-brown dark:border-brown
-                         hover:bg-gray-100 dark:hover:bg-gray-800 rounded-sm"
+                         hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
             >
               Logout
             </Button>

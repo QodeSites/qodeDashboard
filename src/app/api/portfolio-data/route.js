@@ -26,32 +26,35 @@ export async function GET(request) {
     // For cumulative view
     if (view_type === "cumulative") {
       // Fetch portfolio details for all nuvama codes
-      const [allPortfolioDetails, allDailyNAV, allTrailingReturns] = await Promise.all([
-        prisma.portfolio_details.findMany({
-          where: {
-            nuvama_code: {
-              in: userNuvamaCodes,
-            },
+      const allPortfolioDetails = await prisma.portfolio_details.findMany({
+        where: {
+          nuvama_code: {
+            in: userNuvamaCodes,
           },
-        }),
-        prisma.daily_nav.findMany({
-          where: {
-            nuvama_code: {
-              in: userNuvamaCodes,
-            },
-          },
-          orderBy: { date: "asc" },
-        }),
-        prisma.trailing_returns.findMany({
-          where: {
-            nuvama_code: {
-              in: userNuvamaCodes,
-            },
-          },
-        }),
-      ]);
+        },
+      });
 
       console.log('Raw Portfolio Details:', allPortfolioDetails);
+
+      // Calculate cumulative portfolio details and ratios
+      let totalPortfolioValue = 0;
+      const portfolioRatios = allPortfolioDetails.map(portfolio => {
+        const portfolioValue = parseFloat(portfolio.portfolio_value) || 0;
+        totalPortfolioValue += portfolioValue;
+        return {
+          name: portfolio.name,
+          nuvama_code: portfolio.nuvama_code,
+          portfolio_value: portfolioValue,
+        };
+      });
+
+      // Calculate the ratio for each portfolio
+      const portfoliosWithRatios = portfolioRatios.map(portfolio => ({
+        ...portfolio,
+        ratio: totalPortfolioValue > 0 ? (portfolio.portfolio_value / totalPortfolioValue) : 0,
+      }));
+
+      console.log('Portfolios with Ratios:', portfoliosWithRatios);
 
       // Calculate cumulative portfolio details
       const cumulativeDetails = allPortfolioDetails.reduce((acc, portfolio) => {
@@ -78,6 +81,16 @@ export async function GET(request) {
       });
 
       console.log('Cumulative Details:', cumulativeDetails);
+
+      // Fetch daily NAV for all nuvama codes
+      const allDailyNAV = await prisma.daily_nav.findMany({
+        where: {
+          nuvama_code: {
+            in: userNuvamaCodes,
+          },
+        },
+        orderBy: { date: "asc" },
+      });
 
       // Calculate cumulative daily NAV
       const navByDate = allDailyNAV.reduce((acc, nav) => {
@@ -112,42 +125,12 @@ export async function GET(request) {
 
       console.log('Sample of Cumulative Daily NAV:', cumulativeDailyNAV.slice(0, 2));
 
-      // Calculate average trailing returns
-      const trailingReturnsSum = allTrailingReturns.reduce((acc, returns) => ({
-        mtd: acc.mtd + (parseFloat(returns.mtd) || 0),
-        qtd: acc.qtd + (parseFloat(returns.qtd) || 0),
-        ytd: acc.ytd + (parseFloat(returns.ytd) || 0),
-        one_year: acc.one_year + (parseFloat(returns.one_year) || 0),
-        three_year: acc.three_year + (parseFloat(returns.three_year) || 0),
-        five_year: acc.five_year + (parseFloat(returns.five_year) || 0),
-        count: acc.count + 1,
-      }), {
-        mtd: 0,
-        qtd: 0,
-        ytd: 0,
-        one_year: 0,
-        three_year: 0,
-        five_year: 0,
-        count: 0,
-      });
-
-      const averageTrailingReturns = trailingReturnsSum.count > 0 ? {
-        mtd: trailingReturnsSum.mtd / trailingReturnsSum.count,
-        qtd: trailingReturnsSum.qtd / trailingReturnsSum.count,
-        ytd: trailingReturnsSum.ytd / trailingReturnsSum.count,
-        one_year: trailingReturnsSum.one_year / trailingReturnsSum.count,
-        three_year: trailingReturnsSum.three_year / trailingReturnsSum.count,
-        five_year: trailingReturnsSum.five_year / trailingReturnsSum.count,
-      } : null;
-
-      console.log('Average Trailing Returns:', averageTrailingReturns);
-
       return NextResponse.json({
         view_type: "cumulative",
         nuvama_codes: userNuvamaCodes,
         dailyNAV: cumulativeDailyNAV,
         portfolioDetails: cumulativeDetails,
-        trailingReturns: averageTrailingReturns,
+        portfoliosWithRatios,
       });
     }
 
@@ -161,7 +144,7 @@ export async function GET(request) {
         );
       }
 
-      const [dailyNAV, portfolioDetails, trailingReturns] = await Promise.all([
+      const [dailyNAV, portfolioDetails] = await Promise.all([
         prisma.daily_nav.findMany({
           where: { nuvama_code },
           orderBy: { date: "asc" },
@@ -169,12 +152,9 @@ export async function GET(request) {
         prisma.portfolio_details.findFirst({
           where: { nuvama_code },
         }),
-        prisma.trailing_returns.findFirst({
-          where: { nuvama_code },
-        }),
       ]);
 
-      if (!dailyNAV.length && !portfolioDetails && !trailingReturns) {
+      if (!dailyNAV.length && !portfolioDetails ) {
         return NextResponse.json(
           { error: "No data found for the provided nuvama_code" },
           { status: 404 }
@@ -186,7 +166,6 @@ export async function GET(request) {
         nuvama_code,
         dailyNAV: dailyNAV || [],
         portfolioDetails: portfolioDetails || null,
-        trailingReturns: trailingReturns || null,
       });
     }
 

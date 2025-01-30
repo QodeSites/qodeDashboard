@@ -12,7 +12,8 @@ const useFetchStrategyData = () => {
         nuvama_codes: [],
         usernames: [],
         portfolioDetails: null,
-        trailingReturns: null
+        trailingReturns: null,
+        portfoliosWithRatios: [] // Add this to store ratios
     });
 
     // Initialize nuvama codes and usernames from session
@@ -68,6 +69,7 @@ const useFetchStrategyData = () => {
                 dailyNAV: responseData.dailyNAV || [],
                 trailingReturns: responseData.trailingReturns || null,
                 portfolioDetails: responseData.portfolioDetails || null,
+                portfoliosWithRatios: responseData.portfoliosWithRatios || [] // Add ratios to state
             }));
         } catch (error) {
             console.error("Error fetching data: ", error);
@@ -76,7 +78,8 @@ const useFetchStrategyData = () => {
                 ...prev,
                 dailyNAV: [],
                 portfolioDetails: null,
-                trailingReturns: null
+                trailingReturns: null,
+                portfoliosWithRatios: [] // Reset ratios on error
             }));
         } finally {
             setIsLoading(false);
