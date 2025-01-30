@@ -11,6 +11,9 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Normalize user email for case-insensitive comparison
+    const userEmail = session.user.email.toLowerCase();
+
     // Get URL parameters
     const { searchParams } = new URL(request.url);
     const nuvama_code = searchParams.get("nuvama_code");
@@ -20,8 +23,6 @@ export async function GET(request) {
     const userNuvamaCodes = Array.isArray(session.user.nuvama_codes)
       ? session.user.nuvama_codes
       : [session.user.nuvama_codes];
-
-    console.log('User Nuvama Codes:', userNuvamaCodes);
 
     // For cumulative view
     if (view_type === "cumulative") {
@@ -34,7 +35,7 @@ export async function GET(request) {
         },
       });
 
-      console.log('Raw Portfolio Details:', allPortfolioDetails);
+      console.log('All Portfolio Details:', allPortfolioDetails); // Debug log
 
       // Calculate cumulative portfolio details and ratios
       let totalPortfolioValue = 0;
@@ -48,13 +49,15 @@ export async function GET(request) {
         };
       });
 
+      console.log('Portfolio Ratios:', portfolioRatios); // Debug log
+
       // Calculate the ratio for each portfolio
       const portfoliosWithRatios = portfolioRatios.map(portfolio => ({
         ...portfolio,
         ratio: totalPortfolioValue > 0 ? (portfolio.portfolio_value / totalPortfolioValue) : 0,
       }));
 
-      console.log('Portfolios with Ratios:', portfoliosWithRatios);
+      console.log('Portfolios With Ratios:', portfoliosWithRatios); // Debug log
 
       // Calculate cumulative portfolio details
       const cumulativeDetails = allPortfolioDetails.reduce((acc, portfolio) => {
@@ -79,8 +82,6 @@ export async function GET(request) {
         portfolio_value: 0,
         cash: 0,
       });
-
-      console.log('Cumulative Details:', cumulativeDetails);
 
       // Fetch daily NAV for all nuvama codes
       const allDailyNAV = await prisma.daily_nav.findMany({
@@ -118,12 +119,12 @@ export async function GET(request) {
       const cumulativeDailyNAV = Object.values(navByDate)
         .map(daily => ({
           date: daily.date,
-          nav_value: daily.nav_value / daily.count,
-          benchmark_value: daily.benchmark_value / daily.count,
+          nav_value: daily.count > 0 ? (daily.nav_value / daily.count) : 0,
+          benchmark_value: daily.count > 0 ? (daily.benchmark_value / daily.count) : 0,
         }))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      console.log('Sample of Cumulative Daily NAV:', cumulativeDailyNAV.slice(0, 2));
+      console.log('Sample of Cumulative Daily NAV:', cumulativeDailyNAV.slice(0, 2)); // Debug log
 
       return NextResponse.json({
         view_type: "cumulative",
@@ -144,7 +145,7 @@ export async function GET(request) {
         );
       }
 
-      const [dailyNAV, portfolioDetails] = await Promise.all([
+      let [dailyNAV, portfolioDetails] = await Promise.all([
         prisma.daily_nav.findMany({
           where: { nuvama_code },
           orderBy: { date: "asc" },
@@ -159,6 +160,11 @@ export async function GET(request) {
           { error: "No data found for the provided nuvama_code" },
           { status: 404 }
         );
+      }
+
+      // Override the name if the user is Hiren
+      if (userEmail === "hiren@prithvigroup.biz" && portfolioDetails) {
+        portfolioDetails = { ...portfolioDetails, name: "HIREN ZAVERCHAND GALA" };
       }
 
       return NextResponse.json({

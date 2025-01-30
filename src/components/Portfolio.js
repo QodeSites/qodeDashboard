@@ -1,9 +1,7 @@
 // components/PerformanceAndDrawdownChart.jsx
-
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Highcharts from "highcharts";
-import HighchartsMore from "highcharts/highcharts-more"; // Import highcharts-more for additional chart types
 import Button from "./common/Button";
 import Text from "./common/Text";
 import useCustomTimeRange from "@/hooks/useCustomRangeHook";
@@ -12,11 +10,8 @@ import useFetchStrategyData from "@/hooks/useFetchStrategyData";
 import useFilteredData from "@/hooks/useFilteredData";
 import Heading from "./common/Heading";
 import { useTheme } from "@/components/ThemeContext";
-import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData"; // Import the new hook
+import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
 import { getChartOptions } from "@/app/lib/ChartOptions";
-
-// Initialize Highcharts modules
-// HighchartsMore(Highcharts);
 
 // Dynamically import components
 const TrailingReturns = dynamic(() => import("./TrailingReturn"), {
@@ -38,6 +33,7 @@ const PerformanceAndDrawdownChart = () => {
     const { timeRange } = useCustomTimeRange();
     const { isMobile } = useMobileWidth();
     const { theme } = useTheme();
+    const chartRef = useRef(null); // Ref for HighchartsReact
 
     // Define benchmark indices
     const benchmarkIndices = ["NIFTY 50"];
@@ -128,10 +124,8 @@ const PerformanceAndDrawdownChart = () => {
             return [currentDate, (currentNavValue / firstNavValue) * 100];
         });
 
-        console.log('normalizedData with forward fill:', normalizedData);  // Log normalized data for debugging
-
         return [{
-            name: 'Benchmark',  // Use a single name since all data points belong to the same benchmark
+            name: 'Nifty 50',  // Use a single name since all data points belong to the same benchmark
             data: normalizedData,
             type: 'line',
             color: '#945c39',  // Assign a color
@@ -157,7 +151,7 @@ const PerformanceAndDrawdownChart = () => {
                 filteredData,
                 activeTab,
                 isMobile,
-                "Performance Chart",
+                "Portfolio",
                 theme,
                 benchmarkSeries // Pass benchmark series here
             );
@@ -168,27 +162,43 @@ const PerformanceAndDrawdownChart = () => {
         return null;
     }, [filteredData, activeTab, isMobile, viewMode, theme, benchmarkSeries]);
 
-    // Prepare Donut Chart options
+    // Prepare Donut Chart options with responsiveness
     const donutChartOptions = useMemo(() => {
         if (!data.portfoliosWithRatios || data.portfoliosWithRatios.length === 0) return null;
 
         // Transform portfoliosWithRatios into Highcharts series data
         const seriesData = data.portfoliosWithRatios.map(portfolio => ({
-            name: `${portfolio.name} (${portfolio.nuvama_code})`, // Using nuvama_code as the name. Replace with a more descriptive name if available.
-            y: portfolio.ratio * 100, // Convert ratio to percentage
-            portfolioValue: portfolio.portfolio_value // Include portfolio value for tooltip
+            name: `${portfolio.name} (${portfolio.nuvama_code})`,
+            y: portfolio.ratio * 100,
+            portfolioValue: portfolio.portfolio_value
         }));
 
         return {
             chart: {
-                type: 'pie'
+                type: 'pie',
+                backgroundColor: theme === 'dark' ? '#000000' : '#FFFFFF',
+                // Responsive sizing handled by container
             },
             title: {
-                text: 'Portfolio Allocation'
+                text: 'Portfolio Allocation',
+                style: {
+                    fontSize: isMobile ? '16px' : '20px',
+                }
             },
             tooltip: {
-                headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
-                pointFormat: '<span style="color:{point.color}">\u25CF</span> <b>{point.name}</b>: {point.percentage:.1f}%<br/><b>Value:</b> ₹{point.portfolioValue:,.2f}'
+                formatter: function () {
+                    const formattedValue = new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        maximumFractionDigits: 2
+                    }).format(this.point.portfolioValue);
+
+                    return `
+                        <span style="color:${this.color}">\u25CF</span> 
+                        <b>${this.point.name}</b>: ${this.percentage.toFixed(1)}%<br/>
+                        <b>Value:</b> ${formattedValue}
+                    `;
+                }
             },
             accessibility: {
                 point: {
@@ -197,12 +207,15 @@ const PerformanceAndDrawdownChart = () => {
             },
             plotOptions: {
                 pie: {
-                    innerSize: '50%', // This makes it a donut chart
+                    innerSize: '50%',
                     allowPointSelect: true,
                     cursor: 'pointer',
                     dataLabels: {
                         enabled: true,
-                        format: '{point.name}: {point.percentage:.1f} %'
+                        format: '{point.name}: {point.percentage:.1f} %',
+                        style: {
+                            fontSize: isMobile ? '10px' : '12px'
+                        }
                     }
                 }
             },
@@ -211,9 +224,28 @@ const PerformanceAndDrawdownChart = () => {
                 colorByPoint: true,
                 data: seriesData
             }],
-            colors: ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
+            colors: ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1'],
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 400
+                    },
+                    chartOptions: {
+                        legend: {
+                            enabled: false
+                        },
+                        plotOptions: {
+                            pie: {
+                                dataLabels: {
+                                    enabled: false
+                                }
+                            }
+                        }
+                    }
+                }]
+            }
         };
-    }, [data.portfoliosWithRatios]);
+    }, [data.portfoliosWithRatios, isMobile, theme]);
 
     // Helper function to format the date
     const formatDate = (dateString) => {
@@ -221,13 +253,27 @@ const PerformanceAndDrawdownChart = () => {
         return date.toLocaleDateString('en-GB'); // Outputs format: dd/mm/yyyy
     };
 
+    console.log('data:', data);  // Log data for debugging
+
+    // Optional: Handle window resize to reflow chart
+    useEffect(() => {
+        const handleResize = () => {
+            if (chartRef.current) {
+                chartRef.current.chart.reflow();
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     return (
         <div className="p-18 tracking-wide bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
             <div className="flex justify-between items-center mb-2">
                 <div>
                     <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-18 mt-4">
-                        {data?.usernames?.[0]
-                            ? `Welcome, ${data.usernames[0].charAt(0).toUpperCase()}${data.usernames[0].slice(1).toLowerCase()}`
+                        {data?.portfolioDetails?.name
+                            ? `Welcome, ${data?.portfolioDetails?.name.charAt(0).toUpperCase()}${data?.portfolioDetails?.name.slice(1).toLowerCase()}`
                             : "Welcome, Guest"}
                     </Heading>
 
@@ -272,10 +318,6 @@ const PerformanceAndDrawdownChart = () => {
                 </div>
             )}
 
-            <div suppressHydrationWarning>
-                <PortfolioDetails data={data?.portfolioDetails} isCumulative={viewMode === "cumulative"} />
-            </div>
-
             <div className="flex justify-between items-center mb-18 mt-18">
                 {startDate && (
                     <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">
@@ -290,17 +332,24 @@ const PerformanceAndDrawdownChart = () => {
                 )}
             </div>
 
+            <div suppressHydrationWarning>
+                <PortfolioDetails data={data?.portfolioDetails} isCumulative={viewMode === "cumulative"} />
+            </div>
 
             {/* Donut Chart Section */}
             {viewMode === "cumulative" && data.portfoliosWithRatios && data.portfoliosWithRatios.length > 0 && (
-                <div className="mb-4">
+                <div className="mb-4 w-full">
                     <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-4">
                         Portfolio Allocation
                     </Heading>
-                    <HighchartsReact
-                        highcharts={Highcharts}
-                        options={donutChartOptions}
-                    />
+                    <div className={`w-full ${isMobile ? 'pb-20' : 'h-96'}`}>
+                        <HighchartsReact
+                            highcharts={Highcharts}
+                            options={donutChartOptions}
+                            containerProps={{ style: { width: '100%', height: '100%' } }}
+                            ref={chartRef}
+                        />
+                    </div>
                 </div>
             )}
 
@@ -316,7 +365,7 @@ const PerformanceAndDrawdownChart = () => {
                 viewMode === "individual" && (
                     <>
                         <div suppressHydrationWarning className="mb-4">
-                            <TrailingReturns data={data} isLoading={isLoading} error={error} name={selectedNuvama} />
+                            <TrailingReturns data={data} isLoading={isLoading} error={error} benchmarkData={benchmarkData} name={selectedNuvama} />
                             <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-18 mt-4">
                                 Performance Chart
                             </Heading>

@@ -41,8 +41,8 @@ export const getChartOptions = (
         [1, 'rgba(255, 69, 58, 0.9)']
       ],
       benchmarkDrawdownGradient: [
-        [0, 'rgba(30, 30, 150, 0.7)'],
-        [1, 'rgba(58, 69, 255, 0.9)']
+        [0, 'rgba(150, 30, 30, 0.7)'],
+        [1, 'rgba(255, 69, 58, 0.9)']
       ]
     },
     light: {
@@ -53,12 +53,12 @@ export const getChartOptions = (
       tooltipBg: '#ffffff',
       tooltipBorder: '#cccccc',
       drawdownGradient: [
-        [0, 'rgba(200, 40, 40, 0.6)'],
-        [1, 'rgba(255, 70, 70, 0.8)']
+        [0, 'rgba(150, 30, 30, 0.7)'],
+        [1, 'rgba(255, 69, 58, 0.9)']
       ],
       benchmarkDrawdownGradient: [
-        [0, 'rgba(200, 40, 40, 0.6)'],
-        [1, 'rgba(255, 70, 70, 0.8)']
+        [0, 'rgba(150, 30, 30, 0.7)'],
+        [1, 'rgba(255, 69, 58, 0.9)']
       ]
     }
   };
@@ -98,6 +98,9 @@ export const getChartOptions = (
       states: { hover: { enabled: true, radius: 5 } }
     }
   }));
+
+  // Extract benchmark names for tooltip categorization
+  const benchmarkNames = benchmarkSeries.map(series => series.name);
 
   // Calculate all value ranges including benchmark data
   const allSeriesValues = [
@@ -164,7 +167,6 @@ export const getChartOptions = (
   ];
 
   return {
-    // ... rest of the chart options remain the same ...
     title: "",
     xAxis: {
       type: "datetime",
@@ -251,13 +253,44 @@ export const getChartOptions = (
       style: { color: colors.text, fontSize: '12px' },
       formatter: function () {
         const formattedDate = formatDate(this.x);
-        let tooltipContent = `<b>${formattedDate}</b><br/>`;
+        let strategyData = '';
+        let benchmarkDataContent = '';
+        let drawdownData = '';
+
         this.points.forEach(point => {
-          const isDrawdown = point.series.name.includes('Drawdown');
-          const value = isDrawdown ? point.y.toFixed(1) + '%' : point.y.toFixed(2);
-          tooltipContent += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: <b>${value}</b><br/>`;
+          if (point.series.name === strategyName) {
+            // Strategy Data
+            const value = point.y.toFixed(2);
+            strategyData += `
+              <span style="color:${point.series.color}">\u25CF</span> 
+              <b>${point.series.name}:</b> ${value}<br/>
+            `;
+          } else if (benchmarkNames.includes(point.series.name)) {
+            // Benchmark Data
+            const value = point.y.toFixed(2);
+            benchmarkDataContent += `
+              <span style="color:${point.series.color}">\u25CF</span> 
+              <b>${point.series.name}:</b> ${value}<br/>
+            `;
+          } else if (point.series.name === "Portfolio Drawdown" || point.series.name.endsWith("Drawdown")) {
+            // Drawdown Data
+            const value = point.y.toFixed(1) + '%';
+            drawdownData += `
+              <span style="color:${point.series.color}">\u25CF</span> 
+              <b>${point.series.name}:</b> ${value}<br/>
+            `;
+          }
         });
-        return tooltipContent;
+
+        return `
+          <div style="padding:10px;">
+            <b>${formattedDate}</b><br/>
+            ${strategyData}
+            ${benchmarkNames.length > 0 ? `${benchmarkDataContent} <br/>` : ''}
+            <hr style="border: 0.5px solid ${colors.gridLines};"/>
+            ${drawdownData}
+          </div>
+        `;
       }
     },
     legend: {
