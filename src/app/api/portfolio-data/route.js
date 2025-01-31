@@ -3,6 +3,63 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+const monthsFull = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+/**
+ * Calculates the monthly PnL based on daily NAV data.
+ * @param {Array} dailyNAV - Array of daily NAV records.
+ * @returns {Array} - Array of monthly PnL objects.
+ */
+function calculateMonthlyPnL(dailyNAV) {
+  if (!dailyNAV || dailyNAV.length === 0) {
+    return [];
+  }
+
+  const navByMonth = dailyNAV.reduce((acc, nav) => {
+    const date = new Date(nav.date);
+    const month = date.getMonth(); // 0-based index
+    const year = date.getFullYear();
+    const key = `${year}-${month}`; // e.g., "2023-0" for January 2023
+
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(nav);
+    return acc;
+  }, {});
+
+  const monthlyPnL = Object.keys(navByMonth).map(key => {
+    const [year, monthIndex] = key.split("-").map(Number);
+    const navs = navByMonth[key].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Changed nav_value to nav
+    const firstNAV = parseFloat(navs[0].nav) || 0;
+    const lastNAV = parseFloat(navs[navs.length - 1].nav) || 0;
+
+    const pnl = lastNAV - firstNAV;
+
+    return {
+      year,
+      month: monthsFull[monthIndex],
+      firstNAV,
+      lastNAV,
+      pnl: parseFloat(pnl.toFixed(2)),
+    };
+  });
+
+  monthlyPnL.sort((a, b) => {
+    if (a.year !== b.year) {
+      return a.year - b.year;
+    }
+    return monthsFull.indexOf(a.month) - monthsFull.indexOf(b.month);
+  });
+
+  return monthlyPnL;
+}
+
 export async function GET(request) {
   try {
     // Check authentication
@@ -68,7 +125,6 @@ export async function GET(request) {
           ? "HIREN ZAVERCHAND GALA"
           : portfolio.name;
 
-
         console.log('Processing portfolio:', {
           nuvama_code: portfolio.nuvama_code,
           initialInvestment,
@@ -88,7 +144,6 @@ export async function GET(request) {
         portfolio_value: 0,
         cash: 0,
         name: userEmail === "hiren@prithvigroup.biz" ? "HIREN ZAVERCHAND GALA" : allPortfolioDetails[0]?.name || "",
-
       });
 
       // Fetch daily NAV for all nuvama codes
@@ -134,12 +189,16 @@ export async function GET(request) {
 
       console.log('Sample of Cumulative Daily NAV:', cumulativeDailyNAV.slice(0, 2)); // Debug log
 
+      // Calculate Monthly PnL
+      const monthlyPnL = calculateMonthlyPnL(cumulativeDailyNAV);
+
       return NextResponse.json({
         view_type: "cumulative",
         nuvama_codes: userNuvamaCodes,
         dailyNAV: cumulativeDailyNAV,
         portfolioDetails: cumulativeDetails,
         portfoliosWithRatios,
+        monthlyPnL, // Include the monthly PnL in the response
       });
     }
 
@@ -175,11 +234,15 @@ export async function GET(request) {
         portfolioDetails = { ...portfolioDetails, name: "HIREN ZAVERCHAND GALA" };
       }
 
+      // Calculate Monthly PnL for individual view
+      const monthlyPnLIndividual = calculateMonthlyPnL(dailyNAV);
+
       return NextResponse.json({
         view_type: "individual",
         nuvama_code,
         dailyNAV: dailyNAV || [],
         portfolioDetails: portfolioDetails || null,
+        monthlyPnL: monthlyPnLIndividual, // Include monthly PnL
       });
     }
 

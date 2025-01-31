@@ -12,6 +12,7 @@ import Heading from "./common/Heading";
 import { useTheme } from "@/components/ThemeContext";
 import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
 import { getChartOptions } from "@/app/lib/ChartOptions";
+import MonthlyPLTable from "./MonthlyPLTable";
 
 // Dynamically import components
 const TrailingReturns = dynamic(() => import("./TrailingReturn"), {
@@ -267,6 +268,7 @@ const PerformanceAndDrawdownChart = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+
     return (
         <div className="p-18 tracking-wide bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
             <div className="flex justify-between items-center mb-2">
@@ -376,6 +378,10 @@ const PerformanceAndDrawdownChart = () => {
                     </>
                 )
             )}
+
+            <div className="mb-4">
+                <MonthlyPLTable monthlyPnL={data.monthlyPnL} />
+            </div>
         </div>
     );
 };
