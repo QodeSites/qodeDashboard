@@ -254,7 +254,36 @@ const PerformanceAndDrawdownChart = () => {
         return date.toLocaleDateString('en-GB'); // Outputs format: dd/mm/yyyy
     };
 
-    console.log('data:', data);  // Log data for debugging
+    // Currency formatter for Indian Rupees
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
+
+    // Filtered Cash In/Out Data (non-zero)
+    const filteredCashInOutData = useMemo(() => {
+        return data.cashInOutData
+            .filter(record => record.cash_in_out !== 0)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+    }, [data.cashInOutData]);
+
+    // Calculate Totals
+    const cashFlowTotals = useMemo(() => {
+        const totalIn = filteredCashInOutData
+            .filter(record => record.cash_in_out > 0)
+            .reduce((sum, record) => sum + record.cash_in_out, 0);
+
+        const totalOut = filteredCashInOutData
+            .filter(record => record.cash_in_out < 0)
+            .reduce((sum, record) => sum + Math.abs(record.cash_in_out), 0);
+
+        const netFlow = totalIn - totalOut;
+
+        return { totalIn, totalOut, netFlow };
+    }, [filteredCashInOutData]);
 
     // Optional: Handle window resize to reflow chart
     useEffect(() => {
@@ -267,7 +296,6 @@ const PerformanceAndDrawdownChart = () => {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
 
     return (
         <div className="p-18 tracking-wide bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
@@ -314,7 +342,7 @@ const PerformanceAndDrawdownChart = () => {
                         className="border border-brown rounded-lg dark:border-beige bg-white dark:bg-black text-gray-900 dark:text-white p-18 w-full sm:w-auto text-xs transition-colors duration-300"
                     >
                         {data.nuvama_codes.map((code, index) => (
-                            <option key={code} value={code}>{data.usernames[index]} ({code})</option>
+                            <option key={index} value={code}>{data.usernames[index]} ({code})</option>
                         ))}
                     </select>
                 </div>
@@ -374,14 +402,66 @@ const PerformanceAndDrawdownChart = () => {
                             {typeof window !== 'undefined' && chartOptions && (
                                 <HighchartsReact highcharts={Highcharts} options={chartOptions} />
                             )}
+                            <div className="mb-4">
+                                <MonthlyPLTable monthlyPnL={data.monthlyPnL} />
+                            </div>
                         </div>
                     </>
                 )
             )}
 
-            <div className="mb-4">
-                <MonthlyPLTable monthlyPnL={data.monthlyPnL} />
-            </div>
+
+
+            {/* Cash In/Out Table Section */}
+            {filteredCashInOutData.length > 0 && (
+                <div className="mb-4">
+                    <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-4">
+                        Cash In/Out
+                    </Heading>
+                    <div className="overflow-x-auto w-1/4 rounded-lg border border-brown dark:border-brown">
+                        <table className="min-w-full bg-white dark:bg-black">
+                            <thead className="bg-lightBeige">
+                                <tr>
+                                    <th className="p-1 border-b border-brown dark:border-brown text-left text-xs font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                                        Date
+                                    </th>
+                                    <th className="p-1 border-b border-brown dark:border-brown text-right text-xs font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                                        Cash In/Out
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredCashInOutData.map((record, index) => (
+                                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td className="p-1 border-b border-brown dark:border-brown text-xs text-gray-700 dark:text-gray-300">
+                                            {formatDate(record.date)}
+                                        </td>
+                                        <td className={`p-1 border-b border-brown dark:border-brown text-xs text-right ${record.cash_in_out > 0 ? 'text-green-600' : 'text-red-600'
+                                            }`}>
+                                            {formatCurrency(record.cash_in_out)}
+                                        </td>
+                                    </tr>
+                                ))}
+                                <tr className="bg-gray-100 dark:bg-gray-800 font-semibold">
+                                    <td className="p-1 border-t border-brown dark:border-brown text-xs text-gray-900 dark:text-gray-100">
+                                        Total
+                                    </td>
+                                    <td className="p-1 border-t border-brown dark:border-brown text-xs text-right text-gray-900 dark:text-gray-100">
+                                        {formatCurrency(cashFlowTotals.netFlow)}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                        <p>Total Cash In: <span className="text-green-600">{formatCurrency(cashFlowTotals.totalIn)}</span></p>
+                        <p>Total Cash Out: <span className="text-red-600">{formatCurrency(cashFlowTotals.totalOut)}</span></p>
+                        <p>Net Flow: <span className={cashFlowTotals.netFlow >= 0 ? 'text-green-600' : 'text-red-600'}>
+                            {formatCurrency(cashFlowTotals.netFlow)}
+                        </span></p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

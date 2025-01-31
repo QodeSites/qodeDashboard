@@ -14,7 +14,8 @@ const useFetchStrategyData = () => {
         portfolioDetails: null,
         trailingReturns: null,
         portfoliosWithRatios: [],
-        monthlyPnL: [], // Initialized here
+        monthlyPnL: [],
+        cashInOutData: [], // Added cash in/out data
     });
 
     // Initialize nuvama codes and usernames from session
@@ -72,8 +73,23 @@ const useFetchStrategyData = () => {
                 trailingReturns: responseData.trailingReturns || null,
                 portfolioDetails: responseData.portfolioDetails || null,
                 portfoliosWithRatios: responseData.portfoliosWithRatios || [],
-                monthlyPnL: responseData.monthlyPnL || [], // **Added monthlyPnL**
+                monthlyPnL: responseData.monthlyPnL || [],
+                cashInOutData: responseData.cashInOutData || [], // Added cash in/out data
             }));
+
+            // Process cash in/out data if needed
+            if (responseData.cashInOutData) {
+                const processedCashInOut = responseData.cashInOutData.map(record => ({
+                    ...record,
+                    date: new Date(record.date), // Ensure date is properly formatted
+                    cash_in_out: parseFloat(record.cash_in_out) // Ensure numeric value
+                }));
+
+                setData(prev => ({
+                    ...prev,
+                    cashInOutData: processedCashInOut
+                }));
+            }
         } catch (error) {
             console.error("Error fetching data: ", error);
             setError(error.message || 'An error occurred while fetching data');
@@ -83,7 +99,8 @@ const useFetchStrategyData = () => {
                 portfolioDetails: null,
                 trailingReturns: null,
                 portfoliosWithRatios: [],
-                monthlyPnL: [], // **Reset monthlyPnL on error**
+                monthlyPnL: [],
+                cashInOutData: [], // Reset cash in/out data on error
             }));
         } finally {
             setIsLoading(false);
@@ -112,6 +129,22 @@ const useFetchStrategyData = () => {
         }
     }, [selectedNuvama, viewMode, fetchData]);
 
+    // Utility function to summarize cash flow
+    const getCashFlowSummary = useCallback(() => {
+        if (!data.cashInOutData.length) return { totalIn: 0, totalOut: 0, netFlow: 0 };
+
+        return data.cashInOutData.reduce((acc, flow) => {
+            const amount = flow.cash_in_out;
+            if (amount > 0) {
+                acc.totalIn += amount;
+            } else {
+                acc.totalOut += Math.abs(amount);
+            }
+            acc.netFlow += amount;
+            return acc;
+        }, { totalIn: 0, totalOut: 0, netFlow: 0 });
+    }, [data.cashInOutData]);
+
     return {
         data,
         isLoading,
@@ -119,7 +152,8 @@ const useFetchStrategyData = () => {
         selectedNuvama,
         setSelectedNuvama,
         viewMode,
-        handleViewModeChange
+        handleViewModeChange,
+        getCashFlowSummary // Added utility function
     };
 };
 
