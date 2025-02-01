@@ -76,9 +76,7 @@ async function fetchCashInOutData(nuvamaCodes) {
  * Processes the cumulative view data
  */
 async function processCumulativeView(userNuvamaCodes, userEmail) {
-  // Fetch all required data in parallel with added logging
-  console.log('Fetching data for nuvama codes:', userNuvamaCodes);
-
+  // Fetch all required data in parallel
   const [allPortfolioDetails, allDailyNAV, cashInOutData] = await Promise.all([
     prisma.portfolio_details.findMany({
       where: {
@@ -97,11 +95,6 @@ async function processCumulativeView(userNuvamaCodes, userEmail) {
     }),
     fetchCashInOutData(userNuvamaCodes)
   ]);
-
-  // Debug logging for initial data
-  console.log('Portfolio Details Count:', allPortfolioDetails.length);
-  console.log('Daily NAV Count:', allDailyNAV.length);
-  console.log('Cash In/Out Records:', cashInOutData.length);
 
   // Calculate portfolio ratios
   let totalPortfolioValue = 0;
@@ -126,22 +119,9 @@ async function processCumulativeView(userNuvamaCodes, userEmail) {
     const initialInvestment = parseFloat(portfolio.initial_investment) || 0;
     const portfolioValue = parseFloat(portfolio.portfolio_value) || 0;
     const cash = parseFloat(portfolio.cash) || 0;
-    let name = acc.name; // Default to existing name
-
-    // Updated condition to handle multiple user emails
-    if (userEmail === "hiren@prithvigroup.biz") {
-      name = "HIREN ZAVERCHAND GALA";
-    } else if (userEmail === "rishabh.nahar@qodeinvest.com") {
-      name = "RISHABH RAMESHKUMAR NAHAR";
-    }
-
-    // Log each addition to accumulator
-    console.log(`Processing portfolio ${portfolio.nuvama_code}:`, {
-      initial_investment: initialInvestment,
-      portfolio_value: portfolioValue,
-      cash,
-      running_total_investment: acc.initial_investment + initialInvestment
-    });
+    const name = userEmail === "hiren@prithvigroup.biz"
+      ? "HIREN ZAVERCHAND GALA"
+      : portfolio.name;
 
     return {
       initial_investment: acc.initial_investment + initialInvestment,
@@ -153,11 +133,7 @@ async function processCumulativeView(userNuvamaCodes, userEmail) {
     initial_investment: 0,
     portfolio_value: 0,
     cash: 0,
-    name: userEmail === "hiren@prithvigroup.biz" 
-      ? "HIREN ZAVERCHAND GALA" 
-      : userEmail === "rishabh.nahar@qodeinvest.com" 
-        ? "RISHABH RAMESHKUMAR NAHAR" 
-        : allPortfolioDetails[0]?.name || "",
+    name: userEmail === "hiren@prithvigroup.biz" ? "HIREN ZAVERCHAND GALA" : allPortfolioDetails[0]?.name || "",
   });
 
   // Calculate cumulative daily NAV
@@ -233,8 +209,6 @@ async function processIndividualView(nuvama_code, userEmail) {
   let processedPortfolioDetails = portfolioDetails;
   if (userEmail === "hiren@prithvigroup.biz" && portfolioDetails) {
     processedPortfolioDetails = { ...portfolioDetails, name: "HIREN ZAVERCHAND GALA" };
-  } else if (userEmail === "rishabh.nahar@qodeinvest.com" && portfolioDetails) {
-    processedPortfolioDetails = { ...portfolioDetails, name: "RISHABH RAMESHKUMAR NAHAR" };
   }
 
   const processedCashInOut = cashInOutData.map(record => ({

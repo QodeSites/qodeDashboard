@@ -140,12 +140,23 @@ model user_master {
   @@schema("pms_clients_tracker")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model pms_cash_in_out {
   date        DateTime @db.Date
   nuvama_code String   @db.VarChar(255)
   cash_in_out Int?
+  id          Int      @id @default(autoincrement())
 
   @@ignore
+  @@schema("pms_clients_tracker")
+}
+
+model managed_accounts_cash_in_out {
+  date           DateTime? @db.Timestamp(6)
+  account_code   String?
+  scheme         String?
+  capital_in_out Float?
+  dividend       Float?
+  id             Int       @id @default(autoincrement())
+
   @@schema("pms_clients_tracker")
 }
