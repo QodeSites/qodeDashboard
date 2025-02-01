@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import { set } from "date-fns";
 
 const useManagedAccounts = () => {
     const [data, setData] = useState(null); // Holds the transformed grouped data
@@ -10,7 +11,7 @@ const useManagedAccounts = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { data: session, status } = useSession();
-
+    const [username, setUsername] = useState(null);
     useEffect(() => {
         const fetchManagedAccounts = async () => {
             if (status !== "authenticated") {
@@ -43,12 +44,14 @@ const useManagedAccounts = () => {
                         })),
                     })
                 );
+                
 
                 // Update state with transformed data, totals, and scheme-wise capital invested
                 setData(transformedData);
                 setTotals({ totalCapitalInvested, totalDividends });
                 setCashInOutData(cashInOutData);
                 setSchemeWiseCapitalInvested(schemeWiseCapitalInvested); // Update scheme-wise capital invested
+                setUsername(session.user.managed_client_names);
             } catch (err) {
                 console.error("Error fetching managed accounts:", err);
                 setError(err.response?.data?.error || "An error occurred");
@@ -60,7 +63,7 @@ const useManagedAccounts = () => {
         fetchManagedAccounts();
     }, [session, status]);
 
-    return { data, totals, cashInOutData, schemeWiseCapitalInvested, loading, error };
+    return { data, totals, cashInOutData,username, schemeWiseCapitalInvested, loading, error };
 };
 
 export default useManagedAccounts;

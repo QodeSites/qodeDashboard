@@ -7,6 +7,7 @@ import HighchartsReact from "highcharts-react-official";
 import Heading from "./common/Heading";
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/20/solid';
 import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
+import Text from "./common/Text";
 
 const TrailingReturns = ({ trailingReturns, ddStats }) => {
   // Extract the periods (keys) from the trailing returns object
@@ -77,9 +78,7 @@ const TrailingReturns = ({ trailingReturns, ddStats }) => {
   );
 };
 
-
 const ManagedAccountDashboard = ({ accountCodes }) => {
-
   // State Hooks
   const [activeScheme, setActiveScheme] = useState("Scheme Total");
   const [theme, setTheme] = useState("light");
@@ -88,8 +87,9 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   const chartComponentRef = useRef(null);
 
   // Custom Hook to fetch data
-  const { data, totals, cashInOutData, schemeWiseCapitalInvested, loading, error } = useManagedAccounts();
-
+  const { data, totals, cashInOutData, username, schemeWiseCapitalInvested, loading, error } = useManagedAccounts();
+  console.log('data', username);
+  
   // Theme Colors
   const themeColors = {
     dark: {
@@ -158,7 +158,6 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
     )?.masterSheetData || [];
   }, [activeSchemeData, strategyName]);
 
-
   // Sort the data by date
   const sortedData = useMemo(() => {
     return [...ac5ZerodhaData].sort(
@@ -166,7 +165,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
     );
   }, [ac5ZerodhaData]);
 
-  // Normalize NAV Data
+  // Normalize NAV Data (Portfolio)
   const normalizedData = useMemo(() => {
     if (sortedData.length === 0) return [];
     const firstNav = parseFloat(sortedData[0].nav);
@@ -180,7 +179,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         const nav = parseFloat(sheet.nav);
         return [
           date.getTime(), // x value (timestamp)
-          nav === 0 || isNaN(nav) ? 0 : (nav / firstNav) * 100, // y value
+          nav === 0 || isNaN(nav) ? 0 : (nav / firstNav) * 100, // y value normalized to 100
         ];
       })
       .filter((point) => point !== null); // Remove null values
@@ -216,7 +215,6 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         }
         return !isExcluded;
       });
-
 
     // Calculate total portfolio value
     const total = latestValues.reduce((sum, strategy) => sum + strategy.y, 0);
@@ -259,72 +257,93 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
     };
   }, [activeSchemeData]);
 
-  // Fetch benchmark data
+  // Fetch benchmark data using the start and end dates from portfolio
   const { benchmarkData, isLoading: isBenchmarkLoading, error: benchmarkError } = useFetchBenchmarkData(
     benchmarkIndices,
-    startDate,
-    endDate
+    startDate && endDate ? startDate : null,
+    startDate && endDate ? endDate : null
   );
 
-  const benchmarkSeries = useMemo(() => {
-    if (!benchmarkData || Object.keys(benchmarkData).length === 0) {
-      console.log('benchmarkData is empty or not provided');
-      return [];
-    }
+  // Prepare benchmark series data
+// Prepare benchmark series data
+const benchmarkSeries = useMemo(() => {
+  if (!benchmarkData || Object.keys(benchmarkData).length === 0) {
+    console.log('benchmarkData is empty or not provided');
+    return [];
+  }
 
-    // Transform benchmarkData into an array of objects
-    const benchmarkArray = Object.values(benchmarkData);
+  // Transform benchmarkData into an array of objects
+  const benchmarkArray = Object.values(benchmarkData);
 
-    // Ensure the data is an array and not empty
-    if (!Array.isArray(benchmarkArray) || benchmarkArray.length === 0) {
-      console.log('benchmarkArray is not an array or is empty');
-      return [];
-    }
+  // Ensure the data is an array and not empty
+  if (!Array.isArray(benchmarkArray) || benchmarkArray.length === 0) {
+    console.log('benchmarkArray is not an array or is empty');
+    return [];
+  }
 
-    // Sort the data by date to ensure chronological order
-    const sortedBenchmarkData = benchmarkArray.slice().sort((a, b) => 
-      new Date(a.date) - new Date(b.date)
+  // Sort the data by date to ensure chronological order
+  const sortedBenchmarkData = benchmarkArray.slice().sort((a, b) => 
+    new Date(a.date) - new Date(b.date)
+  );
+  console.log('sortedBenchmarkData:', sortedBenchmarkData);
+
+  // Use portfolio's first timestamp from normalizedData as the benchmark start date.
+  const portfolioStartTimestamp = normalizedData.length ? normalizedData[0][0] : null;
+
+  let filteredBenchmarkData = sortedBenchmarkData;
+  if (portfolioStartTimestamp) {
+    // Filter out any benchmark records before the portfolio's first timestamp
+    filteredBenchmarkData = sortedBenchmarkData.filter(
+      item => new Date(item.date).getTime() >= portfolioStartTimestamp
     );
-    console.log('sortedBenchmarkData:', sortedBenchmarkData);
+    // If the very first benchmark record is after the portfolio start timestamp,
+    // prepend a new data point at the portfolio start timestamp using the first available value.
+    if (filteredBenchmarkData.length && new Date(filteredBenchmarkData[0].date).getTime() !== portfolioStartTimestamp) {
+      filteredBenchmarkData.unshift({
+        date: new Date(portfolioStartTimestamp).toISOString().split('T')[0],
+        nav: filteredBenchmarkData[0].nav
+      });
+    }
+  }
 
-    // Get the first NAV value for normalization
-    const firstNavValue = parseFloat(sortedBenchmarkData[0].nav);
-    console.log('firstNavValue:', firstNavValue);
+  // Get the first NAV value for normalization from the filtered benchmark data
+  const firstNavValue = parseFloat(filteredBenchmarkData[0].nav);
+  console.log('firstNavValue:', firstNavValue);
 
-    // Normalize the data to 100 and forward-fill missing dates
-    let previousNavValue = firstNavValue;
-    const normalizedData = sortedBenchmarkData.map(item => {
-      const currentDate = new Date(item.date).getTime();
-      let currentNavValue = parseFloat(item.nav);
+  // Normalize the data to 100 and forward-fill missing dates
+  let previousNavValue = firstNavValue;
+  const normalizedDataBenchmark = filteredBenchmarkData.map(item => {
+    const currentDate = new Date(item.date).getTime();
+    let currentNavValue = parseFloat(item.nav);
 
-      // Forward fill if NAV is missing or undefined
-      if (isNaN(currentNavValue)) {
-        currentNavValue = previousNavValue;
-      } else {
-        previousNavValue = currentNavValue;
-      }
+    // Forward fill if NAV is missing or undefined
+    if (isNaN(currentNavValue)) {
+      currentNavValue = previousNavValue;
+    } else {
+      previousNavValue = currentNavValue;
+    }
 
-      // Normalize NAV to 100 based on the first NAV value
-      return [currentDate, (currentNavValue / firstNavValue) * 100];
-    });
+    // Normalize NAV to 100 based on the first NAV value
+    return [currentDate, (currentNavValue / firstNavValue) * 100];
+  });
 
-    return [{
-      name: 'Nifty 50',
-      data: normalizedData,
-      type: 'line',
-      color: '#945c39',
-      dashStyle: 'line',
-      marker: {
-        enabled: false
-      },
-      tooltip: {
-        valueDecimals: 2,
-        valueSuffix: ' %'
-      },
-      zIndex: 1,
-    }];
-  }, [benchmarkData]);
-  
+  return [{
+    name: 'Nifty 50',
+    data: normalizedDataBenchmark,
+    type: 'line',
+    color: '#945c39',
+    dashStyle: 'line',
+    marker: {
+      enabled: false
+    },
+    tooltip: {
+      valueDecimals: 2,
+      valueSuffix: ' %'
+    },
+    zIndex: 1,
+  }];
+}, [benchmarkData, normalizedData]);
+
   // Prepare data for Drawdown Chart
   const drawdownData = useMemo(() => {
     if (sortedData.length === 0) return [];
@@ -335,7 +354,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           console.error("Invalid date:", sheet.date);
           return null; // Skip invalid dates
         }
-        const drawdown = parseFloat(sheet.drawdown) || 0;
+        const drawdown = parseFloat((sheet.drawdown)*100) || 0;
         return [date.getTime(), drawdown];
       })
       .filter((point) => point !== null); // Remove null values
@@ -443,12 +462,8 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       monthlyPnL: monthlyPnLArray
     };
   }, [activeSchemeData, activeScheme, totals.totalCapitalInvested, schemeWiseCapitalInvested]);
-
-
-  console.log('latestPortfolioValue:', monthlyPnL);
   
-
-
+  // Update NAV chart options to include a subtitle with the inception and current data dates.
   const navChartOptions = useMemo(() => ({
     chart: {
       type: 'line',
@@ -458,6 +473,10 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       text: 'NAV Performance vs Benchmark',
       style: { color: colors.text }
     },
+    // New subtitle added:
+    subtitle: (startDate && endDate) ? {
+      style: { color: colors.text, fontSize: '12px' }
+    } : undefined,
     xAxis: {
       type: 'datetime',
       gridLineColor: colors.gridLines,
@@ -496,8 +515,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       itemStyle: { color: colors.text },
       itemHoverStyle: { color: colors.accent }
     }
-  }), [normalizedData, benchmarkSeries, colors]);
-
+  }), [normalizedData, benchmarkSeries, colors, startDate, endDate]);
 
   // Prepare the series data with absolute values for slice sizes
   const seriesData = allocationData.map((strategy) => ({
@@ -695,10 +713,11 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       benchmark: { currentDD: benchmarkCurrentDD, maxDD: benchmarkMaxDD }
     };
   }, [drawdownData, benchmarkSeries]);
+
   // Update drawdown chart options
   const drawdownChartOptions = useMemo(() => ({
     chart: {
-      type: 'line',
+      type: 'area', // Area chart
       backgroundColor: colors.background,
     },
     title: {
@@ -722,7 +741,16 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       {
         name: 'Portfolio Drawdown',
         data: drawdownData,
-        color: colors.accent,
+        type: 'area',
+        color: '#FF0000', // Red for the line
+        // Gradient fill: red fading to transparent
+        fillColor: {
+          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+          stops: [
+            [1, Highcharts.color('#FF0000').setOpacity(0.5).get('rgba')],
+            [0, Highcharts.color('#FF0000').setOpacity(0.0).get('rgba')]
+          ]
+        },
         zIndex: 2,
         marker: {
           enabled: false
@@ -731,12 +759,21 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       {
         name: 'Nifty 50 Drawdown',
         data: benchmarkDrawdownData,
-        color: '#945c39',
+        type: 'area',
+        color: '#FF0000', // Also red for the line
+        // Gradient fill: red fading to transparent
+        fillColor: {
+          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+          stops: [
+            [1, Highcharts.color('#FF0000').setOpacity(0.5).get('rgba')],
+            [0, Highcharts.color('#FF0000').setOpacity(0.0).get('rgba')]
+          ]
+        },
         dashStyle: 'line',
+        zIndex: 1,
         marker: {
           enabled: false
         },
-        zIndex: 1,
       }
     ],
     tooltip: {
@@ -751,6 +788,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       itemHoverStyle: { color: colors.accent }
     }
   }), [drawdownData, benchmarkDrawdownData, colors]);
+  
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -864,7 +902,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-18 mb-6">
           <div className="p-18 bg-white rounded-lg shadow">
             <h3 className="text-md font-medium">Amount Invested</h3>
-            <p className="mt-2 text-2xl">
+            <p className="mt-2 text-sm">
               ₹
               {activeScheme === "Scheme Total"
                 ? totals.totalCapitalInvested.toLocaleString("en-IN", {
@@ -881,17 +919,17 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           <div className="p-18 bg-white rounded-lg shadow flex-1">
             <h3 className="text-md font-medium">Current Portfolio Value</h3>
             <div className="mt-2 flex items-baseline gap-18">
-              <span className="text-2xl">
+              <span className="text-sm">
                 ₹{latestPortfolioValue.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
               </span>
-              <div className={`flex items-center text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`flex items-end text-xs ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
                 {isPositive ? (
-                  <ArrowUpIcon className="h-1 w-1" />
+                  <ArrowUpIcon className="h-18 w-18" />
                 ) : (
-                  <ArrowDownIcon className="h-1 w-1" />
+                  <ArrowDownIcon className="h-18 w-18" />
                 )}
                 <span>
                   {dailyPercentageChange.toFixed(2)}
@@ -904,7 +942,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           <div className="p-18 bg-white rounded-lg shadow">
             <h3 className="text-md font-medium">Returns</h3>
             <div className="mt-2 flex items-baseline gap-18">
-              <span className={`text-2xl ${returns >= 0 ? "text-green-500" : "text-red-500"}`}>
+              <span className={`text-sm ${returns >= 0 ? "text-green-500" : "text-red-500"}`}>
                 {returns.toFixed(2)}%
               </span>
             </div>
@@ -913,7 +951,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           <div className="p-18 bg-white rounded-lg shadow">
             <h3 className="text-md font-medium">Total Profit</h3>
             <p
-              className={`mt-2 text-2xl ${totalProfit >= 0 ? "text-green-500" : "text-red-500"
+              className={`mt-2 text-sm ${totalProfit >= 0 ? "text-green-500" : "text-red-500"
                 }`}
             >
               ₹
@@ -925,7 +963,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           </div>
           <div className="p-18 bg-white rounded-lg shadow">
             <h3 className="text-md font-medium">Total Dividends</h3>
-            <p className="mt-2 text-2xl">
+            <p className="mt-2 text-sm">
               ₹
               {totals.totalDividends.toLocaleString("en-IN", {
                 minimumFractionDigits: 2,
@@ -934,6 +972,20 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
             </p>
           </div>
         </div>
+
+        <div className="flex justify-between items-center mb-18 mt-18">
+                {startDate && (
+                    <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">
+                        Inception Date: {formatDate(startDate)}
+                    </Text>
+                )}
+
+                {endDate && (
+                    <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-right">
+                        Data as of: {formatDate(endDate)}
+                    </Text>
+                )}
+            </div>
 
         {/* NAV Chart */}
         <div className=" bg-white p-18 rounded-lg shadow">
@@ -962,7 +1014,6 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
 
         <TrailingReturns trailingReturns={trailingReturns} ddStats={ddStats} />
 
-
         {/* Donut Chart for Strategy-wise Allocation */}
         <div className="mb-6 bg-white p-18 rounded-lg shadow">
           {allocationData.length ? (
@@ -980,7 +1031,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
             <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-4">
               Cash In/Out
             </Heading>
-            <div className="overflow-x-auto w-1/2 rounded-lg border border-brown dark:border-brown">
+            <div className="overflow-x-auto w-1/2 sm:w-full rounded-lg border border-brown dark:border-brown">
               <table className="min-w-full bg-white dark:bg-black">
                 <thead className="bg-lightBeige">
                   <tr>
@@ -1036,10 +1087,11 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   };
 
   return (
-    <DefaultLayout>
       <div className="p-18">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Managed Account Dashboard</h1>
+          <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-18 mt-4">
+            Welcome, {username}
+          </Heading>
           {/* Theme toggle button */}
           {/* <button
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -1052,7 +1104,6 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         {/* Conditional Content Rendering */}
         {renderContent()}
       </div>
-    </DefaultLayout>
   );
 };
 
