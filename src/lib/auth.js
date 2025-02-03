@@ -55,7 +55,8 @@ export const authOptions = {
               select: {
                 id: true,
                 client_name: true,
-                account_code: true
+                account_code: true,
+                account_name: true,
               },
             });
 
@@ -65,6 +66,7 @@ export const authOptions = {
               hasaccess: user.hasaccess,
               managed_client_names: managedClients.map(client => client.client_name),
               managed_account_codes: managedClients.map(client => client.account_code),
+              managed_account_names: managedClients.map(client => client.account_name),
               id: managedClients[0].id.toString(),
             };
           }
@@ -97,7 +99,7 @@ export const authOptions = {
           email: token.email,
           hasaccess: token.hasaccess,
           ...(token.nuvama_codes ? { nuvama_codes: token.nuvama_codes, usernames: token.usernames } : 
-           { managed_client_names: token.managed_client_names, managed_account_codes: token.managed_account_codes })
+           { managed_client_names: token.managed_client_names, managed_account_codes: token.managed_account_codes, managed_account_names: token.managed_account_names }),
         },
       };
     },
@@ -108,7 +110,7 @@ export const authOptions = {
           id: user.id,
           hasaccess: user.hasaccess,
           ...(user.nuvama_codes ? { nuvama_codes: user.nuvama_codes, usernames: user.usernames } : 
-           { managed_client_names: user.managed_client_names, managed_account_codes: user.managed_account_codes })
+           { managed_client_names: user.managed_client_names, managed_account_codes: user.managed_account_codes, managed_account_names: user.managed_account_names }),
         };
       }
       return token;

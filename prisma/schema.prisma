@@ -37,6 +37,7 @@ model managed_account_clients {
   account_code String?   @db.VarChar(50)
   created_at   DateTime? @default(now()) @db.Timestamp(6)
   updated_at   DateTime? @default(now()) @db.Timestamp(6)
+  account_name String?   @db.VarChar
 
   @@schema("pms_clients_tracker")
 }
@@ -51,7 +52,7 @@ model master_sheet {
   prev_value                        Float?
   daily_pl                          Float?
   long_options_total_prev_portfolio Float?
-  daily_pl__                        Float?    @map("daily_pl_%")
+  daily_pl__                        Float?
   nav                               Float?
   prev_nav                          Float?
   drawdown                          Float?
@@ -91,6 +92,7 @@ model scheme {
   updated_at    DateTime? @default(now()) @db.Timestamp(6)
   strategy_name String?   @db.VarChar(100)
   system_tag    String?   @db.VarChar(100)
+  account_name  String?   @db.VarChar
 
   @@schema("pms_clients_tracker")
 }

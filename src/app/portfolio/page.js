@@ -50,7 +50,7 @@ const Portfolio = () => {
 
   return (
     <DefaultLayout>
-      {hasManagedAccounts ? <ManagedAccountDashboard accountCodes={session.user.managed_account_codes} /> :<PerformanceAndDrawdownChart /> }
+      {hasManagedAccounts ? <ManagedAccountDashboard accountCodes={session.user.managed_account_names} /> :<PerformanceAndDrawdownChart /> }
     </DefaultLayout>
   );
 };
