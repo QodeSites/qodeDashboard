@@ -119,9 +119,14 @@ async function processCumulativeView(userNuvamaCodes, userEmail) {
     const initialInvestment = parseFloat(portfolio.initial_investment) || 0;
     const portfolioValue = parseFloat(portfolio.portfolio_value) || 0;
     const cash = parseFloat(portfolio.cash) || 0;
-    const name = userEmail === "hiren@prithvigroup.biz"
-      ? "HIREN ZAVERCHAND GALA"
-      : portfolio.name;
+    let name;
+    if (userEmail === "hiren@prithvigroup.biz") {
+      name = "HIREN ZAVERCHAND GALA";
+    } else if (userEmail === "rishabh.nahar@qodeinvest.com") {
+      name = "Rishabh Nahar";
+    } else {
+      name = portfolio.name;
+    }
 
     return {
       initial_investment: acc.initial_investment + initialInvestment,
@@ -133,13 +138,17 @@ async function processCumulativeView(userNuvamaCodes, userEmail) {
     initial_investment: 0,
     portfolio_value: 0,
     cash: 0,
-    name: userEmail === "hiren@prithvigroup.biz" ? "HIREN ZAVERCHAND GALA" : allPortfolioDetails[0]?.name || "",
+    name: (userEmail === "hiren@prithvigroup.biz")
+      ? "HIREN ZAVERCHAND GALA"
+      : (userEmail === "rishabh.nahar@qodeinvest.com"
+        ? "Rishabh Nahar"
+        : allPortfolioDetails[0]?.name || ""),
   });
 
   // Calculate cumulative daily NAV
   const navByDate = allDailyNAV.reduce((acc, nav) => {
     const dateStr = new Date(nav.date).toISOString().split('T')[0];
-    
+
     if (!acc[dateStr]) {
       acc[dateStr] = {
         date: nav.date,
@@ -207,8 +216,12 @@ async function processIndividualView(nuvama_code, userEmail) {
   }
 
   let processedPortfolioDetails = portfolioDetails;
-  if (userEmail === "hiren@prithvigroup.biz" && portfolioDetails) {
-    processedPortfolioDetails = { ...portfolioDetails, name: "HIREN ZAVERCHAND GALA" };
+  if (portfolioDetails) {
+    if (userEmail === "hiren@prithvigroup.biz") {
+      processedPortfolioDetails = { ...portfolioDetails, name: "HIREN ZAVERCHAND GALA" };
+    } else if (userEmail === "rishabh.nahar@qodeinvest.com") {
+      processedPortfolioDetails = { ...portfolioDetails, name: "Rishabh Nahar" };
+    }
   }
 
   const processedCashInOut = cashInOutData.map(record => ({
