@@ -418,7 +418,7 @@ const PerformanceAndDrawdownChart = () => {
                     <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-4">
                         Cash In/Out
                     </Heading>
-                    <div className="overflow-x-auto w-1/4 sm:w-full rounded-lg border border-brown dark:border-brown">
+                    <div className="overflow-x-auto w-full rounded-lg border border-brown dark:border-brown">
                         <table className="min-w-full bg-white dark:bg-black">
                             <thead className="bg-lightBeige">
                                 <tr>
