@@ -186,14 +186,25 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   }, [sortedData]);
 
   // Prepare data for Donut Chart (Strategy-wise Allocation)
-  const allocationData = useMemo(() => {
+  // Prepare data for Donut Chart (Strategy-wise Allocation or Scheme-wise Allocation if Scheme Total)
+const allocationData = useMemo(() => {
+  if (activeScheme === "Scheme Total") {
+    // For Scheme Total: aggregate allocation by scheme
+    if (!schemeWiseCapitalInvested) return [];
+    const totalInvested = totals.totalCapitalInvested;
+    return Object.keys(schemeWiseCapitalInvested).map((scheme) => {
+      const value = schemeWiseCapitalInvested[scheme];
+      return {
+        name: scheme,
+        y: value,
+        percentage: totalInvested > 0 ? ((value / totalInvested) * 100).toFixed(2) : 0,
+      };
+    });
+  } else {
+    // For individual schemes: use strategy-wise allocation as before
     if (!activeSchemeData) return [];
     const strategies = activeSchemeData.strategies;
-    let totalStrategyName = getStrategyName(activeScheme);
-    console.log('strategies', strategyName);
-    console.log('activeSchemeData', activeSchemeData);
-
-    // Extract latest portfolio_value for each strategy
+    const totalStrategyName = getStrategyName(activeScheme);
     const latestValues = strategies
       .map((strategy) => {
         const sortedStrategyData = [...strategy.masterSheetData].sort(
@@ -201,31 +212,22 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         );
         const latestEntry = sortedStrategyData[0];
         const parsedValue = parseFloat(latestEntry.portfolio_value) || 0;
-        console.log(`Strategy: ${strategy.strategy} - Latest Value: ${parsedValue}`);
         return {
           name: strategy.strategy,
           y: parsedValue,
         };
       })
       .filter((strategy) => strategy.y !== 0)
-      .filter((strategy) => {
-        const isExcluded = strategy.name === totalStrategyName;
-        if (isExcluded) {
-          console.log(`Excluding ${strategy.name} because it matches totalStrategyName (${totalStrategyName})`);
-        }
-        return !isExcluded;
-      });
-
-    // Calculate total portfolio value
+      .filter((strategy) => strategy.name !== totalStrategyName);
     const total = latestValues.reduce((sum, strategy) => sum + strategy.y, 0);
-
-    // Calculate percentage allocation
     return latestValues.map((strategy) => ({
       name: strategy.name,
       y: strategy.y,
       percentage: total > 0 ? ((strategy.y / total) * 100).toFixed(2) : 0,
     }));
-  }, [activeSchemeData]);
+  }
+}, [activeScheme, activeSchemeData, schemeWiseCapitalInvested, totals.totalCapitalInvested]);
+
 
   const filteredCashInOutData = useMemo(() => {
     return activeScheme === "Scheme Total"
@@ -517,12 +519,6 @@ const benchmarkSeries = useMemo(() => {
     }
   }), [normalizedData, benchmarkSeries, colors, startDate, endDate]);
 
-  // Prepare the series data with absolute values for slice sizes
-  const seriesData = allocationData.map((strategy) => ({
-    name: strategy.name,
-    y: Math.abs(strategy.y),  // Use the absolute value for the slice size
-    actualValue: strategy.y,    // Keep the original signed value for display
-  }));
 
   const chartColors = {
     background: '#ffffff',
@@ -554,11 +550,14 @@ const benchmarkSeries = useMemo(() => {
       backgroundColor: chartColors.background,
       height: 400,
       style: {
-        fontFamily: 'Inter, system-ui, sans-serif'
-      }
+        fontFamily: "Inter, system-ui, sans-serif",
+      },
     },
     title: {
-      text: `Strategy-wise Allocation - ${activeScheme}`,
+      text:
+        activeScheme === "Scheme Total"
+          ? "Scheme-wise Allocation"
+          : `Strategy-wise Allocation - ${activeScheme}`,
       align: "left",
       style: {
         fontSize: "18px",
@@ -568,7 +567,7 @@ const benchmarkSeries = useMemo(() => {
     },
     tooltip: {
       formatter: function () {
-        const formattedValue = this.point.actualValue.toLocaleString("en-IN", {
+        const formattedValue = this.point.y.toLocaleString("en-IN", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
@@ -576,7 +575,6 @@ const benchmarkSeries = useMemo(() => {
           <div style="padding: 8px">
             <div style="font-weight: 600">${this.point.name}</div>
             <div>Allocation: ${this.point.percentage.toFixed(2)}%</div>
-            <div>Value: ₹${formattedValue}</div>
           </div>
         `;
       },
@@ -591,7 +589,7 @@ const benchmarkSeries = useMemo(() => {
     },
     accessibility: {
       announceNewData: {
-        enabled: true
+        enabled: true,
       },
       point: {
         valueSuffix: "%",
@@ -606,16 +604,16 @@ const benchmarkSeries = useMemo(() => {
         dataLabels: {
           enabled: true,
           formatter: function () {
-            const formattedValue = this.point.actualValue.toLocaleString("en-IN", {
+            const formattedValue = this.point.y.toLocaleString("en-IN", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             });
-            return `<b>${this.point.name}</b><br>${this.point.percentage.toFixed(1)}%<br>₹${formattedValue}`;
+            return `<b>${this.point.name}</b><br>${this.point.percentage.toFixed(2)}%`;
           },
           style: {
             color: chartColors.text,
             fontSize: "11px",
-            textOutline: '1px contrast',
+            textOutline: "1px contrast",
           },
           distance: 20,
         },
@@ -627,24 +625,29 @@ const benchmarkSeries = useMemo(() => {
       {
         name: "Allocation",
         colorByPoint: true,
-        data: seriesData,
+        data: allocationData.map((item) => ({
+          name: item.name,
+          y: Math.abs(item.y),
+          percentage: parseFloat(item.percentage), // Ensure percentage is a number
+        })),
       },
     ],
     legend: {
       enabled: true,
-      layout: 'horizontal',
-      align: 'center',
-      verticalAlign: 'bottom',
+      layout: "horizontal",
+      align: "center",
+      verticalAlign: "bottom",
       itemStyle: {
         color: chartColors.text,
-        fontWeight: 'normal'
+        fontWeight: "normal",
       },
       itemHoverStyle: {
-        color: '#718096'
-      }
+        color: "#718096",
+      },
     },
     credits: { enabled: false },
   };
+  
 
   const benchmarkDrawdownData = useMemo(() => {
     if (!benchmarkData || Object.keys(benchmarkData).length === 0) return [];
@@ -1016,14 +1019,20 @@ const benchmarkSeries = useMemo(() => {
 
         {/* Donut Chart for Strategy-wise Allocation */}
         <div className="mb-6 bg-white p-18 rounded-lg shadow">
-          {allocationData.length ? (
-            <HighchartsReact
-              highcharts={Highcharts}
-              options={donutChartOptions}
-            />
-          ) : (
-            <div>No allocation data available.</div>
+          {/* Donut Chart for Strategy-wise Allocation */}
+          {activeScheme !== "Scheme C" && (
+            <div className="mb-6 bg-white p-18 rounded-lg shadow">
+              {allocationData.length ? (
+                <HighchartsReact
+                  highcharts={Highcharts}
+                  options={donutChartOptions}
+                />
+              ) : (
+                <div>No allocation data available.</div>
+              )}
+            </div>
           )}
+
         </div>
 
         {filteredCashInOutData.length > 0 && (
