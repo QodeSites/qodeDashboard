@@ -8,63 +8,63 @@ import Heading from "./common/Heading";
 import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/20/solid";
 import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
 import Text from "./common/Text";
-// import YearlyMonthlyPLTable from "./MonthlyPLTable";
-
+import YearlyMonthlyPLTable from "./MonthlyPLTable";
+import useMobileWidth from "@/hooks/useMobileWidth";
 const TrailingReturns = ({ trailingReturns, ddStats }) => {
   const periods = Object.keys(trailingReturns.portfolioReturns);
   return (
-    <div className="my-6 bg-white p-18 rounded-lg shadow">
-      <h2 className="text-xl font-bold mb-4">Trailing Returns & Drawdown</h2>
-      <div className="overflow-x-auto border border-brown rounded-lg">
-        <table className="min-w-full border-collapse">
+    <div className="my-6 bg-white p-1 rounded-lg shadow">
+      <h2 className="text-xs sm:text-xl font-bold mb-4">Trailing Returns & Drawdown</h2>
+      <div className="overflow-x-auto border text-xs sm:text-lg border-brown rounded-lg">
+        <table className="min-w-full table-fixed border-collapse">
           <thead>
-            <tr className="bg-lightBeige text-black">
-              <th className="border border-brown p-18 text-left">Return Type</th>
+            <tr className="bg-lightBeige">
+              <th className="w-1/10  p-1 text-left border border-brown font-semibold">Return Type</th>
               {periods.map((period) => (
-                <th key={period} className="border border-brown p-18 text-center">
+                <th key={period} className="w-1/10 border p-18 border-brown text-center font-semibold">
                   {period}
                 </th>
               ))}
-              <th className="border border-brown p-18 text-center">Current DD</th>
-              <th className="border border-brown p-18 text-center">Max DD</th>
+              <th className="w-1/12 border p-18 border-brown text-center font-semibold">Current DD</th>
+              <th className="w-1/12 border p-18 border-brown text-center font-semibold">Max DD</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border border-brown p-18 font-medium">Portfolio (%)</td>
+              <td className="border p-1 border-brown font-medium">Portfolio (%)</td>
               {periods.map((period) => (
-                <td key={period} className="border border-brown p-18 text-center">
+                <td key={period} className="border p-1 border-brown text-center">
                   {trailingReturns.portfolioReturns[period] !== null
                     ? trailingReturns.portfolioReturns[period].toFixed(2)
                     : "N/A"}
                 </td>
               ))}
-              <td className="border border-brown p-18 text-center">
+              <td className="border p-1 border-brown text-center">
                 {ddStats.portfolio.currentDD !== null
                   ? ddStats.portfolio.currentDD.toFixed(2)
                   : "N/A"}
               </td>
-              <td className="border border-brown p-18 text-center">
+              <td className="border p-1 border-brown text-center">
                 {ddStats.portfolio.maxDD !== null
                   ? ddStats.portfolio.maxDD.toFixed(2)
                   : "N/A"}
               </td>
             </tr>
             <tr>
-              <td className="border border-brown p-18 font-medium">Nifty 50 (%)</td>
+              <td className="border p-1 border-brown font-medium">Nifty 50 (%)</td>
               {periods.map((period) => (
-                <td key={period} className="border border-brown p-18 text-center">
+                <td key={period} className="border p-1 border-brown text-center">
                   {trailingReturns.benchmarkReturns[period] !== null
                     ? trailingReturns.benchmarkReturns[period].toFixed(2)
                     : "N/A"}
                 </td>
               ))}
-              <td className="border border-brown p-18 text-center">
+              <td className="border p-1 border-brown text-center">
                 {ddStats.benchmark.currentDD !== null
                   ? ddStats.benchmark.currentDD.toFixed(2)
                   : "N/A"}
               </td>
-              <td className="border border-brown p-18 text-center">
+              <td className="border p-1 border-brown text-center">
                 {ddStats.benchmark.maxDD !== null
                   ? ddStats.benchmark.maxDD.toFixed(2)
                   : "N/A"}
@@ -75,6 +75,7 @@ const TrailingReturns = ({ trailingReturns, ddStats }) => {
       </div>
     </div>
   );
+
 };
 
 const ManagedAccountDashboard = ({ accountCodes }) => {
@@ -85,6 +86,8 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   // State Hooks
   const [activeScheme, setActiveScheme] = useState("Scheme Total");
   const [theme, setTheme] = useState("light");
+  const [isOpen, setIsOpen] = useState(false);
+  const { isMobile } = useMobileWidth();
 
   // Refs for charts
   const navChartRef = useRef(null);
@@ -100,7 +103,6 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
     loading,
     error,
   } = useManagedAccounts();
-  console.log("data", data);
 
   // Theme Colors
   const themeColors = {
@@ -150,7 +152,6 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   };
 
   const strategyName = useMemo(() => getStrategyName(activeScheme), [activeScheme]);
-  console.log(strategyName);
 
   // Find active scheme data
   const activeSchemeData = useMemo(() => {
@@ -183,19 +184,23 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           console.error("Invalid date:", sheet.date);
           return null;
         }
+        // Reset the time portion to midnight
+        date.setHours(0, 0, 0, 0);
+
         const nav = parseFloat(sheet.nav);
         return [
-          date.getTime(), // timestamp
+          date.getTime(), // timestamp at local midnight
           nav === 0 || isNaN(nav) ? 0 : (nav / firstNav) * 100, // normalized value
         ];
       })
       .filter((point) => point !== null);
   }, [sortedData]);
 
+
   // ─── CALCULATE MONTHLY P&L BASED ON LAST DATES OF PREVIOUS & CURRENT MONTH ─────────
   const monthlyPnLFromNormalizedData = useMemo(() => {
     if (normalizedData.length === 0) return [];
-  
+
     // Group all normalized data points by month
     const dataByMonth = {};
     normalizedData.forEach(([timestamp, value]) => {
@@ -206,24 +211,24 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       }
       dataByMonth[monthKey].push({ timestamp, value });
     });
-  
+
     // Sort data points within each month by timestamp
     Object.keys(dataByMonth).forEach(monthKey => {
       dataByMonth[monthKey].sort((a, b) => a.timestamp - b.timestamp);
     });
-  
+
     const sortedMonthKeys = Object.keys(dataByMonth).sort();
     const monthlyPnLArray = [];
-  
+
     sortedMonthKeys.forEach((monthKey, idx) => {
       const currentMonthData = dataByMonth[monthKey];
       const previousMonthKey = sortedMonthKeys[idx - 1];
-      
+
       // If this is the first month with data
       if (idx === 0) {
         const firstDayValue = currentMonthData[0].value;
         const lastDayValue = currentMonthData[currentMonthData.length - 1].value;
-        
+
         monthlyPnLArray.push({
           month: monthKey,
           previousMonth: monthKey, // Same as current month for first entry
@@ -239,7 +244,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         const previousMonthData = dataByMonth[previousMonthKey];
         const startValue = previousMonthData[previousMonthData.length - 1].value; // Last value of previous month
         const endValue = currentMonthData[currentMonthData.length - 1].value; // Last value of current month
-        
+
         monthlyPnLArray.push({
           month: monthKey,
           previousMonth: previousMonthKey,
@@ -252,12 +257,9 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         });
       }
     });
-  
+
     return monthlyPnLArray;
   }, [normalizedData]);
-  
-  
-  // ────────────────────────────────────────────────────────────────────────────────
 
   // Prepare data for the Donut Chart (Strategy-wise Allocation)
   const schemeForDonut = useMemo(() => {
@@ -279,7 +281,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           );
           const latestEntry = sortedStrategyData[0];
           const parsedValue = parseFloat(latestEntry?.portfolio_value) || 0;
-          console.log(strategy.strategy, parsedValue);
+          //console.log(strategy.strategy, parsedValue);
           return {
             name: strategy.strategy,
             y: parsedValue,
@@ -348,10 +350,8 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       ? cashInOutData
       : cashInOutData.filter((record) => record.scheme === activeScheme);
   }, [cashInOutData, activeScheme]);
-
   // Define benchmark indices
   const benchmarkIndices = ["NIFTY 50"];
-
   // Get start and end dates from strategies data
   const { startDate, endDate } = useMemo(() => {
     if (!activeSchemeData?.strategies) return { startDate: null, endDate: null };
@@ -381,30 +381,38 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   // Prepare benchmark series data
   const benchmarkSeries = useMemo(() => {
     if (!benchmarkData || Object.keys(benchmarkData).length === 0) {
-      console.log("benchmarkData is empty or not provided");
+      //console.log("benchmarkData is empty or not provided");
       return [];
     }
     const benchmarkArray = Object.values(benchmarkData);
     if (!Array.isArray(benchmarkArray) || benchmarkArray.length === 0) {
-      console.log("benchmarkArray is not an array or is empty");
+      //console.log("benchmarkArray is not an array or is empty");
       return [];
     }
     const sortedBenchmarkData = benchmarkArray
       .slice()
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-    console.log("sortedBenchmarkData:", sortedBenchmarkData);
+    //console.log("sortedBenchmarkData:", sortedBenchmarkData);
+
     const portfolioStartTimestamp = normalizedData.length ? normalizedData[0][0] : null;
     let filteredBenchmarkData = sortedBenchmarkData;
     if (portfolioStartTimestamp) {
       filteredBenchmarkData = sortedBenchmarkData.filter(
-        (item) => new Date(item.date).getTime() >= portfolioStartTimestamp
+        (item) => {
+          const d = new Date(item.date);
+          d.setHours(0, 0, 0, 0);
+          return d.getTime() >= portfolioStartTimestamp;
+        }
       );
+      // If the first benchmark date doesn't match the portfolio start date, add an entry
       if (
         filteredBenchmarkData.length &&
-        new Date(filteredBenchmarkData[0].date).getTime() !== portfolioStartTimestamp
+        (new Date(filteredBenchmarkData[0].date).setHours(0, 0, 0, 0)) !== portfolioStartTimestamp
       ) {
+        // Create a new Date from the portfolioStartTimestamp and set its time to midnight (it should already be)
+        const normalizedStartDate = new Date(portfolioStartTimestamp);
         filteredBenchmarkData.unshift({
-          date: new Date(portfolioStartTimestamp).toISOString().split("T")[0],
+          date: normalizedStartDate.toISOString().split("T")[0], // "YYYY-MM-DD"
           nav: filteredBenchmarkData[0].nav,
         });
       }
@@ -412,7 +420,11 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
     const firstNavValue = parseFloat(filteredBenchmarkData[0].nav);
     let previousNavValue = firstNavValue;
     const normalizedDataBenchmark = filteredBenchmarkData.map((item) => {
-      const currentDate = new Date(item.date).getTime();
+      // Normalize the date to midnight
+      const dateObj = new Date(item.date);
+      dateObj.setHours(0, 0, 0, 0);
+      const currentDate = dateObj.getTime();
+
       let currentNavValue = parseFloat(item.nav);
       if (isNaN(currentNavValue)) {
         currentNavValue = previousNavValue;
@@ -471,11 +483,22 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         returns: 0,
       };
 
-    const strategiesData = activeSchemeData.strategies.flatMap(
-      (strategy) => strategy.masterSheetData
+    const totalSchemeName = getStrategyName(activeScheme);
+    //console.log("totalSchemeName:", totalSchemeName);
+
+    // Use Array.find to locate the correct strategy object
+    const strategyObj = activeSchemeData.strategies.find(
+      (s) => s.strategy === totalSchemeName
     );
+    //console.log("strategyObj:", strategyObj);
+
+    const strategiesData = strategyObj?.masterSheetData;
+    //console.log("strategiesData:", strategiesData);
+
     const latestRecord =
-      strategiesData.length > 0 ? strategiesData[strategiesData.length - 1] : null;
+      strategiesData && strategiesData.length > 0 ? strategiesData[strategiesData.length - 1] : null;
+    //console.log("latestRecord:", latestRecord);
+
     const latestPortfolioValue = latestRecord
       ? parseFloat(latestRecord.portfolio_value) || 0
       : 0;
@@ -487,10 +510,11 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         ? totals.totalCapitalInvested
         : schemeWiseCapitalInvested[activeScheme];
     const totalProfit = latestPortfolioValue - investment;
-    const firstEntry = strategiesData[0];
+    const firstEntry = strategiesData && strategiesData[0];
     const lastEntry = latestRecord;
     const startDate = new Date(firstEntry?.date);
     const endDate = new Date(lastEntry?.date);
+
     const holdingPeriodDays = Math.floor(
       (endDate - startDate) / (1000 * 60 * 60 * 24)
     );
@@ -508,7 +532,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       const lastEntryDailyPL = latestRecord.daily_pl__ || 0;
       if (lastEntryDailyPL !== 0) {
         dailyPercentageChange = lastEntryDailyPL;
-      } else {
+      } else if (strategiesData) {
         const sumDaily = strategiesData.reduce(
           (acc, entry) => acc + (entry.daily_pl__ || 0),
           0
@@ -535,6 +559,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
     }
     return initial;
   });
+
   useEffect(() => {
     const initial = [{ name: "Portfolio NAV", visible: true }];
     if (benchmarkSeries && benchmarkSeries.length > 0) {
@@ -555,8 +580,8 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   };
 
   const [drawdownSeriesVisibility, setDrawdownSeriesVisibility] = useState([
-    { name: "Portfolio Drawdown", visible: true },
-    { name: "Nifty 50 Drawdown", visible: true },
+    { name: "Portfolio", visible: true },
+    { name: "Nifty 50", visible: true },
   ]);
 
   const toggleDrawdownSeries = (index) => {
@@ -567,8 +592,6 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       drawdownChartRef.current.chart.series[index].setVisible(newVisibility[index].visible);
     }
   };
-  // ───────────────────────────────────────────────────────────────────────────────
-
   // ─── CHART OPTIONS ─────────────────────────────────────────────────────────────
   const navChartOptions = useMemo(
     () => ({
@@ -587,21 +610,51 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
               "%d-%m-%Y",
               new Date(startDate)
             )} to ${Highcharts.dateFormat("%d-%m-%Y", new Date(endDate))}`,
-            style: { color: colors.text, fontSize: "12px" },
+            style: { color: colors.text, fontSize: "0" },
           }
           : undefined,
       xAxis: {
         type: "datetime",
         gridLineColor: colors.gridLines,
         labels: { style: { color: colors.text } },
+        tickWidth: isMobile ? 0 : 1,
+        responsive: {
+          rules: [{
+            condition: {
+              maxWidth: 768 // Mobile breakpoint
+            },
+            chartOptions: {
+              xAxis: {
+                tickLength: 0,
+                labels: {
+                  step: 2 // Show fewer labels on mobile
+                }
+              }
+            }
+          }, {
+            condition: {
+              minWidth: 769 // Desktop breakpoint
+            },
+            chartOptions: {
+              xAxis: {
+                tickLength: 6, // Show ticks on desktop
+                labels: {
+                  step: 1 // Show all labels on desktop
+                }
+              }
+            }
+          }]
+        }
       },
       yAxis: {
         title: {
-          text: "Normalized Value",
+          text: "",
           style: { color: colors.text },
         },
         gridLineColor: colors.gridLines,
         labels: { style: { color: colors.text } },
+        tickWidth: isMobile ? 0 : 1,
+
       },
       series: [
         {
@@ -619,14 +672,16 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
         })),
       ],
       tooltip: {
+        shared: true,
         backgroundColor: colors.tooltipBg,
         borderColor: colors.tooltipBorder,
         style: { color: colors.text },
       },
       legend: { enabled: false },
     }),
-    [normalizedData, benchmarkSeries, colors, startDate, endDate, navSeriesVisibility]
+    [normalizedData, benchmarkSeries, colors, startDate, endDate, navSeriesVisibility, isMobile]
   );
+
 
   const drawdownChartOptions = useMemo(
     () => ({
@@ -645,7 +700,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       },
       yAxis: {
         title: {
-          text: "Drawdown (%)",
+          text: "",
           style: { color: colors.text },
         },
         gridLineColor: colors.gridLines,
@@ -653,23 +708,32 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       },
       series: [
         {
-          name: "Portfolio Drawdown",
+          name: "Portfolio",
           data: drawdownData,
           type: "area",
-          color: "#FF0000",
+          color: "#FF9E9E", // Lighter pink base color
           fillColor: {
             linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
             stops: [
-              [1, Highcharts.color("#FF0000").setOpacity(0.5).get("rgba")],
-              [0, Highcharts.color("#FF0000").setOpacity(0.0).get("rgba")],
-            ],
+              [0, "#FFB6B6"], // Light pink at top
+              [1, Highcharts.color("#FFE6E6").setOpacity(0.3).get("rgba")] // Very light pink with transparency at bottom
+            ]
           },
+          zones: [
+            {
+              value: -10,
+              color: "#FF8080" // Medium pink for mild drawdown
+            },
+            {
+              color: "#E57373" // Deeper pink for severe drawdown
+            }
+          ],
           zIndex: 2,
           marker: { enabled: false },
           visible: drawdownSeriesVisibility[0].visible,
         },
         {
-          name: "Nifty 50 Drawdown",
+          name: "Nifty 50 ",
           data: (() => {
             if (!benchmarkData || Object.keys(benchmarkData).length === 0) return [];
             const benchmarkArray = Object.values(benchmarkData);
@@ -699,20 +763,30 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
               .filter((point) => point !== null);
           })(),
           type: "area",
-          color: "#CC0000",
+          color: "#FFCDD2", // Lighter red base color
           fillColor: {
             linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
             stops: [
-              [1, Highcharts.color("#CC0000").setOpacity(0.5).get("rgba")],
-              [0, Highcharts.color("#CC0000").setOpacity(0.0).get("rgba")],
-            ],
+              [0, "#FFCDD2"], // Light red at top
+              [1, Highcharts.color("#FFEBEE").setOpacity(0.3).get("rgba")] // Very light red with transparency at bottom
+            ]
           },
           dashStyle: "line",
+          zones: [
+            {
+              value: -10,
+              color: "#EF9A9A" // Medium red for mild drawdown
+            },
+            {
+              color: "#E57373" // Deeper red for severe drawdown
+            }
+          ],
           zIndex: 1,
           marker: { enabled: false },
           visible: drawdownSeriesVisibility[1].visible,
         },
       ],
+
       tooltip: {
         backgroundColor: colors.tooltipBg,
         borderColor: colors.tooltipBorder,
@@ -881,6 +955,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   }, [filteredCashInOutData]);
 
   const isPositive = dailyPercentageChange >= 0;
+
   const trailingReturns = useMemo(() => {
     const periods = {
       "5d": 5,
@@ -888,6 +963,8 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       "15d": 15,
       "1m": 30,
       "1y": 365,
+      "2y": 730,
+      "3y": 1095,
     };
     const getTrailingReturn = (series, days) => {
       const periodMs = days * 24 * 60 * 60 * 1000;
@@ -917,6 +994,36 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
     return { portfolioReturns, benchmarkReturns };
   }, [normalizedData, benchmarkSeries]);
 
+  const calculateReturn = (normalizedData) => {
+    if (normalizedData.length === 0) return 0;
+
+    const startTimestamp = normalizedData[0][0];
+    const endTimestamp = normalizedData[normalizedData.length - 1][0];
+    const startValue = normalizedData[0][1];
+    const endValue = normalizedData[normalizedData.length - 1][1];
+
+    // Calculate the total return in decimal form (e.g., 0.25 for 25%)
+    const totalReturnDecimal = (endValue / startValue) - 1;
+
+    // Calculate the holding period in years
+    const holdingPeriodYears = (endTimestamp - startTimestamp) / (365 * 24 * 60 * 60 * 1000);
+
+    // If holding period is 1 year or more, compute annualized return (CAGR)
+    if (holdingPeriodYears >= 1) {
+      const annualizedReturn = (Math.pow(1 + totalReturnDecimal, 1 / holdingPeriodYears) - 1) * 100;
+      return annualizedReturn;
+    } else {
+      // If less than 1 year, return the absolute return percentage
+      return totalReturnDecimal * 100;
+    }
+  };
+
+  // Usage example inside a useMemo hook to recalc when normalizedData changes:
+  const returnsValue = useMemo(() => {
+    return calculateReturn(normalizedData);
+  }, [normalizedData]);
+
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -926,17 +1033,17 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       );
     }
     if (error) {
-      return <div className="p-18 text-red-500">Error: {error}</div>;
+      return <div className="p-1 text-red-500">Error: {error}</div>;
     }
     if (!Array.isArray(data)) {
-      return <div className="p-18 text-red-500">No data available.</div>;
+      return <div className="p-1 text-red-500">No data available.</div>;
     }
-    console.log("accountCodes:", accountCodes);
+    //console.log("accountCodes:", accountCodes);
     return (
       <>
         {isSarlaAccount ? (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-18 mb-6">
-            <label htmlFor="scheme-select" className="text-md font-medium">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 mb-6">
+            <label htmlFor="scheme-select" className="text-xs sm:text-md font-medium">
               Select Scheme:
             </label>
             <select
@@ -954,13 +1061,13 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           </div>
         ) : (
           <div className="mb-6">
-            <h3 className="text-md font-medium"></h3>
+            <h3 className="text-xs sm:text-md font-medium"></h3>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-18 mb-6">
-          <div className="p-18 bg-white rounded-lg shadow">
-            <h3 className="text-lg font-medium">Amount Invested</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1 mb-6">
+          <div className="p-1 bg-white rounded-lg shadow">
+            <h3 className="text-xs sm:text-lg font-medium">Amount Invested</h3>
             <p className="mt-2 text-base">
               ₹
               {activeScheme === "Scheme Total"
@@ -974,29 +1081,24 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
                 })}
             </p>
           </div>
-          <div className="p-18 bg-white rounded-lg shadow flex-1">
-            <h3 className="text-lg font-medium">Current Portfolio Value</h3>
-            <div className="mt-2 flex items-baseline gap-4">
+          <div className="p-1 bg-white rounded-lg shadow flex-1">
+            <h3 className="text-xs sm:text-lg font-medium">Current Portfolio Value</h3>
+            <div className="mt-2 flex items-baseline gap-1">
               <span className="text-base">
                 ₹{latestPortfolioValue.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
               </span>
-              <span className={`text-sm ${latestPreviousValue >= 0 ? "text-green-500" : "text-red-500"}`}>
-                Daily P&L: ₹{latestPreviousValue.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
+
             </div>
           </div>
 
-          <div className="p-18 bg-white rounded-lg shadow">
-            <h3 className="text-lg font-medium">Returns</h3>
-            <div className="mt-2 flex items-baseline gap-18">
-              <span className={`text-xl font-semibold ${returns >= 0 ? "text-green-500" : "text-red-500"}`}>
-                {returns.toFixed(2)}%
+          <div className="p-1 bg-white rounded-lg shadow">
+            <h3 className="text-xs sm:text-lg font-medium">Returns</h3>
+            <div className="mt-2 flex justify-between items-baseline gap-1">
+              <span className={`text-xs sm:text-xl font-semibold ${returns >= 0 ? "text-green-500" : "text-red-500"}`}>
+                {returnsValue.toFixed(2)}%
               </span>
               <div className={`flex items-end text-sm ${isPositive ? "text-green-600" : "text-red-600"}`}>
                 {isPositive ? (
@@ -1008,17 +1110,39 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
               </div>
             </div>
           </div>
-          <div className="p-18 bg-white rounded-lg shadow">
-            <h3 className="text-lg font-medium">Total Profit</h3>
-            <p className={`mt-2 text-base ${totalProfit >= 0 ? "text-green-500" : "text-red-500"}`}>
-              ₹{totalProfit.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
+          <div className="p-1 bg-white rounded-lg shadow">
+            <h3 className="text-xs sm:text-lg font-medium">Total Profit</h3>
+            <div className="mt-2 flex justify-between items-baseline gap-1">
+              <p
+                className={`text-base ${totalProfit >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
+              >
+                ₹{totalProfit.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <div className=" flex items-center">
+                {latestPreviousValue >= 0 ? (
+                  <ArrowUpIcon className="h-18 w-18 text-green-500" />
+                ) : (
+                  <ArrowDownIcon className="h-18 w-18 text-red-500" />
+                )}
+                <span
+                  className={`text-sm ${latestPreviousValue >= 0 ? "text-green-500" : "text-red-500"
+                    }`}
+                >
+                  {latestPreviousValue.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="p-18 bg-white rounded-lg shadow">
-            <h3 className="text-lg font-medium">Total Dividends</h3>
+
+          <div className="p-1 bg-white rounded-lg shadow">
+            <h3 className="text-xs sm:text-lg font-medium">Total Dividends</h3>
             <p className="mt-2 text-base">
               ₹{totals.totalDividends.toLocaleString("en-IN", {
                 minimumFractionDigits: 2,
@@ -1028,6 +1152,9 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           </div>
         </div>
 
+        <TrailingReturns trailingReturns={trailingReturns} ddStats={ddStats} />
+
+
         <div className="flex justify-between items-center mb-18 mt-18">
           {startDate && (
             <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">
@@ -1036,17 +1163,17 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           )}
         </div>
 
-        <div className="bg-white p-18 rounded-lg shadow mb-6">
+        <div className="bg-white p-0 sm:p-1 rounded-lg  shadow mb-6">
           {normalizedData.length ? (
             <>
-              <div className="mb-2">
+              <div className="my-2 p-18">
                 {navSeriesVisibility.map((series, index) => (
-                  <label key={index} className="mr-4" style={{ color: colors.text }}>
+                  <label key={index} className="mr-2 text-xs sm:text-md" style={{ color: colors.text }}>
                     <input
                       type="checkbox"
                       checked={series.visible}
                       onChange={() => toggleNavSeries(index)}
-                      className="mr-1"
+                      className="mr-18"
                     />
                     {series.name}
                   </label>
@@ -1059,17 +1186,17 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           )}
         </div>
 
-        <div className="mb-6 bg-white p-18 rounded-lg shadow">
+        <div className="mb-6 bg-white sm:p-1 rounded-lg shadow">
           {drawdownData.length ? (
             <>
-              <div className="mb-2">
+              <div className="my-2 p-18">
                 {drawdownSeriesVisibility.map((series, index) => (
-                  <label key={index} className="mr-4" style={{ color: colors.text }}>
+                  <label key={index} className="mr-18 p-18 text-xs sm:text-md" style={{ color: colors.text }}>
                     <input
                       type="checkbox"
                       checked={series.visible}
                       onChange={() => toggleDrawdownSeries(index)}
-                      className="mr-1"
+                      className="mr-18"
                     />
                     {series.name}
                   </label>
@@ -1082,91 +1209,119 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           )}
         </div>
 
-        <TrailingReturns trailingReturns={trailingReturns} ddStats={ddStats} />
 
         {/* Pass the monthly P&L computed using last dates of previous & current months */}
-        {/* <YearlyMonthlyPLTable monthlyPnL={monthlyPnLFromNormalizedData} /> */}
+        <YearlyMonthlyPLTable monthlyPnL={monthlyPnLFromNormalizedData} />
+        {(!isSarlaAccount || activeScheme !== "Scheme Total") && (
+          <div className="mt-6 bg-white p-1 rounded-lg shadow">
+            {allocationData.length ? (
+              <HighchartsReact highcharts={Highcharts} options={donutChartOptions} />
+            ) : (
+              <div>No allocation data available.</div>
+            )}
+          </div>
+        )}
 
-        <div className="mb-6 bg-white p-18 rounded-lg shadow">
-          {(!isSarlaAccount || activeScheme !== "Scheme Total") && (
-            <div className="mb-6 bg-white p-18 rounded-lg shadow">
-              {allocationData.length ? (
-                <HighchartsReact highcharts={Highcharts} options={donutChartOptions} />
-              ) : (
-                <div>No allocation data available.</div>
-              )}
+        <div className="my-4 border rounded-lg">
+          {/* Accordion Header */}
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="w-full flex items-center justify-between p-2 border-brown border rounded-lg bg-lightBeige dark:bg-gray-800 text-md font-medium text-black dark:text-gray-400 uppercase tracking-wider focus:outline-none"
+          >
+            <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">Cash In/Out</Text>
+            <span className="text-xs sm:text-xl">
+              {isOpen ? "−" : "+"}
+            </span>
+          </button>
+
+          {/* Accordion Content */}
+          {isOpen && (
+            <div className="sm:p-2">
+              <div className="overflow-x-auto w-full rounded-lg border border-brown dark:border-brown">
+                <table className="min-w-full bg-white dark:bg-black">
+                  <thead className="bg-lightBeige">
+                    <tr>
+                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-md  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-md  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                        Scheme
+                      </th>
+                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-right text-xs sm:text-md  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                        Cash In/Out
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCashInOutData.map((record, index) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-md  text-gray-700 dark:text-gray-300">
+                          {formatDate(record.date)}
+                        </td>
+                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-md  text-gray-700 dark:text-gray-300">
+                          {record.scheme}
+                        </td>
+                        <td
+                          className={`p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-md  text-right ${record.capital_in_out > 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                            }`}
+                        >
+                          {formatCurrency(record.capital_in_out)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-gray-100 dark:bg-gray-800 font-semibold">
+                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-md  text-gray-900 dark:text-gray-100">
+                        Total
+                      </td>
+                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-md  text-right text-gray-900 dark:text-gray-100"></td>
+                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-md  text-right text-gray-900 dark:text-gray-100">
+                        {formatCurrency(cashFlowTotals.netFlow)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-2 text-xs sm:text-md  text-gray-600 dark:text-gray-400">
+                <p>
+                  Total Cash In:{" "}
+                  <span className="text-green-600">
+                    {formatCurrency(cashFlowTotals.totalIn)}
+                  </span>
+                </p>
+                <p>
+                  Total Cash Out:{" "}
+                  <span className="text-red-600">
+                    {formatCurrency(cashFlowTotals.totalOut)}
+                  </span>
+                </p>
+                <p>
+                  Net Flow:{" "}
+                  <span
+                    className={
+                      cashFlowTotals.netFlow >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    {formatCurrency(cashFlowTotals.netFlow)}
+                  </span>
+                </p>
+              </div>
             </div>
           )}
         </div>
-
-        {filteredCashInOutData.length > 0 && (
-          <div className="mb-4">
-            <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-4">
-              Cash In/Out
-            </Heading>
-            <div className="overflow-x-auto w-full rounded-lg border border-brown dark:border-brown">
-              <table className="min-w-full bg-white dark:bg-black">
-                <thead className="bg-lightBeige">
-                  <tr>
-                    <th className="p-18 border-b border-brown dark:border-brown text-left text-md font-medium text-black dark:text-gray-400 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="p-18 border-b border-brown dark:border-brown text-left text-md font-medium text-black dark:text-gray-400 uppercase tracking-wider">
-                      Scheme
-                    </th>
-                    <th className="p-18 border-b border-brown dark:border-brown text-right text-md font-medium text-black dark:text-gray-400 uppercase tracking-wider">
-                      Cash In/Out
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCashInOutData.map((record, index) => (
-                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="p-18 border-b border-brown dark:border-brown text-md text-gray-700 dark:text-gray-300">
-                        {formatDate(record.date)}
-                      </td>
-                      <td className="p-18 border-b border-brown dark:border-brown text-md text-gray-700 dark:text-gray-300">
-                        {record.scheme}
-                      </td>
-                      <td className={`p-18 border-b border-brown dark:border-brown text-md text-right ${record.capital_in_out > 0 ? "text-green-600" : "text-red-600"}`}>
-                        {formatCurrency(record.capital_in_out)}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-gray-100 dark:bg-gray-800 font-semibold">
-                    <td className="p-18 border-t border-brown dark:border-brown text-md text-gray-900 dark:text-gray-100">
-                      Total
-                    </td>
-                    <td className="p-18 border-t border-brown dark:border-brown text-md text-right text-gray-900 dark:text-gray-100"></td>
-                    <td className="p-18 border-t border-brown dark:border-brown text-md text-right text-gray-900 dark:text-gray-100">
-                      {formatCurrency(cashFlowTotals.netFlow)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-2 text-md text-gray-600 dark:text-gray-400">
-              <p>
-                Total Cash In: <span className="text-green-600">{formatCurrency(cashFlowTotals.totalIn)}</span>
-              </p>
-              <p>
-                Total Cash Out: <span className="text-red-600">{formatCurrency(cashFlowTotals.totalOut)}</span>
-              </p>
-              <p>
-                Net Flow:{" "}
-                <span className={cashFlowTotals.netFlow >= 0 ? "text-green-600" : "text-red-600"}>
-                  {formatCurrency(cashFlowTotals.netFlow)}
-                </span>
-              </p>
-            </div>
-          </div>
-        )}
       </>
     );
   };
 
   return (
-    <div className="p-18">
+    <div className="p-0 sm:p-1">
       {endDate && (
         <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-right">
           Data as of: {formatDate(endDate)}

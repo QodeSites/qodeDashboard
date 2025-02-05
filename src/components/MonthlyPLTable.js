@@ -1,19 +1,29 @@
-// components/MonthlyPLTable.jsx
+// components/YearlyMonthlyPLTable.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 
+const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
+  // Group monthlyPnL by year using the month string ("YYYY-MM")
+  const groupedByYear = {};
+  console.log('monthlyPnL', monthlyPnL);
+  monthlyPnL.forEach(item => {
+    const [year, monthNum] = item.month.split('-');
+    if (!groupedByYear[year]) {
+      groupedByYear[year] = {};
+    }
+    groupedByYear[year][monthNum] = item;
+  });
 
+  // Get a sorted list of years (ascending order)
+  const sortedYears = Object.keys(groupedByYear).sort();
 
-const MonthlyPLTable = ({ monthlyPnL }) => {
-  console.log('monthlyPnL', monthlyPnL); // Debugging log
+  // Define the month labels and corresponding abbreviations.
+  // We use the two-digit month keys (e.g., "01", "02", …, "12")
+  const monthLabels = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  // Conditional rendering if monthlyPnL is empty or undefined
-  if (!monthlyPnL || !Array.isArray(monthlyPnL) || monthlyPnL.length === 0) {
-    return null;
-  }
-
-  // Helper function to render the PnL cell with conditional styling
-  const renderPnLCell = (pnl) => {
+  // Helper function to render the PnL cell with conditional styling and a key.
+  const renderPnLCell = (pnl, key) => {
     const numValue = parseFloat(pnl);
     const cellValue = isNaN(numValue) ? "0.0%" : `${numValue}%`;
 
@@ -25,8 +35,8 @@ const MonthlyPLTable = ({ monthlyPnL }) => {
     }
 
     return (
-      <td className={cellClass}>
-        {numValue >= 0 ? `+${cellValue}` : cellValue}
+      <td key={key} className={cellClass}>
+        {numValue > 0 ? `+${cellValue}` : cellValue}
       </td>
     );
   };
@@ -34,39 +44,53 @@ const MonthlyPLTable = ({ monthlyPnL }) => {
   return (
     <div className="w-full space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        {/* Header */}
-        <div className="p-1 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        {/* Table Header */}
+        <div className="p-1 bg-lightBeige dark:bg-gray-700 border border-brown dark:border-gray-600">
+          <h3 className="text-xs sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
             Monthly PnL Table (%)
           </h3>
         </div>
 
         {/* Table Container */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+        <div className="overflow-x-auto border text-xs sm:text-lg border-t-none border-brown rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200  dark:divide-gray-700">
+            <thead className="bg-lightBeige dark:bg-gray-700">
               <tr>
-                <th className="p-1 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <th className="p-1 text-center text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100">
                   Year
                 </th>
-                <th className="p-1 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Month
-                </th>
-                <th className="p-1 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  PnL (%)
-                </th>
+                {monthNames.map((monthName, index) => (
+                  <th
+                    key={monthLabels[index]}
+                    className="p-1 text-center text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100"
+                  >
+                    {monthName}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {monthlyPnL.map((row, rowIndex) => (
-                <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <tbody className="bg-white dark:bg-gray-800 text-xs sm:text-sm divide-y divide-gray-200 dark:divide-gray-700">
+              {sortedYears.map(year => (
+                <tr key={year} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  {/* Year cell */}
                   <td className="p-1 text-center font-semibold text-gray-900 dark:text-gray-100">
-                    {row.year}
+                    {year}
                   </td>
-                  <td className="p-1 text-center text-gray-900 dark:text-gray-100">
-                    {row.month}
-                  </td>
-                  {renderPnLCell(row.pnl)}
+                  {/* Month cells */}
+                  {monthLabels.map((monthLabel) => {
+                    const monthData = groupedByYear[year][monthLabel];
+                    const cellKey = `${year}-${monthLabel}`;
+                    return monthData
+                      ? renderPnLCell((monthData.pnlPercentage.toFixed(2)), cellKey)
+                      : (
+                        <td
+                          key={cellKey}
+                          className="p-1 text-center text-gray-900 dark:text-gray-100"
+                        >
+                          -
+                        </td>
+                      );
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -77,17 +101,16 @@ const MonthlyPLTable = ({ monthlyPnL }) => {
   );
 };
 
-// Define PropTypes for type checking and better maintainability
-MonthlyPLTable.propTypes = {
+YearlyMonthlyPLTable.propTypes = {
   monthlyPnL: PropTypes.arrayOf(
     PropTypes.shape({
-      year: PropTypes.number.isRequired,
-      month: PropTypes.string.isRequired,
-      firstNAV: PropTypes.number,
-      lastNAV: PropTypes.number,
+      month: PropTypes.string.isRequired, // Format: "YYYY-MM"
       pnl: PropTypes.number.isRequired,
+      monthlyReturn: PropTypes.number, // Optional computed percentage
+      portfolioValue: PropTypes.number,
+      trades: PropTypes.number,
     })
   ).isRequired,
 };
 
-export default MonthlyPLTable;
+export default YearlyMonthlyPLTable;
