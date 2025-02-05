@@ -8,14 +8,14 @@ import Heading from "./common/Heading";
 import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/20/solid";
 import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
 import Text from "./common/Text";
-import YearlyMonthlyPLTable from "./MonthlyPLTable";
+import YearlyMonthlyPLTable from "./MonthlyPLTableManagedAccounts";
 import useMobileWidth from "@/hooks/useMobileWidth";
 const TrailingReturns = ({ trailingReturns, ddStats }) => {
   const periods = Object.keys(trailingReturns.portfolioReturns);
   return (
     <div className="my-6 bg-white p-1 rounded-lg shadow">
       <h2 className="text-xs sm:text-xl font-bold mb-4">Trailing Returns & Drawdown</h2>
-      <div className="overflow-x-auto border text-xs sm:text-lg border-brown rounded-lg">
+      <div className="overflow-x-auto border text-xs sm:text-sm border-brown rounded-lg">
         <table className="min-w-full table-fixed border-collapse">
           <thead>
             <tr className="bg-lightBeige">
@@ -711,21 +711,21 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           name: "Portfolio",
           data: drawdownData,
           type: "area",
-          color: "#FF9E9E", // Lighter pink base color
+          color: "#FF4D4D", // Darker pink base color
           fillColor: {
             linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
             stops: [
-              [0, "#FFB6B6"], // Light pink at top
-              [1, Highcharts.color("#FFE6E6").setOpacity(0.3).get("rgba")] // Very light pink with transparency at bottom
+              [0, "#FF6666"], // Darker pink at top
+              [1, Highcharts.color("#FF8080").setOpacity(0.4).get("rgba")] // Semi-transparent medium pink at bottom
             ]
           },
           zones: [
             {
               value: -10,
-              color: "#FF8080" // Medium pink for mild drawdown
+              color: "#FF3333" // Darker pink for mild drawdown
             },
             {
-              color: "#E57373" // Deeper pink for severe drawdown
+              color: "#FF0000" // Deep red for severe drawdown
             }
           ],
           zIndex: 2,
@@ -1043,7 +1043,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       <>
         {isSarlaAccount ? (
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 mb-6">
-            <label htmlFor="scheme-select" className="text-xs sm:text-md font-medium">
+            <label htmlFor="scheme-select" className="text-xs sm:text-sm font-medium">
               Select Scheme:
             </label>
             <select
@@ -1061,7 +1061,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           </div>
         ) : (
           <div className="mb-6">
-            <h3 className="text-xs sm:text-md font-medium"></h3>
+            <h3 className="text-xs sm:text-sm font-medium"></h3>
           </div>
         )}
 
@@ -1168,7 +1168,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
             <>
               <div className="my-2 p-18">
                 {navSeriesVisibility.map((series, index) => (
-                  <label key={index} className="mr-2 text-xs sm:text-md" style={{ color: colors.text }}>
+                  <label key={index} className="mr-2 text-xs sm:text-sm" style={{ color: colors.text }}>
                     <input
                       type="checkbox"
                       checked={series.visible}
@@ -1191,7 +1191,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
             <>
               <div className="my-2 p-18">
                 {drawdownSeriesVisibility.map((series, index) => (
-                  <label key={index} className="mr-18 p-18 text-xs sm:text-md" style={{ color: colors.text }}>
+                  <label key={index} className="mr-18 p-18 text-xs sm:text-sm" style={{ color: colors.text }}>
                     <input
                       type="checkbox"
                       checked={series.visible}
@@ -1227,7 +1227,7 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full flex items-center justify-between p-2 border-brown border rounded-lg bg-lightBeige dark:bg-gray-800 text-md font-medium text-black dark:text-gray-400 uppercase tracking-wider focus:outline-none"
+            className="w-full flex items-center justify-between p-2 border-brown border rounded-lg bg-lightBeige dark:bg-gray-800 text-sm font-medium text-black dark:text-gray-400 uppercase tracking-wider focus:outline-none"
           >
             <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">Cash In/Out</Text>
             <span className="text-xs sm:text-xl">
@@ -1242,13 +1242,13 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
                 <table className="min-w-full bg-white dark:bg-black">
                   <thead className="bg-lightBeige">
                     <tr>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-md  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-md  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
                         Scheme
                       </th>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-right text-xs sm:text-md  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-right text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
                         Cash In/Out
                       </th>
                     </tr>
@@ -1259,14 +1259,14 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-800"
                       >
-                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-md  text-gray-700 dark:text-gray-300">
+                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-gray-700 dark:text-gray-300">
                           {formatDate(record.date)}
                         </td>
-                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-md  text-gray-700 dark:text-gray-300">
+                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-gray-700 dark:text-gray-300">
                           {record.scheme}
                         </td>
                         <td
-                          className={`p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-md  text-right ${record.capital_in_out > 0
+                          className={`p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-right ${record.capital_in_out > 0
                             ? "text-green-600"
                             : "text-red-600"
                             }`}
@@ -1276,18 +1276,18 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
                       </tr>
                     ))}
                     <tr className="bg-gray-100 dark:bg-gray-800 font-semibold">
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-md  text-gray-900 dark:text-gray-100">
+                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-gray-900 dark:text-gray-100">
                         Total
                       </td>
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-md  text-right text-gray-900 dark:text-gray-100"></td>
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-md  text-right text-gray-900 dark:text-gray-100">
+                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-right text-gray-900 dark:text-gray-100"></td>
+                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-right text-gray-900 dark:text-gray-100">
                         {formatCurrency(cashFlowTotals.netFlow)}
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <div className="mt-2 text-xs sm:text-md  text-gray-600 dark:text-gray-400">
+              <div className="mt-2 text-xs sm:text-sm  text-gray-600 dark:text-gray-400">
                 <p>
                   Total Cash In:{" "}
                   <span className="text-green-600">

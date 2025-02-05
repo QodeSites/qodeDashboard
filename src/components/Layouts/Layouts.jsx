@@ -17,9 +17,9 @@ export default function DefaultLayout({ children }) {
       {/* MAIN CONTENT */}
       {/* We still push content right on large screens with lg:ml-64 */}
       <div className="w-full lg:ml-64 overflow-y-auto p-1 text-gray-900 dark:text-white bg-white dark:bg-black">
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
           <ThemeToggle />
-        </div>
+        </div> */}
         <main className="w-full max-w-screen-2xl mx-auto">{children}</main>
       </div>
     </div>

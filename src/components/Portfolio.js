@@ -12,7 +12,7 @@ import Heading from "./common/Heading";
 import { useTheme } from "@/components/ThemeContext";
 import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
 import { getChartOptions } from "@/app/lib/ChartOptions";
-import MonthlyPLTable from "./MonthlyPLTable";
+import YearlyMonthlyPLTable from "./MonthlyPLTablePms";
 
 // Dynamically import components
 const TrailingReturns = dynamic(() => import("./TrailingReturn"), {
@@ -63,7 +63,8 @@ const PerformanceAndDrawdownChart = () => {
         startDate && endDate ? startDate : null,
         startDate && endDate ? endDate : null
     );
-
+    console.log('monthlyPnL:', data.monthlyPnL);  // Log monthlyPnL for debugging
+    
     // Log the dates for debugging
     useEffect(() => {
         console.log('startDate:', startDate);
@@ -402,8 +403,8 @@ const PerformanceAndDrawdownChart = () => {
                             {typeof window !== 'undefined' && chartOptions && (
                                 <HighchartsReact highcharts={Highcharts} options={chartOptions} />
                             )}
-                            <div className="mb-4">
-                                <MonthlyPLTable monthlyPnL={data.monthlyPnL} />
+                            <div className="my-4">
+                                <YearlyMonthlyPLTable monthlyPnL={data.monthlyPnL} />
                             </div>
                         </div>
                     </>
