@@ -9,7 +9,6 @@ import ManagedAccountDashboard from "@/components/ManagedAccountDashboard"; // I
 const Portfolio = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  console.log(session);
 
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +49,7 @@ const Portfolio = () => {
 
   return (
     <DefaultLayout>
-      {hasManagedAccounts ? <ManagedAccountDashboard accountCodes={session.user.managed_account_names} /> :<PerformanceAndDrawdownChart /> }
+      {hasManagedAccounts ? <ManagedAccountDashboard accountCodes={session?.user?.managed_account_codes} accountNames={session.user.managed_account_names} /> :<PerformanceAndDrawdownChart /> }
     </DefaultLayout>
   );
 };

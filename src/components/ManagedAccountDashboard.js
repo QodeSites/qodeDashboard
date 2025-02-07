@@ -1,72 +1,172 @@
 "use client";
-import React, { useState, useRef, useMemo, useEffect } from "react";
-import DefaultLayout from "@/components/Layouts/Layouts";
-import useManagedAccounts from "@/hooks/useManagedAccounts";
+import React, { useState, useRef, useMemo } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import Heading from "./common/Heading";
 import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/20/solid";
-import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
 import Text from "./common/Text";
 import YearlyMonthlyPLTable from "./MonthlyPLTableManagedAccounts";
 import useMobileWidth from "@/hooks/useMobileWidth";
-const TrailingReturns = ({ trailingReturns, ddStats }) => {
-  const periods = Object.keys(trailingReturns.portfolioReturns);
+import useManagedAccounts from "@/hooks/useManagedAccounts";
+import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
+
+const getReferencePoint = (data, targetTime) => {
+  for (let i = data.length - 1; i >= 0; i--) {
+    const time = new Date(data[i].date).getTime();
+    if (time <= targetTime) {
+      return data[i];
+    }
+  }
+  return data[0]; // if none found, return the first available point
+};
+
+const calculateTrailingReturns = (data) => {
+  if (!data || data.length === 0) return {};
+  // Define periods in days (adjust as needed)
+  const periods = {
+    "5d": 5,
+    "10d": 10,
+    "15d": 15,
+    "1m": 30,
+    "1y": 365,
+    "2y": 730,
+    "3y": 1095,
+  };
+
+  const trailing = {};
+  const lastPoint = data[data.length - 1];
+  const lastDate = new Date(lastPoint.date).getTime();
+  const lastNav = parseFloat(lastPoint.nav);
+
+  Object.entries(periods).forEach(([key, days]) => {
+    const targetTime = lastDate - days * 24 * 60 * 60 * 1000;
+    const referencePoint = getReferencePoint(data, targetTime);
+    const refNav = parseFloat(referencePoint.nav);
+    // Calculate trailing return as percentage change
+    const trailingReturn = ((lastNav / refNav) - 1) * 100;
+    trailing[key] = trailingReturn;
+  });
+  return trailing;
+};
+
+const calculateBenchmarkDD = (data) => {
+  let maxBenchmark = -Infinity;
+  let currentDD = 0;
+  let maxDD = 0; // will be the most negative value
+  data.forEach((point) => {
+    const nav = parseFloat(point.nav);
+    maxBenchmark = Math.max(maxBenchmark, nav);
+    const dd = ((nav - maxBenchmark) / maxBenchmark) * 100;
+    currentDD = dd; // last value will be the current drawdown
+    if (dd < maxDD) {
+      maxDD = dd;
+    }
+  });
+  return { currentDD, maxDD };
+};
+
+const calculateSchemeDD = (navData) => {
+  let peakNav = -Infinity;
+  let currentDD = 0;
+  let maxDD = 0; // This will hold the deepest (most negative) drawdown
+
+  navData.forEach((point) => {
+    const nav = parseFloat(point.nav);
+    // Update the peak if the current nav is higher
+    peakNav = Math.max(peakNav, nav);
+    // Compute the drawdown percentage from the peak
+    const dd = ((nav - peakNav) / peakNav) * 100;
+    currentDD = dd; // The last point's dd is the current drawdown
+    if (dd < maxDD) {
+      maxDD = dd;
+    }
+  });
+
+  return { currentDD, maxDD };
+};
+
+// ─── TRAILING RETURNS COMPONENT ────────────────────────────────
+
+const TrailingReturns = ({
+  trailingReturns,
+  ddStats,
+  benchmarkTrailingReturns,
+  benchmarkDDStats,
+}) => {
+  // We assume the trailing returns object keys are the same for both scheme and benchmark.
+  const periods = Object.keys(trailingReturns);
   return (
-    <div className="my-6 bg-white p-1 rounded-lg shadow">
-      <h2 className="text-xs sm:text-xl font-bold mb-4">Trailing Returns & Drawdown</h2>
+    <div className="my-6 bg-white p-4 rounded-lg shadow">
+      <h2 className="text-xs sm:text-xl font-bold mb-4">
+        Trailing Returns &amp; Drawdown
+      </h2>
       <div className="overflow-x-auto border text-xs sm:text-sm border-brown rounded-lg">
         <table className="min-w-full table-fixed border-collapse">
           <thead>
             <tr className="bg-lightBeige">
-              <th className="w-1/10  p-1 text-left border border-brown font-semibold">Return Type</th>
+              <th className="w-1/10 p-4 text-left border border-brown font-semibold">
+                Return Type
+              </th>
               {periods.map((period) => (
-                <th key={period} className="w-1/10 border p-18 border-brown text-center font-semibold">
+                <th
+                  key={period}
+                  className="w-1/10 border p-4 border-brown text-center font-semibold"
+                >
                   {period}
                 </th>
               ))}
-              <th className="w-1/12 border p-18 border-brown text-center font-semibold">Current DD</th>
-              <th className="w-1/12 border p-18 border-brown text-center font-semibold">Max DD</th>
+              <th className="w-1/12 border p-4 border-brown text-center font-semibold">
+                Current DD
+              </th>
+              <th className="w-1/12 border p-4 border-brown text-center font-semibold">
+                Max DD
+              </th>
             </tr>
           </thead>
           <tbody>
+            {/* Row for Scheme trailing returns */}
             <tr>
-              <td className="border p-1 border-brown font-medium">Portfolio (%)</td>
+              <td className="border p-4 border-brown font-medium">
+                Scheme (%)
+              </td>
               {periods.map((period) => (
-                <td key={period} className="border p-1 border-brown text-center">
-                  {trailingReturns.portfolioReturns[period] !== null
-                    ? trailingReturns.portfolioReturns[period].toFixed(2)
+                <td key={period} className="border p-4 border-brown text-center">
+                  {trailingReturns[period] !== null
+                    ? trailingReturns[period].toFixed(2)
                     : "N/A"}
                 </td>
               ))}
-              <td className="border p-1 border-brown text-center">
+              <td className="border p-4 text-center">
                 {ddStats.portfolio.currentDD !== null
                   ? ddStats.portfolio.currentDD.toFixed(2)
                   : "N/A"}
               </td>
-              <td className="border p-1 border-brown text-center">
+              <td className="border p-4 text-center">
                 {ddStats.portfolio.maxDD !== null
                   ? ddStats.portfolio.maxDD.toFixed(2)
                   : "N/A"}
               </td>
             </tr>
+            {/* Row for Benchmark trailing returns */}
             <tr>
-              <td className="border p-1 border-brown font-medium">Nifty 50 (%)</td>
+              <td className="border p-4 border-brown font-medium">
+                Benchmark (%)
+              </td>
               {periods.map((period) => (
-                <td key={period} className="border p-1 border-brown text-center">
-                  {trailingReturns.benchmarkReturns[period] !== null
-                    ? trailingReturns.benchmarkReturns[period].toFixed(2)
+                <td key={period} className="border p-4 border-brown text-center">
+                  {benchmarkTrailingReturns && benchmarkTrailingReturns[period] != null
+                    ? benchmarkTrailingReturns[period].toFixed(2)
                     : "N/A"}
                 </td>
               ))}
-              <td className="border p-1 border-brown text-center">
-                {ddStats.benchmark.currentDD !== null
-                  ? ddStats.benchmark.currentDD.toFixed(2)
+              <td className="border p-4 border-brown text-center">
+                {benchmarkDDStats && benchmarkDDStats.currentDD !== null
+                  ? benchmarkDDStats.currentDD.toFixed(2)
                   : "N/A"}
               </td>
-              <td className="border p-1 border-brown text-center">
-                {ddStats.benchmark.maxDD !== null
-                  ? ddStats.benchmark.maxDD.toFixed(2)
+              <td className="border p-4 border-brown text-center">
+                {benchmarkDDStats && benchmarkDDStats.maxDD !== null
+                  ? benchmarkDDStats.maxDD.toFixed(2)
                   : "N/A"}
               </td>
             </tr>
@@ -75,953 +175,425 @@ const TrailingReturns = ({ trailingReturns, ddStats }) => {
       </div>
     </div>
   );
-
 };
 
-const ManagedAccountDashboard = ({ accountCodes }) => {
-  const isSarlaAccount = Array.isArray(accountCodes)
-    ? accountCodes.includes("Sarla Performance fibers")
-    : accountCodes === "Sarla Performance fibers";
+// ─── MANAGED ACCOUNT DASHBOARD ────────────────────────────────
 
-  // State Hooks
+const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
+  // Check if this is a Sarla account to display a scheme dropdown
+  const benchmarkIndices = ["NIFTY 50"];
+
+  const isSarlaAccount = Array.isArray(accountNames)
+    ? accountNames.includes("Sarla Performance fibers")
+    : accountNames === "Sarla Performance fibers";
+
+  // Local UI state
   const [activeScheme, setActiveScheme] = useState("Scheme Total");
-  const [theme, setTheme] = useState("light");
   const [isOpen, setIsOpen] = useState(false);
   const { isMobile } = useMobileWidth();
 
   // Refs for charts
   const navChartRef = useRef(null);
-  const drawdownChartRef = useRef(null);
 
-  // Custom Hook to fetch data
+  // Use the hook and extract helper functions
   const {
-    data,
-    totals,
-    cashInOutData,
-    username,
-    schemeWiseCapitalInvested,
+    accountsData,
+    aggregatedTotals,
     loading,
     error,
+    getAccountByCode,
+    getTotalPortfolioByAccount,
   } = useManagedAccounts();
 
-  // Theme Colors
-  const themeColors = {
-    dark: {
-      text: "#fee9d6",
-      accent: "#d1a47b",
-      gridLines: "#292929",
-      background: "none",
-      tooltipBg: "#000000",
-      tooltipBorder: "#000000",
-      donutColors: ["#D1A47B", "#fee9d6", "#A3C1AD", "#C5B5E3", "#F7A072"],
-    },
-    light: {
-      text: "#333333",
-      accent: "#3b82f6",
-      gridLines: "#d3d3d3",
-      background: "#ffffff",
-      tooltipBg: "#ffffff",
-      tooltipBorder: "#cccccc",
-      donutColors: [
-        "#2563eb", "#7c3aed", "#059669", "#dc2626", "#d97706",
-        "#0891b2", "#6d28d9", "#be185d", "#15803d", "#b45309",
-        "#4f46e5", "#9333ea", "#16a34a", "#e11d48", "#0284c7",
-      ],
-    },
-  };
-  const colors = themeColors[theme];
+  // Assume you are using the first account from accountCodes
+  const accountCode =
+    accountCodes && accountCodes.length > 0 ? accountCodes[0] : null;
+  const currentAccount = accountCode ? getAccountByCode(accountCode) : null;
+  // Get totalPortfolio using the new helper function
+  const totalPortfolio = accountCode
+    ? getTotalPortfolioByAccount(accountCode)
+    : null;
 
-  // Determine the strategy name based on active scheme
-  const getStrategyName = (schemeName) => {
-    if (schemeName === "Scheme Total") {
-      return `${accountCodes} Zerodha Total Portfolio`;
-    }
-    const match = schemeName.match(/Scheme\s+([A-Z])/);
-    if (match && match[1]) {
-      const portfolioWithLetter = `${accountCodes} Zerodha Total Portfolio ${match[1]}`;
-      const portfolioWithoutLetter = `${accountCodes} Zerodha Total Portfolio`;
-      if (data && Array.isArray(data)) {
-        const schemeData = data.find((scheme) => scheme.schemeName === schemeName);
-        if (schemeData?.strategies?.some((s) => s.strategy === portfolioWithLetter)) {
-          return portfolioWithLetter;
-        }
-      }
-      return portfolioWithoutLetter;
-    }
-    return `${accountCodes} Zerodha Total Portfolio`;
-  };
+  // Get client name
+  const clientName = currentAccount ? currentAccount.clientName : "User";
 
-  const strategyName = useMemo(() => getStrategyName(activeScheme), [activeScheme]);
+  // Convert schemes into an array for mapping (if available)
+  const schemes =
+    currentAccount && currentAccount.schemes ? currentAccount.schemes : [];
 
-  // Find active scheme data
-  const activeSchemeData = useMemo(() => {
-    if (!Array.isArray(data)) return null;
-    return data.find((scheme) => scheme.schemeName === activeScheme);
-  }, [data, activeScheme]);
+  // When an individual scheme is selected, get its data.
+  // For "Scheme Total" we use totalPortfolio data.
+  const selectedScheme =
+    activeScheme === "Scheme Total"
+      ? null
+      : schemes.find((s) => s.schemeName === activeScheme);
 
-  // Get the relevant strategy data
-  const ac5ZerodhaData = useMemo(() => {
-    return activeSchemeData?.strategies.find(
-      (strategy) => strategy.strategy === strategyName
-    )?.masterSheetData || [];
-  }, [activeSchemeData, strategyName]);
+  // Get start and end dates from the appropriate NAV curve
+  const startDate =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.navCurve?.[0]?.date || null
+      : selectedScheme?.navCurve?.[0]?.date || null;
+  const endDate =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.navCurve?.[totalPortfolio?.navCurve?.length - 1]?.date || null
+      : selectedScheme?.navCurve?.[selectedScheme?.navCurve?.length - 1]?.date || null;
 
-  // Sort the data by date
-  const sortedData = useMemo(() => {
-    return [...ac5ZerodhaData].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-  }, [ac5ZerodhaData]);
+  // Helper function to remove the timestamp from an ISO date string
+  const stripTimestamp = (dateString) =>
+    dateString ? dateString.split("T")[0] : null;
+  const formattedStartDate = stripTimestamp(startDate);
+  const formattedEndDate = stripTimestamp(endDate);
 
-  // Normalize NAV Data (Portfolio)
-  const normalizedData = useMemo(() => {
-    if (sortedData.length === 0) return [];
-    const firstNav = parseFloat(sortedData[0].nav);
-    return sortedData
-      .map((sheet) => {
-        const date = new Date(sheet.date);
-        if (isNaN(date.getTime())) {
-          console.error("Invalid date:", sheet.date);
-          return null;
-        }
-        // Reset the time portion to midnight
-        date.setHours(0, 0, 0, 0);
-
-        const nav = parseFloat(sheet.nav);
-        return [
-          date.getTime(), // timestamp at local midnight
-          nav === 0 || isNaN(nav) ? 0 : (nav / firstNav) * 100, // normalized value
-        ];
-      })
-      .filter((point) => point !== null);
-  }, [sortedData]);
-
-
-  // ─── CALCULATE MONTHLY P&L BASED ON LAST DATES OF PREVIOUS & CURRENT MONTH ─────────
-  const monthlyPnLFromNormalizedData = useMemo(() => {
-    if (normalizedData.length === 0) return [];
-
-    // Group all normalized data points by month
-    const dataByMonth = {};
-    normalizedData.forEach(([timestamp, value]) => {
-      const date = new Date(timestamp);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      if (!dataByMonth[monthKey]) {
-        dataByMonth[monthKey] = [];
-      }
-      dataByMonth[monthKey].push({ timestamp, value });
-    });
-
-    // Sort data points within each month by timestamp
-    Object.keys(dataByMonth).forEach(monthKey => {
-      dataByMonth[monthKey].sort((a, b) => a.timestamp - b.timestamp);
-    });
-
-    const sortedMonthKeys = Object.keys(dataByMonth).sort();
-    const monthlyPnLArray = [];
-
-    sortedMonthKeys.forEach((monthKey, idx) => {
-      const currentMonthData = dataByMonth[monthKey];
-      const previousMonthKey = sortedMonthKeys[idx - 1];
-
-      // If this is the first month with data
-      if (idx === 0) {
-        const firstDayValue = currentMonthData[0].value;
-        const lastDayValue = currentMonthData[currentMonthData.length - 1].value;
-
-        monthlyPnLArray.push({
-          month: monthKey,
-          previousMonth: monthKey, // Same as current month for first entry
-          startDate: new Date(currentMonthData[0].timestamp).toISOString().split("T")[0],
-          endDate: new Date(currentMonthData[currentMonthData.length - 1].timestamp).toISOString().split("T")[0],
-          startValue: firstDayValue,
-          endValue: lastDayValue,
-          pnlAbsolute: lastDayValue - firstDayValue,
-          pnlPercentage: firstDayValue !== 0 ? ((lastDayValue / firstDayValue) - 1) * 100 : 0
-        });
-      } else {
-        // For subsequent months
-        const previousMonthData = dataByMonth[previousMonthKey];
-        const startValue = previousMonthData[previousMonthData.length - 1].value; // Last value of previous month
-        const endValue = currentMonthData[currentMonthData.length - 1].value; // Last value of current month
-
-        monthlyPnLArray.push({
-          month: monthKey,
-          previousMonth: previousMonthKey,
-          startDate: new Date(previousMonthData[previousMonthData.length - 1].timestamp).toISOString().split("T")[0],
-          endDate: new Date(currentMonthData[currentMonthData.length - 1].timestamp).toISOString().split("T")[0],
-          startValue,
-          endValue,
-          pnlAbsolute: endValue - startValue,
-          pnlPercentage: startValue !== 0 ? ((endValue / startValue) - 1) * 100 : 0
-        });
-      }
-    });
-
-    return monthlyPnLArray;
-  }, [normalizedData]);
-
-  // Prepare data for the Donut Chart (Strategy-wise Allocation)
-  const schemeForDonut = useMemo(() => {
-    if (!isSarlaAccount && Array.isArray(data)) {
-      return data.find((scheme) => scheme.schemeName !== "Scheme Total");
-    }
-    return activeSchemeData;
-  }, [isSarlaAccount, data, activeSchemeData]);
-
-  const allocationData = useMemo(() => {
-    if (!isSarlaAccount) {
-      if (!schemeForDonut || !schemeForDonut.strategies) return [];
-      const strategies = schemeForDonut.strategies;
-      const totalStrategyName = getStrategyName(schemeForDonut.schemeName);
-      const latestValues = strategies
-        .map((strategy) => {
-          const sortedStrategyData = [...strategy.masterSheetData].sort(
-            (a, b) => new Date(b.date) - new Date(a.date)
-          );
-          const latestEntry = sortedStrategyData[0];
-          const parsedValue = parseFloat(latestEntry?.portfolio_value) || 0;
-          //console.log(strategy.strategy, parsedValue);
-          return {
-            name: strategy.strategy,
-            y: parsedValue,
-          };
-        })
-        .filter(
-          (strategy) => strategy.y !== 0 && strategy.name !== totalStrategyName
-        );
-
-      const total = latestValues.reduce((sum, strategy) => sum + strategy.y, 0);
-      return latestValues.map((strategy) => ({
-        name: strategy.name,
-        y: strategy.y,
-        percentage: total > 0 ? ((strategy.y / total) * 100).toFixed(2) : 0,
-      }));
-    } else {
-      if (activeScheme === "Scheme Total") {
-        if (!schemeWiseCapitalInvested) return [];
-        const totalInvested = totals.totalCapitalInvested;
-        return Object.keys(schemeWiseCapitalInvested).map((scheme) => {
-          const value = schemeWiseCapitalInvested[scheme];
-          return {
-            name: scheme,
-            y: value,
-            percentage: totalInvested > 0 ? ((value / totalInvested) * 100).toFixed(2) : 0,
-          };
-        });
-      } else {
-        if (!activeSchemeData) return [];
-        const strategies = activeSchemeData.strategies;
-        const totalStrategyName = getStrategyName(activeScheme);
-        const latestValues = strategies
-          .map((strategy) => {
-            const sortedStrategyData = [...strategy.masterSheetData].sort(
-              (a, b) => new Date(b.date) - new Date(a.date)
-            );
-            const latestEntry = sortedStrategyData[0];
-            const parsedValue = parseFloat(latestEntry.portfolio_value) || 0;
-            return {
-              name: strategy.strategy,
-              y: parsedValue,
-            };
-          })
-          .filter(
-            (strategy) => strategy.y !== 0 && strategy.name !== totalStrategyName
-          );
-        const total = latestValues.reduce((sum, strategy) => sum + strategy.y, 0);
-        return latestValues.map((strategy) => ({
-          name: strategy.name,
-          y: strategy.y,
-          percentage: total > 0 ? ((strategy.y / total) * 100).toFixed(2) : 0,
-        }));
-      }
-    }
-  }, [
-    activeScheme,
-    activeSchemeData,
-    schemeWiseCapitalInvested,
-    totals.totalCapitalInvested,
-    isSarlaAccount,
-    schemeForDonut,
-  ]);
-
-  const filteredCashInOutData = useMemo(() => {
-    return activeScheme === "Scheme Total"
-      ? cashInOutData
-      : cashInOutData.filter((record) => record.scheme === activeScheme);
-  }, [cashInOutData, activeScheme]);
-  // Define benchmark indices
-  const benchmarkIndices = ["NIFTY 50"];
-  // Get start and end dates from strategies data
-  const { startDate, endDate } = useMemo(() => {
-    if (!activeSchemeData?.strategies) return { startDate: null, endDate: null };
-    const allDates = activeSchemeData.strategies
-      .flatMap((strategy) => strategy.masterSheetData)
-      .map((entry) => new Date(entry.date));
-    if (allDates.length === 0) return { startDate: null, endDate: null };
-    const minDate = new Date(Math.min(...allDates));
-    const maxDate = new Date(Math.max(...allDates));
-    return {
-      startDate: minDate.toISOString().split("T")[0],
-      endDate: maxDate.toISOString().split("T")[0],
-    };
-  }, [activeSchemeData]);
-
-  // Fetch benchmark data using start and end dates
+  // Pass the formatted dates to useFetchBenchmarkData
   const {
     benchmarkData,
     isLoading: isBenchmarkLoading,
     error: benchmarkError,
   } = useFetchBenchmarkData(
     benchmarkIndices,
-    startDate && endDate ? startDate : null,
-    startDate && endDate ? endDate : null
+    formattedStartDate,
+    formattedEndDate
   );
 
-  // Prepare benchmark series data
-  const benchmarkSeries = useMemo(() => {
-    if (!benchmarkData || Object.keys(benchmarkData).length === 0) {
-      //console.log("benchmarkData is empty or not provided");
-      return [];
+  // Compute display values:
+  const investedAmount =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.investedAmount || aggregatedTotals.totalInvestedAmount
+      : selectedScheme?.investedAmount || 0;
+
+  const portfolioValue =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.currentPortfolioValue ||
+      schemes.reduce((sum, s) => sum + (s.currentPortfolioValue || 0), 0)
+      : selectedScheme?.currentPortfolioValue || 0;
+
+  const returnsValue =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.returns || 0
+      : selectedScheme?.returns || 0;
+
+  const dailyPercentageChange = 0;
+  const isPositive = returnsValue >= 0;
+  const totalProfit = portfolioValue - investedAmount;
+
+  const latestPreviousValue = 0; // placeholder
+
+  // Use totalPortfolio data for trailing returns & drawdown when selected.
+  const trailingReturns =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.trailingReturns || {}
+      : selectedScheme?.trailingReturns || {};
+
+  // ── Calculate Benchmark trailing returns and drawdown stats ──
+  const benchmarkTrailingReturns = useMemo(() => {
+    if (benchmarkData && benchmarkData.length > 0) {
+      return calculateTrailingReturns(benchmarkData);
     }
-    const benchmarkArray = Object.values(benchmarkData);
-    if (!Array.isArray(benchmarkArray) || benchmarkArray.length === 0) {
-      //console.log("benchmarkArray is not an array or is empty");
-      return [];
+    return {};
+  }, [benchmarkData]);
+
+  const benchmarkDDStats = useMemo(() => {
+    if (benchmarkData && benchmarkData.length > 0) {
+      return calculateBenchmarkDD(benchmarkData);
     }
-    const sortedBenchmarkData = benchmarkArray
-      .slice()
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-    //console.log("sortedBenchmarkData:", sortedBenchmarkData);
+    return { currentDD: 0, maxDD: 0 };
+  }, [benchmarkData]);
 
-    const portfolioStartTimestamp = normalizedData.length ? normalizedData[0][0] : null;
-    let filteredBenchmarkData = sortedBenchmarkData;
-    if (portfolioStartTimestamp) {
-      filteredBenchmarkData = sortedBenchmarkData.filter(
-        (item) => {
-          const d = new Date(item.date);
-          d.setHours(0, 0, 0, 0);
-          return d.getTime() >= portfolioStartTimestamp;
-        }
-      );
-      // If the first benchmark date doesn't match the portfolio start date, add an entry
-      if (
-        filteredBenchmarkData.length &&
-        (new Date(filteredBenchmarkData[0].date).setHours(0, 0, 0, 0)) !== portfolioStartTimestamp
-      ) {
-        // Create a new Date from the portfolioStartTimestamp and set its time to midnight (it should already be)
-        const normalizedStartDate = new Date(portfolioStartTimestamp);
-        filteredBenchmarkData.unshift({
-          date: normalizedStartDate.toISOString().split("T")[0], // "YYYY-MM-DD"
-          nav: filteredBenchmarkData[0].nav,
-        });
-      }
+  const schemeDDStats = useMemo(() => {
+    if (activeScheme === "Scheme Total" && totalPortfolio?.navCurve?.length) {
+      return calculateSchemeDD(totalPortfolio.navCurve);
+    } else if (activeScheme !== "Scheme Total" && selectedScheme?.navCurve?.length) {
+      return calculateSchemeDD(selectedScheme.navCurve);
     }
-    const firstNavValue = parseFloat(filteredBenchmarkData[0].nav);
-    let previousNavValue = firstNavValue;
-    const normalizedDataBenchmark = filteredBenchmarkData.map((item) => {
-      // Normalize the date to midnight
-      const dateObj = new Date(item.date);
-      dateObj.setHours(0, 0, 0, 0);
-      const currentDate = dateObj.getTime();
+    return { currentDD: 0, maxDD: 0 };
+  }, [activeScheme, selectedScheme, totalPortfolio]);
 
-      let currentNavValue = parseFloat(item.nav);
-      if (isNaN(currentNavValue)) {
-        currentNavValue = previousNavValue;
-      } else {
-        previousNavValue = currentNavValue;
-      }
-      return [currentDate, (currentNavValue / firstNavValue) * 100];
-    });
-    return [
-      {
-        name: "Nifty 50",
-        data: normalizedDataBenchmark,
-        type: "line",
-        color: "#945c39",
-        dashStyle: "line",
-        marker: { enabled: false },
-        tooltip: {
-          valueDecimals: 2,
-          valueSuffix: " %",
-        },
-        zIndex: 1,
-      },
-    ];
-  }, [benchmarkData, normalizedData]);
-
-  // Prepare data for Drawdown Chart
-  const drawdownData = useMemo(() => {
-    if (sortedData.length === 0) return [];
-    return sortedData
-      .map((sheet) => {
-        const date = new Date(sheet.date);
-        if (isNaN(date.getTime())) {
-          console.error("Invalid date:", sheet.date);
-          return null;
-        }
-        const drawdown = parseFloat(sheet.drawdown * 100) || 0;
-        return [date.getTime(), drawdown];
-      })
-      .filter((point) => point !== null);
-  }, [sortedData]);
-
-  // Calculate financial numbers for the active scheme
-  const {
-    latestPortfolioValue,
-    latestPreviousValue,
-    totalProfit,
-    dailyPercentageChange,
-    returns,
-  } = useMemo(() => {
-    if (!activeSchemeData)
-      return {
-        latestPortfolioValue: 0,
-        latestPreviousValue: 0,
-        totalProfit: 0,
-        dailyPercentageChange: 0,
-        returns: 0,
-      };
-
-    const totalSchemeName = getStrategyName(activeScheme);
-    //console.log("totalSchemeName:", totalSchemeName);
-
-    // Use Array.find to locate the correct strategy object
-    const strategyObj = activeSchemeData.strategies.find(
-      (s) => s.strategy === totalSchemeName
-    );
-    //console.log("strategyObj:", strategyObj);
-
-    const strategiesData = strategyObj?.masterSheetData;
-    //console.log("strategiesData:", strategiesData);
-
-    const latestRecord =
-      strategiesData && strategiesData.length > 0 ? strategiesData[strategiesData.length - 1] : null;
-    //console.log("latestRecord:", latestRecord);
-
-    const latestPortfolioValue = latestRecord
-      ? parseFloat(latestRecord.portfolio_value) || 0
-      : 0;
-    const latestPreviousValue = latestRecord
-      ? parseFloat(latestRecord.daily_pl) || 0
-      : 0;
-    const investment =
-      activeScheme === "Scheme Total"
-        ? totals.totalCapitalInvested
-        : schemeWiseCapitalInvested[activeScheme];
-    const totalProfit = latestPortfolioValue - investment;
-    const firstEntry = strategiesData && strategiesData[0];
-    const lastEntry = latestRecord;
-    const startDate = new Date(firstEntry?.date);
-    const endDate = new Date(lastEntry?.date);
-
-    const holdingPeriodDays = Math.floor(
-      (endDate - startDate) / (1000 * 60 * 60 * 24)
-    );
-    let returns = 0;
-    if (investment > 0) {
-      if (holdingPeriodDays <= 365) {
-        returns = (totalProfit / investment) * 100;
-      } else {
-        const years = holdingPeriodDays / 365;
-        returns = (Math.pow(latestPortfolioValue / investment, 1 / years) - 1) * 100;
-      }
-    }
-    let dailyPercentageChange = 0;
-    if (latestRecord) {
-      const lastEntryDailyPL = latestRecord.daily_pl__ || 0;
-      if (lastEntryDailyPL !== 0) {
-        dailyPercentageChange = lastEntryDailyPL;
-      } else if (strategiesData) {
-        const sumDaily = strategiesData.reduce(
-          (acc, entry) => acc + (entry.daily_pl__ || 0),
-          0
-        );
-        dailyPercentageChange = sumDaily / strategiesData.length;
-      }
-    }
+  const ddStats = useMemo(() => {
     return {
-      latestPortfolioValue,
-      latestPreviousValue,
-      totalProfit,
-      dailyPercentageChange,
-      returns,
+      portfolio: schemeDDStats,
+      benchmark: { currentDD: 0, maxDD: 0 },
     };
-  }, [activeSchemeData, activeScheme, totals.totalCapitalInvested, schemeWiseCapitalInvested]);
-
-  // ─── CUSTOM SERIES VISIBILITY STATE & TOGGLERS ──────────────────────────────
-  const [navSeriesVisibility, setNavSeriesVisibility] = useState(() => {
-    const initial = [{ name: "Portfolio NAV", visible: true }];
-    if (benchmarkSeries && benchmarkSeries.length > 0) {
-      benchmarkSeries.forEach((series) =>
-        initial.push({ name: series.name, visible: true })
-      );
-    }
-    return initial;
-  });
-
-  useEffect(() => {
-    const initial = [{ name: "Portfolio NAV", visible: true }];
-    if (benchmarkSeries && benchmarkSeries.length > 0) {
-      benchmarkSeries.forEach((series) =>
-        initial.push({ name: series.name, visible: true })
-      );
-    }
-    setNavSeriesVisibility(initial);
-  }, [benchmarkSeries]);
-
-  const toggleNavSeries = (index) => {
-    const newVisibility = [...navSeriesVisibility];
-    newVisibility[index].visible = !newVisibility[index].visible;
-    setNavSeriesVisibility(newVisibility);
-    if (navChartRef.current && navChartRef.current.chart?.series[index]) {
-      navChartRef.current.chart.series[index].setVisible(newVisibility[index].visible);
-    }
+  }, [schemeDDStats]);
+  
+  // ── Helper function to normalize data series ──
+  const normalizeDataSeries = (data, startValue) => {
+    return data.map(point => [
+      point[0],
+      (point[1] / startValue) * 100
+    ]);
   };
 
-  const [drawdownSeriesVisibility, setDrawdownSeriesVisibility] = useState([
-    { name: "Portfolio", visible: true },
-    { name: "Nifty 50", visible: true },
-  ]);
-
-  const toggleDrawdownSeries = (index) => {
-    const newVisibility = [...drawdownSeriesVisibility];
-    newVisibility[index].visible = !newVisibility[index].visible;
-    setDrawdownSeriesVisibility(newVisibility);
-    if (drawdownChartRef.current && drawdownChartRef.current.chart?.series[index]) {
-      drawdownChartRef.current.chart.series[index].setVisible(newVisibility[index].visible);
+  // ── MERGED CHART OPTIONS (NAV & Drawdown) ──
+  const mergedChartOptions = useMemo(() => {
+    // ── Prepare Performance (NAV) Series ──
+    let performanceSeries = [];
+    let portfolioData = [];
+    if (activeScheme === "Scheme Total") {
+      const totalNavCurve = totalPortfolio?.navCurve || [];
+      portfolioData = totalNavCurve.map((item) => [
+        new Date(item.date).getTime(),
+        parseFloat(item.nav)
+      ]);
+    } else if (selectedScheme) {
+      portfolioData = (selectedScheme.navCurve || []).map((item) => [
+        new Date(item.date).getTime(),
+        parseFloat(item.nav)
+      ]);
     }
-  };
-  // ─── CHART OPTIONS ─────────────────────────────────────────────────────────────
-  const navChartOptions = useMemo(
-    () => ({
-      chart: {
+    if (portfolioData.length > 0) {
+      // Normalize so that the very first value becomes 0.
+      const normalizedPortfolioData = normalizeDataSeries(
+        portfolioData,
+        portfolioData[0][1]
+      );
+      performanceSeries.push({
+        name: activeScheme === "Scheme Total" ? "Portfolio" : selectedScheme.schemeName,
+        data: normalizedPortfolioData,
+        color: "#2E8B57", // Forest green for portfolio performance.
+        zIndex: 2,
+        yAxis: 0, // assign to performance y-axis (top)
         type: "line",
-        backgroundColor: colors.background,
+        marker: { enabled: false }
+      });
+    }
+  
+    let benchmarkPerformanceSeries = [];
+    if (benchmarkData?.length) {
+      const benchmarkDataPoints = benchmarkData.map((item) => [
+        new Date(item.date).getTime(),
+        parseFloat(item.nav)
+      ]);
+      const normalizedBenchmarkData = normalizeDataSeries(
+        benchmarkDataPoints,
+        benchmarkDataPoints[0][1]
+      );
+      benchmarkPerformanceSeries.push({
+        name: "NIFTY 50",
+        data: normalizedBenchmarkData,
+        color: "#4169E1", // Royal blue for benchmark.
+        dashStyle: "shortdash",
+        zIndex: 1,
+        yAxis: 0, // performance axis
+        type: "line",
+        marker: { enabled: false }
+      });
+    }
+  
+    // ── Prepare Drawdown Series Using Actual (Negative) Values ──
+    let drawdownSeries = [];
+    const portfolioCurve =
+      activeScheme === "Scheme Total"
+        ? totalPortfolio?.drawdownCurve
+        : selectedScheme?.drawdownCurve;
+    if (portfolioCurve?.length) {
+      drawdownSeries.push({
+        name: "Portfolio Drawdown",
+        data: portfolioCurve.map((point) => [
+          new Date(point.date).getTime(),
+          parseFloat(-point.drawdown)// Multiply drawdown by 100
+        ]),
+        color: "#FF4560",
+        zIndex: 2,
+        yAxis: 1, // assign to drawdown y-axis (bottom)
+        type: "area",
+        marker: { enabled: false },
+        fillOpacity: 0.2,
+        threshold: 0, // Draw from the 0 baseline
+        tooltip: { valueSuffix: "%" }
+      });
+    }
+  
+    let benchmarkDrawdownSeries = [];
+    if (benchmarkData?.length) {
+      let maxBenchmark = -Infinity;
+      const benchmarkDrawdownCurve = benchmarkData.map((point) => {
+        const timestamp = new Date(point.date).getTime();
+        const nav = parseFloat(point.nav);
+        maxBenchmark = Math.max(maxBenchmark, nav);
+        // Compute drawdown percentage (this will be negative or zero).
+        const dd = ((nav - maxBenchmark) / maxBenchmark) * 100;
+        return [timestamp, dd];
+      });
+      benchmarkDrawdownSeries.push({
+        name: "NIFTY 50 Drawdown",
+        data: benchmarkDrawdownCurve,
+        color: "#FF8F00",
+        dashStyle: "shortdash",
+        zIndex: 1,
+        yAxis: 1, // drawdown axis
+        type: "area",
+        marker: { enabled: false },
+        fillOpacity: 0.2,
+        threshold: 0, // Draw from the 0 baseline
+        tooltip: { valueSuffix: "%" }
+      });
+    }
+  
+    // Combine all series.
+    const mergedSeries = [
+      ...performanceSeries,
+      ...benchmarkPerformanceSeries,
+      ...drawdownSeries,
+      ...benchmarkDrawdownSeries
+    ];
+  
+    return {
+      chart: {
+        zoomType: "xy",
+        height: 800, // Increased chart height for better visibility
       },
       title: {
-        text: "NAV Performance vs Benchmark",
-        style: { color: colors.text },
+        text: "Portfolio vs Benchmark Performance & Drawdown",
+        style: { fontSize: "16px" },
       },
-      subtitle:
-        startDate && endDate
-          ? {
-            text: `From ${Highcharts.dateFormat(
-              "%d-%m-%Y",
-              new Date(startDate)
-            )} to ${Highcharts.dateFormat("%d-%m-%Y", new Date(endDate))}`,
-            style: { color: colors.text, fontSize: "0" },
-          }
-          : undefined,
       xAxis: {
         type: "datetime",
-        gridLineColor: colors.gridLines,
-        labels: { style: { color: colors.text } },
-        tickWidth: isMobile ? 0 : 1,
-        responsive: {
-          rules: [{
-            condition: {
-              maxWidth: 768 // Mobile breakpoint
-            },
-            chartOptions: {
-              xAxis: {
-                tickLength: 0,
-                labels: {
-                  step: 2 // Show fewer labels on mobile
-                }
-              }
-            }
-          }, {
-            condition: {
-              minWidth: 769 // Desktop breakpoint
-            },
-            chartOptions: {
-              xAxis: {
-                tickLength: 6, // Show ticks on desktop
-                labels: {
-                  step: 1 // Show all labels on desktop
-                }
-              }
-            }
-          }]
-        }
-      },
-      yAxis: {
-        title: {
-          text: "",
-          style: { color: colors.text },
+        title: { text: "Date" },
+        // Match the xAxis settings from your second configuration:
+        labels: {
+          formatter: function () {
+            return Highcharts.dateFormat('%Y', this.value);
+          },
+          style: {
+            color: "#2E8B57", // replace with colors.accent if available
+            fontSize: "10px",
+          },
         },
-        gridLineColor: colors.gridLines,
-        labels: { style: { color: colors.text } },
-        tickWidth: isMobile ? 0 : 1,
-
+        gridLineColor: "#e6e6e6", // replace with colors.gridLines if available
+        tickWidth: 1, // or (isMobile ? 0 : 1)
       },
-      series: [
+      // Define two yAxes: index 0 for performance and index 1 for drawdown.
+      yAxis: [
         {
-          name: "Portfolio NAV",
-          data: normalizedData,
-          color: colors.accent,
-          marker: { enabled: false },
-          tooltip: { valueDecimals: 2, valueSuffix: " %" },
-          zIndex: 2,
-          visible: navSeriesVisibility[0]?.visible ?? true,
+          // Performance yAxis (top half)
+          title: { text: "Performance (%)" },
+          height: "50%",
+          top: "0%",
+
+          labels: {
+            formatter: function () {
+              return Math.round(this.value);
+            },
+            style: {
+              color: "#2E8B57", // or colors.accent
+              fontSize: "10px",
+            },
+          },
+          lineColor: "#2E8B57",
+          tickColor: "#2E8B57",
+          tickWidth: 1, // or (isMobile ? 0 : 1)
+          gridLineColor: "#e6e6e6", // or colors.gridLines
+          plotLines: [{
+            value: 100, // adjust as needed (if your performance is normalized to 100)
+            color: "#2E8B57",
+            width: 1,
+            zIndex: 5,
+            dashStyle: "dot"
+          }],
         },
-        ...benchmarkSeries.map((series, idx) => ({
-          ...series,
-          visible: navSeriesVisibility[idx + 1]?.visible ?? true,
-        })),
+        {
+          // Drawdown yAxis (bottom half)
+          title: { text: "FEFREWE" },
+          height: "50%",
+          top: "50%",
+          offset: 0,
+          min: -15, // or use drawdownMin if available
+          max: 0,
+          tickAmount: 5,
+          labels: {
+            formatter: function () {
+              return Math.round(this.value) + '%';
+            },
+            style: {
+              color: "#FF4560", // or your chosen color for drawdown
+              fontSize: "10px",
+            },
+          },
+          lineColor: "#FF4560",
+          tickColor: "#FF4560",
+          tickWidth: 1, // or (isMobile ? 0 : 1)
+          gridLineColor: "#e6e6e6",
+        },
       ],
       tooltip: {
         shared: true,
-        backgroundColor: colors.tooltipBg,
-        borderColor: colors.tooltipBorder,
-        style: { color: colors.text },
-      },
-      legend: { enabled: false },
-    }),
-    [normalizedData, benchmarkSeries, colors, startDate, endDate, navSeriesVisibility, isMobile]
-  );
-
-
-  const drawdownChartOptions = useMemo(
-    () => ({
-      chart: {
-        type: "area",
-        backgroundColor: colors.background,
-      },
-      title: {
-        text: "Drawdown Analysis",
-        style: { color: colors.text },
-      },
-      xAxis: {
-        type: "datetime",
-        gridLineColor: colors.gridLines,
-        labels: { style: { color: colors.text } },
-      },
-      yAxis: {
-        title: {
-          text: "",
-          style: { color: colors.text },
-        },
-        gridLineColor: colors.gridLines,
-        labels: { style: { color: colors.text } },
-      },
-      series: [
-        {
-          name: "Portfolio",
-          data: drawdownData,
-          type: "area",
-          color: "#FF4D4D", // Darker pink base color
-          fillColor: {
-            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-            stops: [
-              [0, "#FF6666"], // Darker pink at top
-              [1, Highcharts.color("#FF8080").setOpacity(0.4).get("rgba")] // Semi-transparent medium pink at bottom
-            ]
-          },
-          zones: [
-            {
-              value: -10,
-              color: "#FF3333" // Darker pink for mild drawdown
-            },
-            {
-              color: "#FF0000" // Deep red for severe drawdown
-            }
-          ],
-          zIndex: 2,
-          marker: { enabled: false },
-          visible: drawdownSeriesVisibility[0].visible,
-        },
-        {
-          name: "Nifty 50 ",
-          data: (() => {
-            if (!benchmarkData || Object.keys(benchmarkData).length === 0) return [];
-            const benchmarkArray = Object.values(benchmarkData);
-            if (!Array.isArray(benchmarkArray) || benchmarkArray.length === 0)
-              return [];
-            const sortedData = benchmarkArray
-              .slice()
-              .sort((a, b) => new Date(a.date) - new Date(b.date));
-            let maxValue = -Infinity;
-            let previousValue = null;
-            return sortedData
-              .map((point) => {
-                const currentDate = new Date(point.date).getTime();
-                let value = parseFloat(point.nav);
-                if (isNaN(value)) {
-                  value = previousValue;
-                } else {
-                  previousValue = value;
-                }
-                if (value !== null) {
-                  maxValue = Math.max(maxValue, value);
-                  const drawdown = ((value - maxValue) / maxValue) * 100;
-                  return [currentDate, drawdown];
-                }
-                return null;
-              })
-              .filter((point) => point !== null);
-          })(),
-          type: "area",
-          color: "#FFCDD2", // Lighter red base color
-          fillColor: {
-            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-            stops: [
-              [0, "#FFCDD2"], // Light red at top
-              [1, Highcharts.color("#FFEBEE").setOpacity(0.3).get("rgba")] // Very light red with transparency at bottom
-            ]
-          },
-          dashStyle: "line",
-          zones: [
-            {
-              value: -10,
-              color: "#EF9A9A" // Medium red for mild drawdown
-            },
-            {
-              color: "#E57373" // Deeper red for severe drawdown
-            }
-          ],
-          zIndex: 1,
-          marker: { enabled: false },
-          visible: drawdownSeriesVisibility[1].visible,
-        },
-      ],
-
-      tooltip: {
-        backgroundColor: colors.tooltipBg,
-        borderColor: colors.tooltipBorder,
-        style: { color: colors.text },
+        xDateFormat: "%Y-%m-%d",
         valueDecimals: 2,
-        valueSuffix: " %",
+        formatter: function () {
+          let tooltipText = "<b>" + Highcharts.dateFormat("%Y-%m-%d", this.x) + "</b><br/>";
+          this.points.forEach((point) => {
+            tooltipText += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: ${point.y.toFixed(2)}`;
+            if (point.series.type === "area") {
+              tooltipText += "%";
+            }
+            tooltipText += "<br/>";
+          });
+          return tooltipText;
+        }
       },
-      legend: { enabled: false },
-    }),
-    [drawdownData, colors, benchmarkData, drawdownSeriesVisibility]
+      legend: {
+        enabled: true,
+        itemStyle: { fontSize: "12px" }
+      },
+      plotOptions: {
+        line: { marker: { enabled: false } },
+        area: { fillOpacity: 0.2, marker: { enabled: false } }
+      },
+      series: mergedSeries
+    };
+  }, [activeScheme, totalPortfolio, selectedScheme, benchmarkData]);
+  
+  // For monthly P&L data
+  const monthlyPnLFromNormalizedData =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.monthlyPnL
+        ? totalPortfolio.monthlyPnL.byMonth || {}
+        : {}
+      : selectedScheme?.monthlyPnL
+        ? selectedScheme.monthlyPnL.byMonth || {}
+        : {};
+
+  // Cash flow data
+  const filteredCashInOutData =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.cashFlows || []
+      : selectedScheme?.cashFlows || [];
+  const totalAmount = filteredCashInOutData.reduce(
+    (sum, record) => sum + record.amount,
+    0
+  );
+  const totalDividend = filteredCashInOutData.reduce(
+    (sum, record) => sum + (record.dividend || 0),
+    0
+  );
+  const netFlow = totalAmount + totalDividend;
+  const { totalIn, totalOut } = filteredCashInOutData.reduce(
+    (acc, record) => {
+      if (record.amount > 0) {
+        acc.totalIn += record.amount;
+      } else {
+        acc.totalOut += record.amount;
+      }
+      return acc;
+    },
+    { totalIn: 0, totalOut: 0 }
   );
 
-  const chartColors = {
-    background: "#ffffff",
-    text: "#2d3748",
-    tooltipBg: "#ffffff",
-    tooltipBorder: "#e2e8f0",
-    donutColors: [
-      "#2563eb", "#7c3aed", "#059669", "#dc2626", "#d97706",
-      "#0891b2", "#6d28d9", "#be185d", "#15803d", "#b45309",
-      "#4f46e5", "#9333ea", "#16a34a", "#e11d48", "#0284c7",
-    ],
-  };
-  const donutChartOptions = {
-    chart: {
-      type: "pie",
-      backgroundColor: chartColors.background,
-      height: 400,
-      style: {
-        fontFamily: "Inter, system-ui, sans-serif",
-      },
-    },
-    title: {
-      text: !isSarlaAccount && schemeForDonut
-        ? `Strategy-wise Allocation - ${schemeForDonut.schemeName}`
-        : activeScheme === "Scheme Total"
-          ? "Scheme-wise Allocation"
-          : `Strategy-wise Allocation - ${activeScheme}`,
-      align: "left",
-      style: {
-        fontSize: "18px",
-        fontWeight: "bold",
-        color: chartColors.text,
-      },
-    },
-    tooltip: {
-      formatter: function () {
-        const formattedValue = this.point.y.toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        return `
-          <div style="padding: 8px">
-            <div style="font-weight: 600">${this.point.name}</div>
-            <div>Allocation: ${this.point.percentage.toFixed(2)}%</div>
-          </div>
-        `;
-      },
-      backgroundColor: chartColors.tooltipBg,
-      borderColor: chartColors.tooltipBorder,
-      borderRadius: 8,
-      style: { color: chartColors.text, fontSize: "12px" },
-      useHTML: true,
-    },
-    accessibility: {
-      announceNewData: { enabled: true },
-      point: { valueSuffix: "%" },
-    },
-    plotOptions: {
-      pie: {
-        innerSize: "50%",
-        allowPointSelect: true,
-        cursor: "pointer",
-        colors: chartColors.donutColors,
-        dataLabels: {
-          enabled: true,
-          formatter: function () {
-            return `<b>${this.point.name}</b><br>${this.point.percentage.toFixed(2)}%`;
-          },
-          style: {
-            color: chartColors.text,
-            fontSize: "11px",
-            textOutline: "1px contrast",
-          },
-          distance: 20,
-        },
-        startAngle: -90,
-        endAngle: 270,
-      },
-    },
-    series: [
-      {
-        name: "Allocation",
-        colorByPoint: true,
-        data: allocationData.map((item) => ({
-          name: item.name,
-          y: Math.abs(item.y),
-          percentage: parseFloat(item.percentage),
-        })),
-      },
-    ],
-    legend: {
-      enabled: true,
-      layout: "horizontal",
-      align: "center",
-      verticalAlign: "bottom",
-      itemStyle: { color: chartColors.text, fontWeight: "normal" },
-      itemHoverStyle: { color: "#718096" },
-    },
-    credits: { enabled: false },
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB");
+  // Helper functions for formatting dates and currency
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString();
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return (
+      "₹" +
+      amount.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    );
   };
-
-  const ddStats = useMemo(() => {
-    let portfolioCurrentDD = null;
-    let portfolioMaxDD = null;
-    let benchmarkCurrentDD = null;
-    let benchmarkMaxDD = null;
-
-    if (drawdownData.length > 0) {
-      portfolioCurrentDD = drawdownData[drawdownData.length - 1][1];
-      portfolioMaxDD = Math.min(...drawdownData.map((point) => point[1]));
-    }
-
-    if (benchmarkSeries.length && benchmarkSeries[0].data && benchmarkSeries[0].data.length > 0) {
-      const benchData = benchmarkSeries[0].data;
-      let runningMax = benchData[0][1];
-      const drawdowns = benchData.map((point) => {
-        const price = point[1];
-        runningMax = Math.max(runningMax, price);
-        const drawdown = ((price - runningMax) / runningMax) * 100;
-        return drawdown;
-      });
-
-      benchmarkCurrentDD = drawdowns[drawdowns.length - 1];
-      benchmarkMaxDD = Math.min(...drawdowns);
-    }
-
-    return {
-      portfolio: { currentDD: portfolioCurrentDD, maxDD: portfolioMaxDD },
-      benchmark: { currentDD: benchmarkCurrentDD, maxDD: benchmarkMaxDD },
-    };
-  }, [drawdownData, benchmarkSeries]);
-
-  const cashFlowTotals = useMemo(() => {
-    const totalIn = filteredCashInOutData
-      .filter((record) => record.capital_in_out > 0)
-      .reduce((sum, record) => sum + record.capital_in_out, 0);
-    const totalOut = filteredCashInOutData
-      .filter((record) => record.capital_in_out < 0)
-      .reduce((sum, record) => sum + Math.abs(record.capital_in_out), 0);
-    const netFlow = totalIn - totalOut;
-    return { totalIn, totalOut, netFlow };
-  }, [filteredCashInOutData]);
-
-  const isPositive = dailyPercentageChange >= 0;
-
-  const trailingReturns = useMemo(() => {
-    const periods = {
-      "5d": 5,
-      "10d": 10,
-      "15d": 15,
-      "1m": 30,
-      "1y": 365,
-      "2y": 730,
-      "3y": 1095,
-    };
-    const getTrailingReturn = (series, days) => {
-      const periodMs = days * 24 * 60 * 60 * 1000;
-      if (!series.length) return null;
-      const lastPoint = series[series.length - 1];
-      const targetTime = lastPoint[0] - periodMs;
-      let index = series.length - 1;
-      while (index >= 0 && series[index][0] > targetTime) {
-        index--;
-      }
-      if (index < 0) return null;
-      const baseValue = series[index][1];
-      if (baseValue === 0) return null;
-      const trailingReturn = ((lastPoint[1] / baseValue) - 1) * 100;
-      return trailingReturn;
-    };
-    const portfolioReturns = {};
-    const benchmarkReturns = {};
-    for (const period in periods) {
-      portfolioReturns[period] = getTrailingReturn(normalizedData, periods[period]);
-      if (benchmarkSeries.length && benchmarkSeries[0].data) {
-        benchmarkReturns[period] = getTrailingReturn(benchmarkSeries[0].data, periods[period]);
-      } else {
-        benchmarkReturns[period] = null;
-      }
-    }
-    return { portfolioReturns, benchmarkReturns };
-  }, [normalizedData, benchmarkSeries]);
-
-  const calculateReturn = (normalizedData) => {
-    if (normalizedData.length === 0) return 0;
-
-    const startTimestamp = normalizedData[0][0];
-    const endTimestamp = normalizedData[normalizedData.length - 1][0];
-    const startValue = normalizedData[0][1];
-    const endValue = normalizedData[normalizedData.length - 1][1];
-
-    // Calculate the total return in decimal form (e.g., 0.25 for 25%)
-    const totalReturnDecimal = (endValue / startValue) - 1;
-
-    // Calculate the holding period in years
-    const holdingPeriodYears = (endTimestamp - startTimestamp) / (365 * 24 * 60 * 60 * 1000);
-
-    // If holding period is 1 year or more, compute annualized return (CAGR)
-    if (holdingPeriodYears >= 1) {
-      const annualizedReturn = (Math.pow(1 + totalReturnDecimal, 1 / holdingPeriodYears) - 1) * 100;
-      return annualizedReturn;
-    } else {
-      // If less than 1 year, return the absolute return percentage
-      return totalReturnDecimal * 100;
-    }
-  };
-
-  // Usage example inside a useMemo hook to recalc when normalizedData changes:
-  const returnsValue = useMemo(() => {
-    return calculateReturn(normalizedData);
-  }, [normalizedData]);
 
 
   const renderContent = () => {
@@ -1033,16 +605,16 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
       );
     }
     if (error) {
-      return <div className="p-1 text-red-500">Error: {error}</div>;
+      return <div className="p-4 text-red-500">Error: {error}</div>;
     }
-    if (!Array.isArray(data)) {
-      return <div className="p-1 text-red-500">No data available.</div>;
+    if (!accountsData) {
+      return <div className="p-4 text-red-500">No data available.</div>;
     }
-    //console.log("accountCodes:", accountCodes);
+
     return (
       <>
-        {isSarlaAccount ? (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 mb-6">
+        {isSarlaAccount && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
             <label htmlFor="scheme-select" className="text-xs sm:text-sm font-medium">
               Select Scheme:
             </label>
@@ -1050,266 +622,174 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
               id="scheme-select"
               value={activeScheme}
               onChange={(e) => setActiveScheme(e.target.value)}
-              className="p-1 rounded border border-brown text-gray-700"
+              className="p-2 rounded border border-brown text-gray-700"
             >
-              {data.map(({ schemeName }) => (
+              <option value="Scheme Total">Scheme Total</option>
+              {schemes.map(({ schemeName }) => (
                 <option key={schemeName} value={schemeName}>
                   {schemeName}
                 </option>
               ))}
             </select>
           </div>
-        ) : (
-          <div className="mb-6">
-            <h3 className="text-xs sm:text-sm font-medium"></h3>
-          </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1 mb-6">
-          <div className="p-1 bg-white rounded-lg shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-xs sm:text-lg font-medium">Amount Invested</h3>
-            <p className="mt-2 text-base">
-              ₹
-              {activeScheme === "Scheme Total"
-                ? totals.totalCapitalInvested.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })
-                : schemeWiseCapitalInvested[activeScheme].toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-            </p>
+            <p className="mt-2 text-base">{formatCurrency(investedAmount)}</p>
           </div>
-          <div className="p-1 bg-white rounded-lg shadow flex-1">
+          <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-xs sm:text-lg font-medium">Current Portfolio Value</h3>
-            <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-base">
-                ₹{latestPortfolioValue.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-
+            <div className="mt-2 flex items-baseline gap-4">
+              <span className="text-base">{formatCurrency(portfolioValue)}</span>
             </div>
           </div>
-
-          <div className="p-1 bg-white rounded-lg shadow">
+          <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-xs sm:text-lg font-medium">Returns</h3>
-            <div className="mt-2 flex justify-between items-baseline gap-1">
-              <span className={`text-xs sm:text-xl font-semibold ${returns >= 0 ? "text-green-500" : "text-red-500"}`}>
+            <div className="mt-2 flex justify-between items-baseline gap-4">
+              <span
+                className={`text-xs sm:text-xl font-semibold ${returnsValue >= 0 ? "text-green-500" : "text-red-500"}`}
+              >
                 {returnsValue.toFixed(2)}%
               </span>
               <div className={`flex items-end text-sm ${isPositive ? "text-green-600" : "text-red-600"}`}>
                 {isPositive ? (
-                  <ArrowUpIcon className="h-18 w-18" />
+                  <ArrowUpIcon className="h-1 w-1" />
                 ) : (
-                  <ArrowDownIcon className="h-18 w-18" />
+                  <ArrowDownIcon className="h-1 w-1" />
                 )}
                 <span>{dailyPercentageChange.toFixed(2)}%</span>
               </div>
             </div>
           </div>
-          <div className="p-1 bg-white rounded-lg shadow">
+          <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-xs sm:text-lg font-medium">Total Profit</h3>
-            <div className="mt-2 flex justify-between items-baseline gap-1">
-              <p
-                className={`text-base ${totalProfit >= 0 ? "text-green-500" : "text-red-500"
-                  }`}
-              >
-                ₹{totalProfit.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+            <div className="mt-2 flex justify-between items-baseline gap-4">
+              <p className={`text-base ${totalProfit >= 0 ? "text-green-500" : "text-red-500"}`}>
+                {formatCurrency(totalProfit)}
               </p>
-              <div className=" flex items-center">
+              <div className="flex items-center">
                 {latestPreviousValue >= 0 ? (
-                  <ArrowUpIcon className="h-18 w-18 text-green-500" />
+                  <ArrowUpIcon className="h-1 w-1 text-green-500" />
                 ) : (
-                  <ArrowDownIcon className="h-18 w-18 text-red-500" />
+                  <ArrowDownIcon className="h-1 w-1 text-red-500" />
                 )}
-                <span
-                  className={`text-sm ${latestPreviousValue >= 0 ? "text-green-500" : "text-red-500"
-                    }`}
-                >
-                  {latestPreviousValue.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                <span className={`text-sm ${latestPreviousValue >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  {formatCurrency(latestPreviousValue)}
                 </span>
               </div>
             </div>
           </div>
-
-          <div className="p-1 bg-white rounded-lg shadow">
+          <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-xs sm:text-lg font-medium">Total Dividends</h3>
-            <p className="mt-2 text-base">
-              ₹{totals.totalDividends.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
+            <p className="mt-2 text-base">{formatCurrency(totalDividend)}</p>
           </div>
         </div>
 
-        <TrailingReturns trailingReturns={trailingReturns} ddStats={ddStats} />
+        <TrailingReturns
+          trailingReturns={trailingReturns}
+          ddStats={ddStats}
+          benchmarkTrailingReturns={benchmarkTrailingReturns}
+          benchmarkDDStats={benchmarkDDStats}
+        />
 
 
-        <div className="flex justify-between items-center mb-18 mt-18">
-          {startDate && (
-            <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">
-              Inception Date: {formatDate(startDate)}
-            </Text>
-          )}
-        </div>
-
-        <div className="bg-white p-0 sm:p-1 rounded-lg  shadow mb-6">
-          {normalizedData.length ? (
-            <>
-              <div className="my-2 p-18">
-                {navSeriesVisibility.map((series, index) => (
-                  <label key={index} className="mr-2 text-xs sm:text-sm" style={{ color: colors.text }}>
-                    <input
-                      type="checkbox"
-                      checked={series.visible}
-                      onChange={() => toggleNavSeries(index)}
-                      className="mr-18"
-                    />
-                    {series.name}
-                  </label>
-                ))}
-              </div>
-              <HighchartsReact highcharts={Highcharts} options={navChartOptions} ref={navChartRef} />
-            </>
+        {/* Merged Chart: NAV & Drawdown */}
+        <div className="bg-white p-4 rounded-lg shadow mb-6">
+          {(activeScheme === "Scheme Total" && totalPortfolio?.navCurve?.length) ||
+            (activeScheme !== "Scheme Total" && selectedScheme?.navCurve?.length) ? (
+            <HighchartsReact
+              highcharts={Highcharts}
+              options={mergedChartOptions}
+              ref={navChartRef}
+            />
           ) : (
-            <div>No NAV data available.</div>
+            <div className="p-4 text-center text-gray-600">
+              No data available.
+            </div>
           )}
         </div>
 
-        <div className="mb-6 bg-white sm:p-1 rounded-lg shadow">
-          {drawdownData.length ? (
-            <>
-              <div className="my-2 p-18">
-                {drawdownSeriesVisibility.map((series, index) => (
-                  <label key={index} className="mr-18 p-18 text-xs sm:text-sm" style={{ color: colors.text }}>
-                    <input
-                      type="checkbox"
-                      checked={series.visible}
-                      onChange={() => toggleDrawdownSeries(index)}
-                      className="mr-18"
-                    />
-                    {series.name}
-                  </label>
-                ))}
-              </div>
-              <HighchartsReact highcharts={Highcharts} options={drawdownChartOptions} ref={drawdownChartRef} />
-            </>
-          ) : (
-            <div>No drawdown data available.</div>
-          )}
-        </div>
-
-
-        {/* Pass the monthly P&L computed using last dates of previous & current months */}
         <YearlyMonthlyPLTable monthlyPnL={monthlyPnLFromNormalizedData} />
-        {(!isSarlaAccount || activeScheme !== "Scheme Total") && (
-          <div className="mt-6 bg-white p-1 rounded-lg shadow">
-            {allocationData.length ? (
-              <HighchartsReact highcharts={Highcharts} options={donutChartOptions} />
-            ) : (
-              <div>No allocation data available.</div>
-            )}
-          </div>
-        )}
 
-        <div className="my-4 border rounded-lg">
-          {/* Accordion Header */}
+        <div className="my-6 border rounded-lg">
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full flex items-center justify-between p-2 border-brown border rounded-lg bg-lightBeige dark:bg-gray-800 text-sm font-medium text-black dark:text-gray-400 uppercase tracking-wider focus:outline-none"
+            className="w-full flex items-center justify-between p-4 border rounded-lg bg-lightBeige text-sm font-medium text-black uppercase tracking-wider focus:outline-none"
           >
-            <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">Cash In/Out</Text>
-            <span className="text-xs sm:text-xl">
-              {isOpen ? "−" : "+"}
-            </span>
+            <Text className="sm:text-sm italic text-xs font-subheading text-brown text-left">
+              Cash In/Out
+            </Text>
+            <span className="text-xs sm:text-xl">{isOpen ? "−" : "+"}</span>
           </button>
 
-          {/* Accordion Content */}
           {isOpen && (
-            <div className="sm:p-2">
-              <div className="overflow-x-auto w-full rounded-lg border border-brown dark:border-brown">
-                <table className="min-w-full bg-white dark:bg-black">
+            <div className="sm:p-4">
+              <div className="overflow-x-auto w-full rounded-lg border">
+                <table className="min-w-full bg-white">
                   <thead className="bg-lightBeige">
                     <tr>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-4 border text-left text-xs sm:text-sm font-medium uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-4 border text-left text-xs sm:text-sm font-medium uppercase tracking-wider">
                         Scheme
                       </th>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-right text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-4 border text-right text-xs sm:text-sm font-medium uppercase tracking-wider">
                         Cash In/Out
+                      </th>
+                      <th className="p-4 border text-right text-xs sm:text-sm font-medium uppercase tracking-wider">
+                        Dividend
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredCashInOutData.map((record, index) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                      >
-                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-gray-700 dark:text-gray-300">
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="p-4 border text-xs sm:text-sm text-gray-700">
                           {formatDate(record.date)}
                         </td>
-                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-gray-700 dark:text-gray-300">
-                          {record.scheme}
+                        <td className="p-4 border text-xs sm:text-sm text-gray-700">
+                          {activeScheme === "Scheme Total" ? record.scheme : activeScheme}
                         </td>
-                        <td
-                          className={`p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-right ${record.capital_in_out > 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                            }`}
-                        >
-                          {formatCurrency(record.capital_in_out)}
+                        <td className={`p-4 border text-xs sm:text-sm text-right ${record.amount > 0 ? "text-green-600" : "text-red-600"}`}>
+                          {formatCurrency(record.amount)}
+                        </td>
+                        <td className={`p-4 border text-xs sm:text-sm text-right ${(record.dividend || 0) > 0 ? "text-green-600" : "text-red-600"}`}>
+                          {formatCurrency(record.dividend || 0)}
                         </td>
                       </tr>
                     ))}
-                    <tr className="bg-gray-100 dark:bg-gray-800 font-semibold">
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-gray-900 dark:text-gray-100">
+                    <tr className="bg-gray-100 font-semibold">
+                      <td className="p-4 border text-xs sm:text-sm text-gray-900">
                         Total
                       </td>
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-right text-gray-900 dark:text-gray-100"></td>
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-right text-gray-900 dark:text-gray-100">
-                        {formatCurrency(cashFlowTotals.netFlow)}
+                      <td className="p-4 border text-xs sm:text-sm text-right"></td>
+                      <td className="p-4 border text-xs sm:text-sm text-right">
+                        {formatCurrency(totalAmount)}
+                      </td>
+                      <td className="p-4 border text-xs sm:text-sm text-right">
+                        {formatCurrency(totalDividend)}
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <div className="mt-2 text-xs sm:text-sm  text-gray-600 dark:text-gray-400">
+              <div className="mt-2 text-xs sm:text-sm text-gray-600">
                 <p>
-                  Total Cash In:{" "}
-                  <span className="text-green-600">
-                    {formatCurrency(cashFlowTotals.totalIn)}
-                  </span>
+                  Total Cash In: <span className="text-green-600">{formatCurrency(totalIn)}</span>
                 </p>
                 <p>
-                  Total Cash Out:{" "}
-                  <span className="text-red-600">
-                    {formatCurrency(cashFlowTotals.totalOut)}
-                  </span>
+                  Total Cash Out: <span className="text-red-600">{formatCurrency(totalOut)}</span>
                 </p>
                 <p>
-                  Net Flow:{" "}
-                  <span
-                    className={
-                      cashFlowTotals.netFlow >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }
-                  >
-                    {formatCurrency(cashFlowTotals.netFlow)}
+                  Total Dividend: <span className="text-green-600">{formatCurrency(totalDividend)}</span>
+                </p>
+                <p>
+                  Net Flow: <span className={netFlow >= 0 ? "text-green-600" : "text-red-600"}>
+                    {formatCurrency(netFlow)}
                   </span>
                 </p>
               </div>
@@ -1321,15 +801,15 @@ const ManagedAccountDashboard = ({ accountCodes }) => {
   };
 
   return (
-    <div className="p-0 sm:p-1">
+    <div className="p-2">
       {endDate && (
-        <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-right">
+        <Text className="sm:text-sm italic text-xs font-subheading text-brown text-right">
           Data as of: {formatDate(endDate)}
         </Text>
       )}
       <div className="flex justify-between items-center mb-4">
-        <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-18 mt-4">
-          Welcome, {username}
+        <Heading className="sm:text-subheading italic text-xs font-subheading text-brown mb-4 mt-4">
+          Welcome, {clientName}
         </Heading>
       </div>
       {renderContent()}

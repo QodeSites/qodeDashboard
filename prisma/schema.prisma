@@ -66,6 +66,7 @@ model master_sheet {
   strategy_tags                     String?
   id                                Int       @id @default(autoincrement())
 
+  @@index([account_tag], map: "idx_master_sheet_account_tag")
   @@schema("pms_clients_tracker")
 }
 

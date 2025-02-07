@@ -3,148 +3,430 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-export async function GET(request) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+const DEFAULT_PAGE_SIZE = 2000;
 
-        const { searchParams } = new URL(request.url);
-        const userId = searchParams.get("user_id");
-
-        if (!userId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
-        }
-
-        // Step 1: Fetch account_code from managed_account_clients
-        const managedAccounts = await prisma.managed_account_clients.findMany({
-            where: {
-                id: parseInt(userId)
-            },
-            select: {
-                account_code: true
-            }
-        });
-
-        const accountCodes = managedAccounts.map(account => account.account_code);
-
-        if (accountCodes.length === 0) {
-            return NextResponse.json({ error: "No accounts found for the user" }, { status: 404 });
-        }
-
-        // Step 2: Fetch capital_in_out and dividend from managed_accounts_cash_in_out
-        const cashInOutData = await prisma.managed_accounts_cash_in_out.findMany({
-            where: {
-                account_code: { in: accountCodes }
-            },
-            select: {
-                date: true,
-                scheme: true,
-                capital_in_out: true,
-                dividend: true
-            },
-            orderBy: {
-                date: 'desc'
-            }
-        });
-
-        // Step 3: Sum capital_in_out and dividend
-        const totalCapitalInvested = cashInOutData.reduce((sum, entry) => sum + (entry.capital_in_out || 0), 0);
-        const totalDividends = cashInOutData.reduce((sum, entry) => sum + (entry.dividend || 0), 0);
-
-        // Step 4: Group cashInOutData by scheme and calculate scheme-wise capital invested
-        const schemeWiseCapitalInvested = cashInOutData.reduce((acc, entry) => {
-            const scheme = entry.scheme;
-            if (!acc[scheme]) {
-                acc[scheme] = 0;
-            }
-            acc[scheme] += entry.capital_in_out || 0;
-            return acc;
-        }, {});
-
-        // Step 5: Get the system tags and account names from schemes (earlier logic)
-        const schemes = await prisma.scheme.findMany({
-            where: {
-                client_id: parseInt(userId)
-            },
-            select: {
-                system_tag: true,
-                scheme_name: true,
-                account_name: true
-            }
-        });
-
-        // Step 6: Group schemes by scheme_name and then by account_name (strategy)
-        // -------------------------------------------------------------------------
-        // The original grouping by system_tag is kept as a comment below:
-        // const groupedSchemes = schemes.reduce((acc, scheme) => {
-        //     if (!acc[scheme.scheme_name]) {
-        //         acc[scheme.scheme_name] = {};
-        //     }
-        //     if (scheme.system_tag) {
-        //         if (!acc[scheme.scheme_name][scheme.system_tag]) {
-        //             acc[scheme.scheme_name][scheme.system_tag] = [];
-        //         }
-        //         acc[scheme.scheme_name][scheme.system_tag].push(scheme.system_tag);
-        //     }
-        //     return acc;
-        // }, {});
-
-        const groupedSchemes = schemes.reduce((acc, scheme) => {
-            if (!acc[scheme.scheme_name]) {
-                acc[scheme.scheme_name] = {};
-            }
-            if (scheme.account_name) {
-                if (!acc[scheme.scheme_name][scheme.account_name]) {
-                    acc[scheme.scheme_name][scheme.account_name] = [];
-                }
-                acc[scheme.scheme_name][scheme.account_name].push(scheme.account_name);
-            }
-            return acc;
-        }, {});
-
-        // Step 7: Fetch master sheet data for each group of account names, ordered by date
-        const groupedMasterSheetData = {};
-
-        for (const [schemeName, strategies] of Object.entries(groupedSchemes)) {
-            groupedMasterSheetData[schemeName] = {};
-
-            for (const [strategy, accountNames] of Object.entries(strategies)) {
-                // The original code using system_tag is preserved in comments:
-                // const masterSheetData = await prisma.master_sheet.findMany({
-                //     where: { 
-                //         system_tag: { in: systemTags }
-                //     },
-                //     orderBy: {
-                //         date: 'asc' // Change to 'desc' for descending order
-                //     }
-                // });
-
-                const masterSheetData = await prisma.master_sheet.findMany({
-                    where: {
-                        account_names: { in: accountNames }
-                    },
-                    orderBy: {
-                        date: 'asc' // Change to 'desc' for descending order
-                    }
-                });
-
-                groupedMasterSheetData[schemeName][strategy] = masterSheetData;
-            }
-        }
-
-
-        // Step 8: Return the results
-        return NextResponse.json({
-            data: groupedMasterSheetData,
-            totalCapitalInvested,
-            totalDividends,
-            schemeWiseCapitalInvested, // Add scheme-wise capital invested
-            cashInOutData
-        }, { status: 200 });
-    } catch (error) {
-        console.error("API Error:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+const PORTFOLIO_MAPPING = {
+AC5: {
+    "Scheme A": {
+    current: "Sarla Performance fibers Zerodha Total Portfolio A",
+    metrics: "Sarla Performance fibers Zerodha Total Portfolio A"
+    },
+    "Scheme B": {
+    current: "Sarla Performance fibers Zerodha Total Portfolio B",
+    metrics: "Sarla Performance fibers Total Portfolio B"
+    },
+    "Scheme C": {
+    current: "Sarla Performance fibers Zerodha Total Portfolio C",
+    metrics: "Sarla Performance fibers Zerodha Total Portfolio C"
+    },
+    "Scheme D": {
+    current: "Sarla Performance fibers Zerodha Total Portfolio D",
+    metrics: "Sarla Performance fibers Zerodha Total Portfolio D"
+    },
+    "Scheme E": {
+    current: "Sarla Performance fibers Zerodha Total Portfolio E",
+    metrics: "Sarla Performance fibers Zerodha Total Portfolio E"
+    },
+    "Scheme F": {
+    current: "Sarla Performance fibers Zerodha Total Portfolio F",
+    metrics: "Sarla Performance fibers Zerodha Total Portfolio F"
+    },
+    "_total": {
+    current: "Sarla Performance fibers Zerodha Total Portfolio",
+    metrics: "Sarla Performance fibers Zerodha Total Portfolio"
     }
+},
+AC6: {
+    "Scheme A": {
+    current: "Priyavrata Mafatlal Zerodha Total Portfolio",
+    metrics: "Priyavrata Mafatlal Zerodha Total Portfolio"
+    },
+    "_total": {
+    current: "Priyavrata Mafatlal Zerodha Total Portfolio",
+    metrics: "Priyavrata Mafatlal Zerodha Total Portfolio"
+    }
+},
+AC7: {
+    "Scheme A": {
+    current: "Raj Jhaveri Zerodha Total Portfolio",
+    metrics: "Raj Jhaveri Zerodha Total Portfolio"
+    },
+    "_total": {
+    current: "Raj Jhaveri Zerodha Total Portfolio",
+    metrics: "Raj Jhaveri Zerodha Total Portfolio"
+    }
+},
+AC8: {
+    "Scheme A": {
+    current: "Satidham Industries Zerodha Total Portfolio",
+    metrics: "Satidham Industries Zerodha Total Portfolio"
+    },
+    "_total": {
+    current: "Satidham Industries Zerodha Total Portfolio",
+    metrics: "Satidham Industries Zerodha Total Portfolio"
+    }
+},
+AC9: {
+    "Scheme B": {
+    current: "Deepti Parikh Zerodha Total Portfolio",
+    metrics: "Deepti Parikh Total Portfolio B"
+    },
+    "_total": {
+    current: "Deepti Parikh Zerodha Total Portfolio",
+    metrics: "Deepti Parikh Zerodha Total Portfolio"
+    }
+}
+};
+// Map account codes to client names for reference
+const CLIENT_NAMES = {
+  AC5:"Sarla Performance Fibers",
+  AC6: "Priyavrata Mafatlal",
+  AC7: "Raj Jhaveri",
+  AC8: "Satidham Industries",
+  AC9: "Deepti Parikh"
+};
+
+  
+function calculateDrawdownMetrics(navData) {
+if (!navData || navData.length === 0) return { currentDD: 0, mdd: 0, ddCurve: [] };
+
+let peak = navData[0].nav;
+let mdd = 0;
+const ddCurve = [];
+
+navData.forEach(point => {
+    if (point.nav > peak) {
+    peak = point.nav;
+    }
+    const drawdown = ((peak - point.nav) / peak) * 100;
+    mdd = Math.max(mdd, drawdown);
+    ddCurve.push({
+    date: point.date,
+    drawdown: drawdown
+    });
+});
+
+const currentDD = ddCurve[ddCurve.length - 1]?.drawdown || 0;
+
+return {
+    currentDD,
+    mdd,
+    ddCurve
+};
+}
+  
+function calculateReturns(navData) {
+    // console.log("NAV Data:", navData);
+  
+    if (!navData || navData.length < 2) {
+      console.log("Insufficient NAV data points");
+      return 0;
+    }
+  
+    const firstDate = new Date(navData[0].date);
+    const lastDate = new Date(navData[navData.length - 1].date);
+    const daysDiff = (lastDate - firstDate) / (1000 * 60 * 60 * 24);
+  
+    console.log("Days Difference:", daysDiff);
+  
+    const firstNav = navData[0].nav;
+    const lastNav = navData[navData.length - 1].nav;
+    const totalReturn = (lastNav / firstNav) - 1; // total return as a decimal
+  
+    if (daysDiff <= 365) {
+      const absoluteReturn = totalReturn * 100;
+      console.log("Absolute Return:", absoluteReturn);
+      return absoluteReturn;
+    } else {
+      // Annualize the return (CAGR)
+      const annualizedReturn = (Math.pow((1 + totalReturn), (365 / daysDiff)) - 1) * 100;
+      console.log("Annualized Return:", annualizedReturn);
+      return annualizedReturn;
+    }
+  }
+  
+
+function calculateTrailingReturns(navData, periods = {
+"5d": 5,
+"10d": 10,
+"15d": 15,
+"1m": 30,
+"1y": 365,
+"2y": 730,
+"3y": 1095,
+}) {
+if (!navData || navData.length === 0) return {};
+
+const lastNav = navData[navData.length - 1].nav;
+const lastDate = new Date(navData[navData.length - 1].date);
+const returns = {};
+
+Object.entries(periods).forEach(([period, days]) => {
+    const targetDate = new Date(lastDate);
+    targetDate.setDate(targetDate.getDate() - days);
+
+    const historicalEntry = [...navData].reverse().find(entry => 
+    new Date(entry.date) <= targetDate
+    );
+    
+    if (historicalEntry) {
+    returns[period] = ((lastNav - historicalEntry.nav) / historicalEntry.nav) * 100;
+    } else {
+    returns[period] = null;
+    }
+});
+
+return returns;
+}
+
+function calculateMonthlyPnL(navData) {
+  if (!navData || navData.length === 0) return {};
+  
+  const dataByMonth = navData.reduce((acc, entry) => {
+    const date = new Date(entry.date);
+    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    
+    if (!acc[yearMonth]) {
+      acc[yearMonth] = [];
+    }
+    acc[yearMonth].push({
+      date: entry.date,
+      nav: entry.nav
+    });
+    
+    return acc;
+  }, {});
+
+  const sortedMonths = Object.keys(dataByMonth).sort();
+  const monthlyPnL = {};
+  
+  sortedMonths.forEach((yearMonth, index) => {
+    const currentMonthData = dataByMonth[yearMonth];
+    const currentMonthEnd = currentMonthData[currentMonthData.length - 1].nav;
+    
+    let startNav;
+    if (index === 0) {
+      startNav = currentMonthData[0].nav;
+    } else {
+      const previousMonth = sortedMonths[index - 1];
+      const previousMonthData = dataByMonth[previousMonth];
+      startNav = previousMonthData[previousMonthData.length - 1].nav;
+    }
+
+    monthlyPnL[yearMonth] = {
+      startDate: index === 0 ? currentMonthData[0].date : dataByMonth[sortedMonths[index - 1]][dataByMonth[sortedMonths[index - 1]].length - 1].date,
+      endDate: currentMonthData[currentMonthData.length - 1].date,
+      startNav,
+      endNav: currentMonthEnd,
+      pnl: ((currentMonthEnd - startNav) / startNav) * 100,
+      navPoints: currentMonthData.map(point => ({
+        date: point.date,
+        nav: point.nav
+      }))
+    };
+  });
+
+  const pnlByYear = {};
+  Object.entries(monthlyPnL).forEach(([yearMonth, data]) => {
+    const year = yearMonth.split('-')[0];
+    if (!pnlByYear[year]) {
+      pnlByYear[year] = {};
+    }
+    pnlByYear[year][yearMonth] = data;
+  });
+
+  return {
+    byYear: pnlByYear,
+    byMonth: monthlyPnL
+  };
+}
+
+function calculateSchemeAllocation(investedAmounts) {
+  const total = Object.values(investedAmounts).reduce((sum, amount) => sum + amount, 0);
+  const allocation = {};
+  
+  Object.entries(investedAmounts).forEach(([scheme, amount]) => {
+    allocation[scheme] = (amount / total) * 100;
+  });
+  
+  return allocation;
+}
+
+function getPortfolioNames(accountCode, scheme) {
+  if (!PORTFOLIO_MAPPING[accountCode] || !PORTFOLIO_MAPPING[accountCode][scheme]) {
+    throw new Error(`Invalid account code (${accountCode}) or scheme (${scheme})`);
+  }
+  return PORTFOLIO_MAPPING[accountCode][scheme];
+}
+
+export async function GET(request) {
+try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("user_id");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const pageSize = Math.max(1, parseInt(searchParams.get("pageSize") || String(DEFAULT_PAGE_SIZE)));
+
+    if (!userId || isNaN(parseInt(userId))) {
+    return NextResponse.json({ error: "Valid user ID is required" }, { status: 400 });
+    }
+
+    const managedAccounts = await prisma.managed_account_clients.findMany({
+    where: { id: parseInt(userId) },
+    select: { account_code: true },
+    });
+
+    const accountCodes = managedAccounts.map((account) => account.account_code);
+    if (accountCodes.length === 0) {
+    return NextResponse.json({ 
+        error: "No accounts found for the user",
+        userId 
+    }, { status: 404 });
+    }
+
+    const [cashInOutData, masterSheetData] = await Promise.all([
+    prisma.managed_accounts_cash_in_out.findMany({
+        where: { account_code: { in: accountCodes } },
+        select: {
+        date: true,
+        account_code: true,
+        scheme: true,
+        capital_in_out: true,
+        dividend: true,
+        },
+        orderBy: { date: "asc" },
+    }),
+    prisma.master_sheet.findMany({
+        where: { account_tag: { in: accountCodes } },
+        orderBy: { date: "asc" },
+    }),
+    ]);
+
+    const results = {};
+    
+    for (const accountCode of accountCodes) {
+    results[accountCode] = {
+        clientName: CLIENT_NAMES[accountCode] || "Unknown Client",
+        schemes: {},
+        totalPortfolio: {}
+    };
+    
+    const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {})
+        .filter(scheme => scheme !== '_total');
+    const schemeInvestedAmounts = {};
+    
+    // Process individual schemes
+    for (const scheme of schemes) {
+        const portfolioNames = getPortfolioNames(accountCode, scheme);
+        
+        const currentData = masterSheetData.filter(
+        (entry) => entry.account_names === portfolioNames.current
+        );
+        const metricsData = masterSheetData.filter(
+        (entry) => entry.account_names === portfolioNames.metrics
+        );
+        const cashForScheme = cashInOutData.filter(
+        (entry) => entry.account_code === accountCode && entry.scheme === scheme
+        );
+
+        const investedAmount = cashForScheme.reduce((sum, entry) => {
+        const capitalAmount = entry.capital_in_out || 0;
+        const dividendAmount = entry.dividend || 0;
+        return sum + capitalAmount + dividendAmount;
+        }, 0);
+
+        schemeInvestedAmounts[scheme] = investedAmount;
+
+        const navCurve = metricsData.map((e) => ({
+        date: e.date,
+        nav: e.nav
+        }));
+
+        const drawdownMetrics = calculateDrawdownMetrics(navCurve);
+
+        results[accountCode].schemes[scheme] = {
+        currentPortfolioValue: currentData.length > 0 
+            ? currentData[currentData.length - 1].portfolio_value || 0
+            : 0,
+        investedAmount,
+        returns: calculateReturns(navCurve, cashForScheme),
+        trailingReturns: calculateTrailingReturns(navCurve),
+        monthlyPnL: calculateMonthlyPnL(navCurve),
+        navCurve,
+        currentDrawdown: drawdownMetrics.currentDD,
+        maxDrawdown: drawdownMetrics.mdd,
+        drawdownCurve: drawdownMetrics.ddCurve,
+        cashFlows: cashForScheme.map(flow => ({
+            date: flow.date,
+            amount: flow.capital_in_out,
+            dividend: flow.dividend
+        }))
+        };
+    }
+
+    // Process total portfolio metrics
+    const totalPortfolioNames = PORTFOLIO_MAPPING[accountCode]._total;
+    const totalCurrentData = masterSheetData.filter(
+        (entry) => entry.account_names === totalPortfolioNames.current
+    );
+    const totalMetricsData = masterSheetData.filter(
+        (entry) => entry.account_names === totalPortfolioNames.metrics
+    );
+    
+    const totalInvestedAmount = Object.values(schemeInvestedAmounts)
+        .reduce((sum, amount) => sum + amount, 0);
+
+    const totalNavCurve = totalMetricsData.map((e) => ({
+        date: e.date,
+        nav: e.nav
+    }));
+
+    const totalDrawdownMetrics = calculateDrawdownMetrics(totalNavCurve);
+    const totalCashFlows = cashInOutData
+    .filter(flow => flow.account_code === accountCode)
+    .map(flow => ({
+      date: flow.date,
+      scheme: flow.scheme, // Added scheme property
+      amount: flow.capital_in_out,
+      dividend: flow.dividend
+    }));
+    results[accountCode].totalPortfolio = {
+        currentPortfolioValue: totalCurrentData.length > 0 
+        ? totalCurrentData[totalCurrentData.length - 1].portfolio_value || 0
+        : 0,
+        investedAmount: totalInvestedAmount,
+        returns: calculateReturns(totalNavCurve),
+        trailingReturns: calculateTrailingReturns(totalNavCurve),
+        monthlyPnL: calculateMonthlyPnL(totalNavCurve),
+        navCurve: totalNavCurve,
+        currentDrawdown: totalDrawdownMetrics.currentDD,
+        maxDrawdown: totalDrawdownMetrics.mdd,
+        drawdownCurve: totalDrawdownMetrics.ddCurve,
+        schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
+        cashFlows: totalCashFlows
+    };
+    }
+
+    return NextResponse.json({ 
+    data: {
+        accounts: results
+    },
+    pagination: {
+        page,
+        pageSize,
+        totalAccounts: accountCodes.length
+    }
+    }, { status: 200 });
+
+} catch (error) {
+    console.error("Portfolio API Error:", error);
+    return NextResponse.json({ 
+    error: "Internal server error",
+    message: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
+}
 }

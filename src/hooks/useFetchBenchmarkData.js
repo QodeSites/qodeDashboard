@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const useFetchBenchmarkData = (indices, startDate, endDate) => {
+    console.log('indices,startDate,endDate',indices,startDate,endDate)
     const [benchmarkData, setBenchmarkData] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
