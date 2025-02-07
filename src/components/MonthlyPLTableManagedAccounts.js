@@ -71,32 +71,46 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
                     {monthName}
                   </th>
                 ))}
+                {/* Add Total column header */}
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
+                  Total
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedYears.map(year => (
-                <tr key={year} className="hover:bg-gray-50">
-                  {/* Year cell */}
-                  <td className="px-4 py-3 text-center font-semibold text-gray-900">
-                    {year}
-                  </td>
-                  {/* Month cells */}
-                  {monthLabels.map((monthLabel) => {
-                    const monthData = groupedByYear[year][monthLabel];
-                    const cellKey = `${year}-${monthLabel}`;
-                    return monthData
-                      ? renderPnLCell(monthData.pnl.toFixed(2), cellKey)
-                      : (
-                        <td
-                          key={cellKey}
-                          className="px-4 py-3 text-center text-gray-900"
-                        >
-                          -
-                        </td>
-                      );
-                  })}
-                </tr>
-              ))}
+              {sortedYears.map(year => {
+                // Compute total for the year by summing available monthly pnl values.
+                const total = monthLabels.reduce((sum, monthLabel) => {
+                  const monthData = groupedByYear[year][monthLabel];
+                  return monthData ? sum + monthData.pnl : sum;
+                }, 0);
+
+                return (
+                  <tr key={year} className="hover:bg-gray-50">
+                    {/* Year cell */}
+                    <td className="px-4 py-3 text-center font-semibold text-gray-900">
+                      {year}
+                    </td>
+                    {/* Month cells */}
+                    {monthLabels.map((monthLabel) => {
+                      const monthData = groupedByYear[year][monthLabel];
+                      const cellKey = `${year}-${monthLabel}`;
+                      return monthData
+                        ? renderPnLCell(monthData.pnl.toFixed(2), cellKey)
+                        : (
+                          <td
+                            key={cellKey}
+                            className="px-4 py-3 text-center text-gray-900"
+                          >
+                            -
+                          </td>
+                        );
+                    })}
+                    {/* Total cell */}
+                    {renderPnLCell(total.toFixed(2), `${year}-total`)}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
