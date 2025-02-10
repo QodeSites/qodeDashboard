@@ -3,17 +3,21 @@ import { Spinner } from "@material-tailwind/react";
 import Text from "./common/Text";
 import Heading from "./common/Heading";
 
+// TrailingReturns Component (Updated styling and layout)
 const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
   if (isLoading)
     return (
-      <div className="text-start flex justify-center items-center">
+      <div className="flex justify-center items-center p-4">
         <Spinner className="text-gray-700 dark:text-gray-300" />
       </div>
     );
-  if (error) return <div>Error: {error}</div>;
+  if (error)
+    return (
+      <div className="text-red-500 text-xs p-2">Error: {error}</div>
+    );
   if (!data || !data.dailyNAV || !benchmarkData) return null;
 
-  // Extract NAV values
+  // Parse NAV values
   const navValues = data.dailyNAV.map((entry) => parseFloat(entry.nav));
   const benchmarkValues = Array.isArray(benchmarkData)
     ? benchmarkData.map((entry) => parseFloat(entry.nav))
@@ -21,25 +25,20 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
     ? [parseFloat(benchmarkData.nav)]
     : [];
 
-  // Helper function to calculate trailing returns
+  // Calculate trailing return given a period (in days)
   const calculateTrailingReturn = (values, periodInDays) => {
-    if (values.length < periodInDays) return null;
-
+    // Make sure there are enough data points.
+    if (values.length < periodInDays + 1) return null;
     const recentNav = values[values.length - 1];
     const pastNav = values[values.length - 1 - periodInDays];
-
     if (!recentNav || !pastNav) return null;
-
     return ((recentNav - pastNav) / pastNav) * 100;
   };
 
-  // Calculate Maximum Drawdown and Current Drawdown
+  // Calculate maximum and current drawdown
   const calculateDrawdowns = (values) => {
     let maxDrawdown = 0;
     let peak = values[0];
-    let currentPeak = values[0];
-
-    // Find the highest peak up to current point and calculate MDD
     for (const value of values) {
       if (value > peak) {
         peak = value;
@@ -47,38 +46,28 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
       const drawdown = ((peak - value) / peak) * 100;
       maxDrawdown = Math.max(maxDrawdown, drawdown);
     }
-
-    // Calculate current drawdown from the most recent peak
-    for (let i = values.length - 1; i >= 0; i--) {
+    // For current drawdown, we determine the peak reached up to now.
+    let currentPeak = values[0];
+    for (let i = 0; i < values.length; i++) {
       if (values[i] > currentPeak) {
         currentPeak = values[i];
       }
     }
     const currentValue = values[values.length - 1];
     const currentDrawdown = ((currentPeak - currentValue) / currentPeak) * 100;
-
-    return {
-      maxDrawdown,
-      currentDrawdown,
-    };
+    return { maxDrawdown, currentDrawdown };
   };
 
-  // Calculate drawdowns for both portfolio and benchmark
   const portfolioDrawdowns = calculateDrawdowns(navValues);
   const benchmarkDrawdowns = calculateDrawdowns(benchmarkValues);
 
-  // Define base periods in days
+  // Define the periods for which we calculate trailing returns.
+  // (You can adjust these as needed; the first two are fixed periods, plus an “Inception” period.)
   const basePeriods = [
     { key: "d10", label: "10D", days: 10 },
     { key: "m1", label: "1M", days: 30 },
-    // { key: "m3", label: "3M", days: 90 },
-    // { key: "m6", label: "6M", days: 180 },
-    // { key: "y1", label: "1Y", days: 365 },
-    // { key: "y2", label: "2Y", days: 730 },
-    // { key: "y5", label: "5Y", days: 1825 },
   ];
 
-  // Add since inception period for portfolio and benchmark separately
   const portfolioPeriods = [
     ...basePeriods,
     { key: "since_inception", label: "Inception", days: navValues.length - 1 },
@@ -91,256 +80,177 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
       ]
     : basePeriods;
 
-  // Format trailing return value for display
-  const formatValue = (value) => {
-    if (value === null || value === undefined || isNaN(value)) return "-";
-    return `${value.toFixed(1)}%`;
-  };
-
-  // Format drawdown value to always include a negative symbol
-  const formatDrawdown = (value) => {
-    if (value === null || value === undefined || isNaN(value)) return "-";
-    return `-${value.toFixed(1)}%`;
-  };
-
-  // Calculate trailing returns for portfolio and benchmark
+  // Compute trailing returns for portfolio and benchmark
   const portfolioReturns = portfolioPeriods.map((period) => ({
-    ...period,
+    key: period.key,
+    label: period.label,
     value: calculateTrailingReturn(navValues, period.days),
   }));
 
   const benchmarkReturns = benchmarkPeriods.map((period) => ({
-    ...period,
+    key: period.key,
+    label: period.label,
     value: calculateTrailingReturn(benchmarkValues, period.days),
   }));
 
-  // Use portfolioPeriods for display since it will always have all periods
-  const displayPeriods = portfolioPeriods;
-
-  // Calculate total number of columns for the horizontal table.
-  // There is one "Strategy" column, one for each period, plus two for "MDD" and "Current Drawdown".
-  const totalColumns = displayPeriods.length + 3;
-  const colWidth = `${100 / totalColumns}%`;
-
-  // Horizontal Table (Desktop/Tablet)
-  const HorizontalTable = () => (
-    <div className="overflow-x-auto">
-      <div className="relative rounded-lg border border-brown overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
-        <table className="w-full table-fixed text-center border-collapse">
-          <thead>
-            <tr className="border border-brown dark:border-gray-700 bg-lightBeige dark:bg-gray-900">
-              <th
-                style={{ width: colWidth }}
-                className="sticky -left-18 p-1 font-body text-sm text-gray-900 dark:text-gray-100 bg-lightBeige dark:bg-black"
-              >
-                <div className="absolute inset-y-0 right-0 w-[1px] bg-lightBeige " />
-                Strategy
-              </th>
-              {displayPeriods.map(({ label }) => (
-                <th
-                  key={label}
-                  style={{ width: colWidth }}
-                  className="p-1 font-body text-sm text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-                >
-                  {label}
-                </th>
-              ))}
-              <th
-                style={{ width: colWidth }}
-                className="p-1 text-center font-body text-sm text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-              >
-                MDD
-              </th>
-              <th
-                style={{ width: colWidth }}
-                className="p-1 text-center font-body text-sm text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-              >
-                Current Drawdown
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border border-brown dark:border-gray-700 text-xs text-center">
-              <td
-                style={{ width: colWidth }}
-                className="sticky -left-18 p-1 bg-white dark:bg-black"
-              >
-                <div className="absolute inset-y-0 right-0 w-[1px] bg-gray-200 dark:bg-gray-700" />
-                Portfolio
-              </td>
-              {portfolioReturns.map(({ key, value }) => (
-                <td
-                  key={key}
-                  style={{ width: colWidth }}
-                  className="p-1 text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-                >
-                  {formatValue(value)}
-                </td>
-              ))}
-              <td
-                style={{ width: colWidth }}
-                className="p-1 text-center text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-              >
-                {formatDrawdown(portfolioDrawdowns.maxDrawdown)}
-              </td>
-              <td
-                style={{ width: colWidth }}
-                className="p-1 text-center text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-              >
-                {formatDrawdown(portfolioDrawdowns.currentDrawdown)}
-              </td>
-            </tr>
-            {benchmarkData && (
-              <tr className="border border-brown dark:border-gray-700 text-xs text-center">
-                <td
-                  style={{ width: colWidth }}
-                  className="sticky -left-18 p-1 bg-white dark:bg-black"
-                >
-                  <div className="absolute inset-y-0 right-0 w-[1px] bg-gray-200 dark:bg-gray-700" />
-                  {benchmarkData[0]?.indices || "Benchmark"}
-                </td>
-                {displayPeriods.map((period) => {
-                  const benchmarkReturn = benchmarkReturns.find((r) => r.key === period.key);
-                  return (
-                    <td
-                      key={period.key}
-                      style={{ width: colWidth }}
-                      className="p-1 text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-                    >
-                      {formatValue(benchmarkReturn?.value)}
-                    </td>
-                  );
-                })}
-                <td
-                  style={{ width: colWidth }}
-                  className="p-1 text-center text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-                >
-                  {formatDrawdown(benchmarkDrawdowns.maxDrawdown)}
-                </td>
-                <td
-                  style={{ width: colWidth }}
-                  className="p-1 text-center text-gray-900 dark:text-gray-100 border-l border-brown dark:border-gray-700"
-                >
-                  {formatDrawdown(benchmarkDrawdowns.currentDrawdown)}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+  return (
+    <div className="p-4 bg-white mb-6 rounded-lg shadow">
+      {/* Header with title and (optionally) a download button */}
+      <div className="flex justify-between items-start">
+        <div className="flex items-center">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
+            Trailing Returns &amp; Drawdown
+          </h3>
+        </div>
+        <div
+          data-cmid="portfolios:button|download_trailing_return"
+          data-reach-tooltip-trigger=""
+        >
+          {/* You can add your download button markup here if needed */}
+        </div>
       </div>
-    </div>
-  );
 
-  // Mobile Table (Vertical)
-  const MobileTable = () => (
-    <div className="overflow-x-auto">
-      <table className="w-full table-fixed border-collapse border border-brown dark:border-gray-700 bg-beige dark:bg-gray-900">
-        <tbody className="bg-white dark:bg-black">
-          {/* Portfolio section */}
-          <tr className="border-b border-brown dark:border-brown bg-lightBeige">
-            <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
-              Strategy
-            </td>
-            <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
-              Portfolio
-            </td>
-          </tr>
-          {portfolioReturns.map(({ key, label, value }) => (
-            <tr key={key} className="border-b border-brown dark:border-gray-700">
-              <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
-                {label}
-              </td>
-              <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
-                {formatValue(value)}
-              </td>
-            </tr>
-          ))}
-          <tr className="border-b border-brown dark:border-gray-700">
-            <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
-              MDD
-            </td>
-            <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
-              {formatDrawdown(portfolioDrawdowns.maxDrawdown)}
-            </td>
-          </tr>
-          <tr className="border-b border-brown dark:border-gray-700">
-            <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
-              Current Drawdown
-            </td>
-            <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
-              {formatDrawdown(portfolioDrawdowns.currentDrawdown)}
-            </td>
-          </tr>
-
-          {/* Benchmark section */}
-          {benchmarkData && (
-            <>
-              <tr className="border-b border-brown dark:border-brown bg-lightBeige">
-                <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
-                  Strategy
-                </td>
-                <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
-                  {benchmarkData[0]?.indices || "Benchmark"}
-                </td>
-              </tr>
-              {displayPeriods.map((period) => {
-                const benchmarkReturn = benchmarkReturns.find((r) => r.key === period.key);
-                return (
-                  <tr key={period.key} className="border-b border-brown dark:border-gray-700">
-                    <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
-                      {period.label}
+      {/* Table container */}
+      <div className="flex flex-col mt-4">
+        <div className="overflow-x-auto">
+          <div className="align-middle inline-block min-w-full">
+            <div className="overflow-hidden rounded-lg">
+              <table
+                role="table"
+                className="min-w-full divide-y divide-gray-200 tabular-nums"
+              >
+                <thead>
+                  <tr role="row">
+                    <th
+                      colSpan="1"
+                      role="columnheader"
+                      title="Toggle SortBy"
+                      className="text-left px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ cursor: "pointer" }}
+                    >
+                      Name
+                    </th>
+                    {portfolioPeriods.map((period) => (
+                      <th
+                        key={period.key}
+                        colSpan="1"
+                        role="columnheader"
+                        title="Toggle SortBy"
+                        className="text-center px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                        style={{ cursor: "pointer" }}
+                      >
+                        {period.label}
+                      </th>
+                    ))}
+                    <th
+                      colSpan="1"
+                      role="columnheader"
+                      title="Toggle SortBy"
+                      className="text-center px-1 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider border-l-2 border-gray-300"
+                      style={{ cursor: "pointer" }}
+                    >
+                      Current DD
+                    </th>
+                    <th
+                      colSpan="1"
+                      role="columnheader"
+                      title="Toggle SortBy"
+                      className="text-center px-1 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ cursor: "pointer" }}
+                    >
+                      Max DD
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  role="rowgroup"
+                  className="bg-white divide-y divide-gray-200"
+                >
+                  {/* Portfolio (Scheme) Row */}
+                  <tr role="row">
+                    <td
+                      role="cell"
+                      className="text-left px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900 capitalize"
+                    >
+                      Scheme (%)
                     </td>
-                    <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
-                      {formatValue(benchmarkReturn?.value)}
+                    {portfolioReturns.map((period) => (
+                      <td
+                        key={period.key}
+                        role="cell"
+                        className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                      >
+                        {period.value !== null
+                          ? period.value.toFixed(2)
+                          : "N/A"}
+                      </td>
+                    ))}
+                    <td
+                      role="cell"
+                      className="text-center px-4 py-2 whitespace-nowrap text-sm border-l-2 border-gray-300 leading-5 text-gray-900"
+                    >
+                      {portfolioDrawdowns.currentDrawdown !== null
+                        ? portfolioDrawdowns.currentDrawdown.toFixed(2)
+                        : "N/A"}
+                    </td>
+                    <td
+                      role="cell"
+                      className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                    >
+                      {portfolioDrawdowns.maxDrawdown !== null
+                        ? portfolioDrawdowns.maxDrawdown.toFixed(2)
+                        : "N/A"}
                     </td>
                   </tr>
-                );
-              })}
-              <tr className="border-b border-brown dark:border-gray-700">
-                <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
-                  MDD
-                </td>
-                <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
-                  {formatDrawdown(benchmarkDrawdowns.maxDrawdown)}
-                </td>
-              </tr>
-              <tr className="border-b border-brown dark:border-gray-700">
-                <td className="p-1 text-xs border-r border-brown text-black dark:text-gray-400 w-1/2">
-                  Current Drawdown
-                </td>
-                <td className="p-1 text-sm font-medium text-gray-900 dark:text-gray-100 w-1/2">
-                  {formatDrawdown(benchmarkDrawdowns.currentDrawdown)}
-                </td>
-              </tr>
-            </>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  return (
-    <div>
-      <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-brown mb-4">
-        Returns
-      </Heading>
-
-      {/* Desktop/Tablet: Horizontal table */}
-      <div className="hidden sm:block">
-        <HorizontalTable />
+                  {/* Benchmark Row */}
+                  <tr role="row">
+                    <td
+                      role="cell"
+                      className="text-left px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900 capitalize"
+                    >
+                      Benchmark (%)
+                    </td>
+                    {benchmarkReturns.map((period) => (
+                      <td
+                        key={period.key}
+                        role="cell"
+                        className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                      >
+                        {benchmarkData && period.value !== null
+                          ? period.value.toFixed(2)
+                          : "N/A"}
+                      </td>
+                    ))}
+                    <td
+                      role="cell"
+                      className="text-center px-1 py-2 whitespace-nowrap text-sm border-l-2 border-gray-300 leading-5 text-gray-900"
+                    >
+                      {benchmarkData && benchmarkDrawdowns.currentDrawdown !== null
+                        ? benchmarkDrawdowns.currentDrawdown.toFixed(2)
+                        : "N/A"}
+                    </td>
+                    <td
+                      role="cell"
+                      className="text-center px-1 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                    >
+                      {benchmarkData && benchmarkDrawdowns.maxDrawdown !== null
+                        ? benchmarkDrawdowns.maxDrawdown.toFixed(2)
+                        : "N/A"}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Mobile: "proper" table layout */}
-      <div className="block sm:hidden">
-        <MobileTable />
-      </div>
-
-      <Text className="text-gray-700 dark:text-gray-300 text-sm font-body mt-2">
-        MDD (Maximum Drawdown) refers to the maximum loss an investment can incur from its highest point.
-        Current Drawdown: {formatDrawdown(portfolioDrawdowns.currentDrawdown)}
-      </Text>
+      <p className="text-xs my-1 font-light text-gray-500">
+        Note: Returns above 1 year are annualised.
+      </p>
     </div>
   );
 };
+
+
 
 export default TrailingReturns;

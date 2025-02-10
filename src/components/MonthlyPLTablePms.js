@@ -105,63 +105,71 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        {/* Table Header */}
-        <div className="p-1 bg-lightBeige dark:bg-gray-700 border border-brown dark:border-gray-600">
-          <h3 className="text-xs sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Monthly PnL Table (%)
-          </h3>
-        </div>
+    <div className="bg-white p-5 rounded-lg my-6 shadow overflow-hidden">
+      {/* Table Header */}
+      <h3 className="text-lg leading-6 mb-4 font-medium text-gray-900">
+        Monthly PnL Table (%)
+      </h3>
 
-        {/* Table Container */}
-        <div className="overflow-x-auto border text-xs sm:text-lg border-t-none border-brown rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-lightBeige dark:bg-gray-700">
-              <tr>
-                <th className="p-1 text-center text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Year
+
+      {/* Table Container */}
+      <div className="overflow-x-auto border text-xs sm:text-lg border-t-0 border-gray-200 rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th
+                colSpan="1"
+                role="columnheader"
+                title="Toggle SortBy"
+                className="text-center px-4 py-2 bg-gray-50 text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                style={{ cursor: "pointer" }}
+              >
+                Year
+              </th>
+              {monthNames.map((monthName, index) => (
+                <th
+                  colSpan="1"
+                  key={monthLabels[index]}
+                  role="columnheader"
+                  title="Toggle SortBy"
+                  className=" px-4 py-2 bg-gray-50 text-center text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                  style={{ cursor: "pointer" }}
+                >
+                  {monthName}
                 </th>
-                {monthNames.map((monthName, index) => (
-                  <th
-                    key={monthLabels[index]}
-                    className="p-1 text-center text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100"
-                  >
-                    {monthName}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 text-xs sm:text-sm divide-y divide-gray-200 dark:divide-gray-700">
-              {sortedYears.map((year) => (
-                <tr key={year} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  {/* Year cell */}
-                  <td className="p-1 text-center font-semibold text-gray-900 dark:text-gray-100">
-                    {year}
-                  </td>
-                  {/* Month cells */}
-                  {monthLabels.map((monthLabel) => {
-                    const monthData = groupedByYear[year][monthLabel];
-                    const cellKey = `${year}-${monthLabel}`;
-                    return monthData
-                      ? renderPnLCell(monthData.pnl.toFixed(2), cellKey)
-                      : (
-                        <td
-                          key={cellKey}
-                          className="p-1 text-center text-gray-900 dark:text-gray-100"
-                        >
-                          -
-                        </td>
-                      );
-                  })}
-                </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </tr>
+          </thead>
+          <tbody className="bg-white text-xs sm:text-sm divide-y divide-gray-200">
+            {sortedYears.map((year) => (
+              <tr key={year} className="hover:bg-gray-50 border-none">
+                {/* Year cell */}
+                <td className="p-2  text-center font-semibold text-gray-900">
+                  {year}
+                </td>
+                {/* Month cells */}
+                {monthLabels.map((monthLabel) => {
+                  const monthData = groupedByYear[year][monthLabel];
+                  const cellKey = `${year}-${monthLabel}`;
+                  return monthData ? (
+                    renderPnLCell(monthData.pnl.toFixed(2), cellKey)
+                  ) : (
+                    <td
+                      key={cellKey}
+                      className="p-2 text-center text-gray-900"
+                    >
+                      -
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
+
 };
 
 YearlyMonthlyPLTable.propTypes = {

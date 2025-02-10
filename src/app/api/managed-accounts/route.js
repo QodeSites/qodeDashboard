@@ -127,7 +127,6 @@ function calculateReturns(navData) {
     const lastDate = new Date(navData[navData.length - 1].date);
     const daysDiff = (lastDate - firstDate) / (1000 * 60 * 60 * 24);
   
-    console.log("Days Difference:", daysDiff);
   
     const firstNav = navData[0].nav;
     const lastNav = navData[navData.length - 1].nav;
@@ -135,7 +134,6 @@ function calculateReturns(navData) {
   
     if (daysDiff <= 365) {
       const absoluteReturn = totalReturn * 100;
-      console.log("Absolute Return:", absoluteReturn);
       return absoluteReturn;
     } else {
       // Annualize the return (CAGR)
@@ -145,38 +143,49 @@ function calculateReturns(navData) {
     }
   }
   
-
-function calculateTrailingReturns(navData, periods = {
-"5d": 5,
-"10d": 10,
-"15d": 15,
-"1m": 30,
-"1y": 365,
-"2y": 730,
-"3y": 1095,
+  function calculateTrailingReturns(navData, periods = {
+    "5d": 5,     // Index 5 to get Jan 30
+    "10d": 10,   // Index 10 to get Jan 23
+    "15d": 15,   // Index 15 to get Jan 16
+    "1m": 30,    // Approximately 21 business days in a month
+    "1y": 365,   // Approximately 252 business days in a year
+    "2y": 730,   // 2 * 252
+    "3y": 756    // 3 * 252
 }) {
-if (!navData || navData.length === 0) return {};
+    if (!navData || navData.length === 0) return {};
 
-const lastNav = navData[navData.length - 1].nav;
-const lastDate = new Date(navData[navData.length - 1].date);
-const returns = {};
-
-Object.entries(periods).forEach(([period, days]) => {
-    const targetDate = new Date(lastDate);
-    targetDate.setDate(targetDate.getDate() - days);
-
-    const historicalEntry = [...navData].reverse().find(entry => 
-    new Date(entry.date) <= targetDate
+    // Sort data by date in descending order
+    const sortedData = [...navData].sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-    
-    if (historicalEntry) {
-    returns[period] = ((lastNav - historicalEntry.nav) / historicalEntry.nav) * 100;
-    } else {
-    returns[period] = null;
-    }
-});
 
-return returns;
+    const lastNav = sortedData[0].nav;
+    const returns = {};
+
+    Object.entries(periods).forEach(([period, targetCount]) => {
+        // Find the entry at the target position
+        if (sortedData.length > targetCount) {
+            const historicalEntry = sortedData[targetCount];
+            
+            if (historicalEntry) {
+                returns[period] = ((lastNav - historicalEntry.nav) / historicalEntry.nav) * 100;
+                
+                // For debugging
+                console.log(`${period}:`, {
+                    targetCount,
+                    date: new Date(historicalEntry.date),
+                    nav: historicalEntry.nav,
+                    return: returns[period]
+                });
+            } else {
+                returns[period] = null;
+            }
+        } else {
+            returns[period] = null;
+        }
+    });
+
+    return returns;
 }
 
 function calculateMonthlyPnL(navData) {

@@ -48,51 +48,84 @@ function MonthlyPLTable({ portfolios }) {
   };
 
   return (
-    <Container>
-      <Card className="shadow-sm mb-4">
-        <Card.Header className="bg-light">
-          <h5 className="mb-0">Monthly PnL Table (%)</h5>
-        </Card.Header>
-        
-        {portfolios.map((portfolio, index) => (
-          <Card.Body key={index} className="p-3">
-            <Card.Title className="text-center mb-3">
-              {portfolio.portfolio_name || `Portfolio ${index + 1}`}
-            </Card.Title>
-            
-            <div className="table-responsive">
-              <Table bordered hover className="mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th className="text-center">Year</th>
-                    {monthsShort.map((month) => (
-                      <th key={month} className="text-center">
-                        {month}
-                      </th>
-                    ))}
-                    <th className="text-center">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {portfolio?.result?.monthly_pl_table?.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      <td className="table-light text-center fw-semibold">
-                        {row.Year}
-                      </td>
-                      {monthsFull.map((month) => renderCell(row[month]))}
-                      {renderCell(row.Total)}
-                    </tr>
+    <div className="bg-white p-4 rounded-lg shadow my-6">
+      <h3 className="text-lg leading-6 font-medium text-gray-900">
+        Monthly PnL Table (%)
+      </h3>
+      <div className="w-full mt-4">
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse divide-y">
+              <thead className="bg-lightBeige">
+                <tr className="bg-gray-100 text-sm">
+                  <th
+                    colSpan="1"
+                    role="columnheader"
+                    title="Toggle SortBy"
+                    className="text-left px-4 py-2 bg-gray-50 text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Year
+                  </th>
+                  {monthNames.map((monthName, index) => (
+                    <th
+                      key={monthLabels[index]}
+                      colSpan="1"
+                      role="columnheader"
+                      title="Toggle SortBy"
+                      className="text-left px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ cursor: "pointer" }}
+                    >
+                      {monthName}
+                    </th>
                   ))}
-                </tbody>
-              </Table>
-            </div>
-            
-            {index < portfolios.length - 1 && <hr className="my-4" />}
-          </Card.Body>
-        ))}
-      </Card>
-    </Container>
+                  <th
+                    className="text-left px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y">
+                {sortedYears.map((year) => {
+                  // Calculate the compounded return for the year.
+                  const compoundedReturn = monthLabels.reduce((product, monthLabel) => {
+                    const monthData = groupedByYear[year][monthLabel];
+                    const monthlyReturn = monthData ? monthData.pnl : 0;
+                    return product * (1 + monthlyReturn / 100);
+                  }, 1);
+                  const totalReturnPercentage = (compoundedReturn - 1) * 100;
+  
+                  return (
+                    <tr key={year} className="hover:bg-gray-50 text-sm border-none">
+                      {/* Year cell */}
+                      <td className="px-4 py-3 text-center">{year}</td>
+                      {/* Month cells */}
+                      {monthLabels.map((monthLabel) => {
+                        const monthData = groupedByYear[year][monthLabel];
+                        const cellKey = `${year}-${monthLabel}`;
+                        return monthData ? (
+                          renderPnLCell(monthData.pnl.toFixed(2), cellKey)
+                        ) : (
+                          <td key={cellKey} className="px-4 py-3 text-center">
+                            -
+                          </td>
+                        );
+                      })}
+                      {/* Total cell */}
+                      {renderPnLCell(totalReturnPercentage.toFixed(2), `${year}-total`)}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   );
+  
 }
 
 export default MonthlyPLTable;

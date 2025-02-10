@@ -23,19 +23,19 @@ const PortfolioDetails = ({ data, isCumulative = false }) => {
 
   const kpis = [
     {
-      icon: <Wallet className="w-1 h-1" />,
+      icon: <Wallet className="w-4 h-4" />,
       title: isCumulative ? "Total Investment" : "Initial Investment",
       value: formatNumber(data.initial_investment),
       className: "col-span-1"
     },
     {
-      icon: <PieChart className="w-1 h-1" />,
+      icon: <PieChart className="w-4 h-4" />,
       title: isCumulative ? "Total Portfolio Value" : "Portfolio Value",
       value: formatNumber(data.portfolio_value),
       className: "col-span-1"
     },
     {
-      icon: <TrendingUp className="w-1 h-1" />,
+      icon: <TrendingUp className="w-4 h-4" />,
       title: "Profit/Loss",
       value: formatNumber(profit, true),
       subtext: `${profit >= 0 ? '+' : '-'}${Math.abs(profitPercentage).toFixed(2)}%`,
@@ -43,7 +43,7 @@ const PortfolioDetails = ({ data, isCumulative = false }) => {
       valueColor: profit >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
     },
     {
-      icon: <ArrowUpDown className="w-1 h-1" />,
+      icon: <ArrowUpDown className="w-4 h-4" />,
       title: "Cash Balance",
       value: formatNumber(data.cash),
       subtext: `${cashPercentage.toFixed(2)}%`,
@@ -53,7 +53,7 @@ const PortfolioDetails = ({ data, isCumulative = false }) => {
 
   return (
     <div className="w-full mb-4">
-      <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-brown mb-18">
+      <Heading className="text-xl italic font-semibold text-gray-900 mb-4">
         Summary
       </Heading>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -62,25 +62,23 @@ const PortfolioDetails = ({ data, isCumulative = false }) => {
             key={index}
             className={`
               ${kpi.className}
-              p-18 
-              bg-gray-50 rounded-lg dark:bg-gray-800
-              border border-gray-200 dark:border-brown
+              p-6 
+              bg-gray-50 rounded-lg
+              border border-gray-200
               transition-colors duration-200
             `}
           >
             <div className="flex items-center mb-2">
-              <span className="text-gray-600 dark:text-gray-300">
-                {kpi.icon}
-              </span>
-              <Text className="ml-2 text-sm text-gray-600 dark:text-gray-300">
-                {kpi.title}
-              </Text>
+              <span className="text-gray-600">{kpi.icon}</span>
+              <Text className="ml-2 text-sm text-gray-600">{kpi.title}</Text>
             </div>
             <div className="mt-2">
-              <Text className={`text-lg font-semibold ${kpi.valueColor || 'text-gray-900 dark:text-white'}`}>
+              <Text className={`text-lg font-semibold ${kpi.valueColor || 'text-gray-900'}`}>
                 {kpi.value}
                 {kpi.subtext && (
-                  <span className="text-gray-400 text-xs font-normal ml-1">{kpi.subtext}</span>
+                  <span className="text-gray-400 text-xs font-normal ml-1">
+                    {kpi.subtext}
+                  </span>
                 )}
               </Text>
             </div>
@@ -89,6 +87,7 @@ const PortfolioDetails = ({ data, isCumulative = false }) => {
       </div>
     </div>
   );
+  
 };
 
 export default PortfolioDetails;

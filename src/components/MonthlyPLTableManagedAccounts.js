@@ -33,9 +33,9 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
 
     let cellClass = "px-4 py-3 text-center";
     if (numValue > 0) {
-      cellClass += " bg-green-100 font-semibold";
+      cellClass += " bg-green-100 ";
     } else if (numValue < 0) {
-      cellClass += " bg-red-100 font-semibold";
+      cellClass += " bg-red-100 ";
     }
 
     return (
@@ -46,77 +46,95 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
   };
 
   return (
-    <div className="w-full mt-4">
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        {/* Table Header */}
-        <div className="px-4 py-3 bg-gray-100 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Monthly PnL Table (%)
-          </h3>
-        </div>
 
-        {/* Table Container */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
-                  Year
-                </th>
-                {monthNames.map((monthName, index) => (
+    <div className="bg-white  p-4 rounded-lg shadow mb-6">
+      <h3 className="text-lg leading-6 font-medium text-gray-900">
+        Monthly PnL Table (%)
+      </h3>
+      <div className="w-full mt-4">
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          {/* Table Header */}
+
+          {/* Table Container */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse divide-y  ">
+              <thead className="bg-lightBeige">
+                <tr className='bg-gray-100 text-sm'>
                   <th
-                    key={monthLabels[index]}
-                    className="px-4 py-3 text-center text-sm font-semibold text-gray-900"
+                    colSpan="1"
+                    role="columnheader"
+                    title="Toggle SortBy"
+                    className="text-center px-4 py-2 bg-gray-50 text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                    style={{ cursor: "pointer" }}
                   >
-                    {monthName}
+                    Year
                   </th>
-                ))}
-                {/* Add Total column header */}
-                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sortedYears.map(year => {
-                // Compute total for the year by summing available monthly pnl values.
-                const total = monthLabels.reduce((sum, monthLabel) => {
-                  const monthData = groupedByYear[year][monthLabel];
-                  return monthData ? sum + monthData.pnl : sum;
-                }, 0);
+                  {monthNames.map((monthName, index) => (
+                    <th
+                      colSpan="1"
+                      key={monthLabels[index]}
+                      role="columnheader"
+                      title="Toggle SortBy"
+                      className="text-center px-4 py-2 bg-gray-50  text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ cursor: "pointer" }}
+                    >
+                      {monthName}
+                    </th>
+                  ))}
+                  {/* Total column header */}
+                  <th
+                    className="text-center px-4 py-2 bg-gray-50  text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y ">
+                {sortedYears.map((year) => {
+                  // Compute compounded (percentage) return for the year.
+                  // For missing months, assume 0% (multiplier of 1).
+                  const compoundedReturn = monthLabels.reduce((product, monthLabel) => {
+                    const monthData = groupedByYear[year][monthLabel];
+                    const monthlyReturn = monthData ? monthData.pnl : 0;
+                    return product * (1 + monthlyReturn / 100);
+                  }, 1);
+                  const totalReturnPercentage = (compoundedReturn - 1) * 100;
 
-                return (
-                  <tr key={year} className="hover:bg-gray-50">
-                    {/* Year cell */}
-                    <td className="px-4 py-3 text-center font-semibold text-gray-900">
-                      {year}
-                    </td>
-                    {/* Month cells */}
-                    {monthLabels.map((monthLabel) => {
-                      const monthData = groupedByYear[year][monthLabel];
-                      const cellKey = `${year}-${monthLabel}`;
-                      return monthData
-                        ? renderPnLCell(monthData.pnl.toFixed(2), cellKey)
-                        : (
+                  return (
+                    <tr key={year} className="hover:bg-gray-50 text-sm border-none">
+                      {/* Year cell */}
+                      <td className="px-4 py-3 text-center  ">
+                        {year}
+                      </td>
+                      {/* Month cells */}
+                      {monthLabels.map((monthLabel) => {
+                        const monthData = groupedByYear[year][monthLabel];
+                        const cellKey = `${year}-${monthLabel}`;
+                        return monthData ? (
+                          renderPnLCell(monthData.pnl.toFixed(2), cellKey)
+                        ) : (
                           <td
                             key={cellKey}
-                            className="px-4 py-3 text-center text-gray-900"
+                            className="px-4 py-3 text-center "
                           >
                             -
                           </td>
                         );
-                    })}
-                    {/* Total cell */}
-                    {renderPnLCell(total.toFixed(2), `${year}-total`)}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      })}
+                      {/* Total cell: compounded percentage change */}
+                      {renderPnLCell(totalReturnPercentage.toFixed(2), `${year}-total`)}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   );
+
 };
 
 YearlyMonthlyPLTable.propTypes = {

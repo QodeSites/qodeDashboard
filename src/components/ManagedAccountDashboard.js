@@ -96,85 +96,181 @@ const TrailingReturns = ({
   // We assume the trailing returns object keys are the same for both scheme and benchmark.
   const periods = Object.keys(trailingReturns);
   return (
-    <div className="my-6 bg-white p-4 rounded-lg shadow">
-      <h2 className="text-xs sm:text-xl font-bold mb-4">
-        Trailing Returns &amp; Drawdown
-      </h2>
-      <div className="overflow-x-auto border text-xs sm:text-sm border-brown rounded-lg">
-        <table className="min-w-full table-fixed border-collapse">
-          <thead>
-            <tr className="bg-lightBeige">
-              <th className="w-1/10 p-4 text-left border border-brown font-semibold">
-                Return Type
-              </th>
-              {periods.map((period) => (
-                <th
-                  key={period}
-                  className="w-1/10 border p-4 border-brown text-center font-semibold"
-                >
-                  {period}
-                </th>
-              ))}
-              <th className="w-1/12 border p-4 border-brown text-center font-semibold">
-                Current DD
-              </th>
-              <th className="w-1/12 border p-4 border-brown text-center font-semibold">
-                Max DD
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Row for Scheme trailing returns */}
-            <tr>
-              <td className="border p-4 border-brown font-medium">
-                Scheme (%)
-              </td>
-              {periods.map((period) => (
-                <td key={period} className="border p-4 border-brown text-center">
-                  {trailingReturns[period] !== null
-                    ? trailingReturns[period].toFixed(2)
-                    : "N/A"}
-                </td>
-              ))}
-              <td className="border p-4 text-center">
-                {ddStats.portfolio.currentDD !== null
-                  ? ddStats.portfolio.currentDD.toFixed(2)
-                  : "N/A"}
-              </td>
-              <td className="border p-4 text-center">
-                {ddStats.portfolio.maxDD !== null
-                  ? ddStats.portfolio.maxDD.toFixed(2)
-                  : "N/A"}
-              </td>
-            </tr>
-            {/* Row for Benchmark trailing returns */}
-            <tr>
-              <td className="border p-4 border-brown font-medium">
-                Benchmark (%)
-              </td>
-              {periods.map((period) => (
-                <td key={period} className="border p-4 border-brown text-center">
-                  {benchmarkTrailingReturns && benchmarkTrailingReturns[period] != null
-                    ? benchmarkTrailingReturns[period].toFixed(2)
-                    : "N/A"}
-                </td>
-              ))}
-              <td className="border p-4 border-brown text-center">
-                {benchmarkDDStats && benchmarkDDStats.currentDD !== null
-                  ? benchmarkDDStats.currentDD.toFixed(2)
-                  : "N/A"}
-              </td>
-              <td className="border p-4 border-brown text-center">
-                {benchmarkDDStats && benchmarkDDStats.maxDD !== null
-                  ? benchmarkDDStats.maxDD.toFixed(2)
-                  : "N/A"}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div className="p-4 bg-white mb-6 rounded-lg shadow">
+      {/* Header with title and download button */}
+      <div className="flex justify-between items-start">
+        <div className="flex items-center">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
+            Trailing Returns &amp; Drawdown
+          </h3>
+        </div>
+        <div
+          data-cmid="portfolios:button|download_trailing_return"
+          data-reach-tooltip-trigger=""
+        >
+          {/* <a
+            download="focused_tailing_return.csv"
+            target="_self"
+            href="blob:https://app.capitalmind.in/3cad4c5c-bcf3-4326-9de2-75f5698b055f"
+          >
+            <svg
+              stroke="currentColor"
+              fill="none"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mr-3 w-4 text-green-500 inline group-hover:text-green-500 group-focus:text-green-600 transition ease-in-out duration-150"
+              height="1em"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </a> */}
+        </div>
       </div>
+
+      {/* Table container */}
+      <div className="flex flex-col mt-4">
+        <div className="overflow-x-auto">
+          <div className="align-middle inline-block min-w-full">
+            <div className="overflow-hidden rounded-lg">
+              <table
+                role="table"
+                className="min-w-full divide-y divide-gray-200 tabular-nums"
+              >
+                <thead>
+                  <tr role="row">
+                    <th
+                      colSpan="1"
+                      role="columnheader"
+                      title="Toggle SortBy"
+                      className="text-left px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ cursor: "pointer" }}
+                    >
+                      Name
+                    </th>
+                    {periods.map((period) => (
+                      <th
+                        key={period}
+                        colSpan="1"
+                        role="columnheader"
+                        title="Toggle SortBy"
+                        className="text-center px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                        style={{ cursor: "pointer" }}
+                      >
+                        {period}
+                      </th>
+                    ))}
+                    <th
+                      colSpan="1"
+                      role="columnheader"
+                      title="Toggle SortBy"
+                      className="text-center px-1 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider border-l-2 border-gray-300"
+                      style={{ cursor: "pointer" }}
+                    >
+                      Current DD
+                    </th>
+                    <th
+                      colSpan="1"
+                      role="columnheader"
+                      title="Toggle SortBy"
+                      className="text-center px-1 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase  tracking-wider"
+                      style={{ cursor: "pointer" }}
+                    >
+                      Max DD
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  role="rowgroup"
+                  className="bg-white divide-y divide-gray-200"
+                >
+                  <tr role="row">
+                    <td
+                      role="cell"
+                      className="text-left px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900 capitalize"
+                    >
+                      Scheme (%)
+                    </td>
+                    {periods.map((period) => (
+                      <td
+                        key={period}
+                        role="cell"
+                        className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                      >
+                        {trailingReturns[period] !== null
+                          ? trailingReturns[period].toFixed(2)
+                          : "N/A"}
+                      </td>
+                    ))}
+                    <td
+                      role="cell"
+                      className="text-center px-4 py-2 whitespace-nowrap text-sm border-l-2 border-gray-300 leading-5 text-gray-900"
+                    >
+                      {ddStats.portfolio.currentDD !== null
+                        ? ddStats.portfolio.currentDD.toFixed(2)
+                        : "N/A"}
+                    </td>
+                    <td
+                      role="cell"
+                      className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                    >
+                      {ddStats.portfolio.maxDD !== null
+                        ? ddStats.portfolio.maxDD.toFixed(2)
+                        : "N/A"}
+                    </td>
+                  </tr>
+                  <tr role="row">
+                    <td
+                      role="cell"
+                      className="text-left px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900 capitalize"
+                    >
+                      Benchmark (%)
+                    </td>
+                    {periods.map((period) => (
+                      <td
+                        key={period}
+                        role="cell"
+                        className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                      >
+                        {benchmarkTrailingReturns && benchmarkTrailingReturns[period] != null
+                          ? benchmarkTrailingReturns[period].toFixed(2)
+                          : "N/A"}
+                      </td>
+                    ))}
+                    <td
+                      role="cell"
+                      className="text-center px-1 py-2 whitespace-nowrap text-sm border-l-2 border-gray-300 leading-5 text-gray-900"
+                    >
+                      {benchmarkDDStats && benchmarkDDStats.currentDD !== null
+                        ? benchmarkDDStats.currentDD.toFixed(2)
+                        : "N/A"}
+                    </td>
+                    <td
+                      role="cell"
+                      className="text-center px-1 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                    >
+                      {benchmarkDDStats && benchmarkDDStats.maxDD !== null
+                        ? benchmarkDDStats.maxDD.toFixed(2)
+                        : "N/A"}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p className="text-xs my-1 font-light text-gray-500">
+        Note: Returns above 1 year are annualised.
+      </p>
     </div>
   );
+
 };
 
 // ─── MANAGED ACCOUNT DASHBOARD ────────────────────────────────
@@ -314,7 +410,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       benchmark: { currentDD: 0, maxDD: 0 },
     };
   }, [schemeDDStats]);
-  
+
   // ── Helper function to normalize data series ──
   const normalizeDataSeries = (data, startValue) => {
     return data.map(point => [
@@ -356,7 +452,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         marker: { enabled: false }
       });
     }
-  
+
     let benchmarkPerformanceSeries = [];
     if (benchmarkData?.length) {
       const benchmarkDataPoints = benchmarkData.map((item) => [
@@ -371,14 +467,13 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         name: "NIFTY 50",
         data: normalizedBenchmarkData,
         color: "#4169E1", // Royal blue for benchmark.
-        dashStyle: "shortdash",
         zIndex: 1,
         yAxis: 0, // performance axis
         type: "line",
         marker: { enabled: false }
       });
     }
-  
+
     // ── Prepare Drawdown Series Using Actual (Negative) Values ──
     let drawdownSeries = [];
     const portfolioCurve =
@@ -402,7 +497,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         tooltip: { valueSuffix: "%" }
       });
     }
-  
+
     let benchmarkDrawdownSeries = [];
     if (benchmarkData?.length) {
       let maxBenchmark = -Infinity;
@@ -418,7 +513,6 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         name: "NIFTY 50 Drawdown",
         data: benchmarkDrawdownCurve,
         color: "#FF8F00",
-        dashStyle: "shortdash",
         zIndex: 1,
         yAxis: 1, // drawdown axis
         type: "area",
@@ -428,7 +522,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         tooltip: { valueSuffix: "%" }
       });
     }
-  
+
     // Combine all series.
     const mergedSeries = [
       ...performanceSeries,
@@ -436,7 +530,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       ...drawdownSeries,
       ...benchmarkDrawdownSeries
     ];
-  
+
     return {
       chart: {
         zoomType: "xy",
@@ -493,7 +587,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         },
         {
           // Drawdown yAxis (bottom half)
-          title: { text: "FEFREWE" },
+          title: { text: "Drawdown" },
           height: "50%",
           top: "50%",
           offset: 0,
@@ -521,13 +615,23 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         valueDecimals: 2,
         formatter: function () {
           let tooltipText = "<b>" + Highcharts.dateFormat("%Y-%m-%d", this.x) + "</b><br/>";
-          this.points.forEach((point) => {
-            tooltipText += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: ${point.y.toFixed(2)}`;
-            if (point.series.type === "area") {
-              tooltipText += "%";
-            }
-            tooltipText += "<br/>";
+
+          // Group series by type (performance and drawdown)
+          const performancePoints = this.points.filter(point => point.series.yAxis.options.top === "0%");
+          const drawdownPoints = this.points.filter(point => point.series.yAxis.options.top === "50%");
+
+          // Add performance metrics
+          tooltipText += "<br/><span style='font-weight: bold'>Performance:</span><br/>";
+          performancePoints.forEach(point => {
+            tooltipText += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: ${point.y.toFixed(2)}<br/>`;
           });
+
+          // Add drawdown metrics
+          tooltipText += "<br/><span style='font-weight: bold'>Drawdown:</span><br/>";
+          drawdownPoints.forEach(point => {
+            tooltipText += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: ${point.y.toFixed(2)}%<br/>`;
+          });
+
           return tooltipText;
         }
       },
@@ -542,7 +646,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       series: mergedSeries
     };
   }, [activeScheme, totalPortfolio, selectedScheme, benchmarkData]);
-  
+
   // For monthly P&L data
   const monthlyPnLFromNormalizedData =
     activeScheme === "Scheme Total"
@@ -558,6 +662,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     activeScheme === "Scheme Total"
       ? totalPortfolio?.cashFlows || []
       : selectedScheme?.cashFlows || [];
+
   const totalAmount = filteredCashInOutData.reduce(
     (sum, record) => sum + record.amount,
     0
@@ -600,7 +705,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     if (loading) {
       return (
         <div className="flex justify-center items-center h-full">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       );
     }
@@ -611,28 +716,74 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       return <div className="p-4 text-red-500">No data available.</div>;
     }
 
+    // Dummy stocks data for now (including some Indian stocks)
+    const dummyStocks = [
+      { symbol: "AAPL", name: "Apple Inc.", quantity: 10, price: 150, totalValue: 1500 },
+      { symbol: "GOOG", name: "Alphabet Inc.", quantity: 5, price: 2800, totalValue: 14000 },
+      { symbol: "TSLA", name: "Tesla Inc.", quantity: 8, price: 800, totalValue: 6400 },
+      { symbol: "AMZN", name: "Amazon.com Inc.", quantity: 2, price: 3300, totalValue: 6600 },
+      { symbol: "RELIANCE", name: "Reliance Industries", quantity: 50, price: 2500, totalValue: 125000 },
+      { symbol: "TCS", name: "Tata Consultancy Services", quantity: 20, price: 3500, totalValue: 70000 },
+      { symbol: "INFY", name: "Infosys Ltd.", quantity: 30, price: 1500, totalValue: 45000 },
+      { symbol: "HDFCBANK", name: "HDFC Bank", quantity: 15, price: 1600, totalValue: 24000 },
+      { symbol: "NIFTY MIDCAP 100", name: "NIFTY MIDCAP 100", quantity: 15, price: 1600, totalValue: 24000 },
+      { symbol: "NIFTY SMLCAP 250", name: "NIFTY SMLCAP 250", quantity: 15, price: 1600, totalValue: 24000 },
+      { symbol: "GOLDBEES", name: "GOLDBEES", quantity: 15, price: 1600, totalValue: 24000 },
+    ];
+
     return (
       <>
         {isSarlaAccount && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-            <label htmlFor="scheme-select" className="text-xs sm:text-sm font-medium">
-              Select Scheme:
-            </label>
-            <select
-              id="scheme-select"
-              value={activeScheme}
-              onChange={(e) => setActiveScheme(e.target.value)}
-              className="p-2 rounded border border-brown text-gray-700"
-            >
-              <option value="Scheme Total">Scheme Total</option>
-              {schemes.map(({ schemeName }) => (
-                <option key={schemeName} value={schemeName}>
-                  {schemeName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <>
+            {/* Tab-Style Selector for larger screens */}
+            <div className="hidden sm:flex items-center gap-6 mb-6 border-b">
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setActiveScheme("Scheme Total")}
+                  className={`px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-wider focus:outline-none border-b-2 ${activeScheme === "Scheme Total"
+                      ? "border-green-500 text-green-500"
+                      : "border-transparent text-gray-700"
+                    }`}
+                >
+                  Scheme Total
+                </button>
+                {schemes.map(({ schemeName }) => (
+                  <button
+                    key={schemeName}
+                    onClick={() => setActiveScheme(schemeName)}
+                    className={`px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-wider focus:outline-none border-b-2 ${activeScheme === schemeName
+                        ? "border-green-500 text-green-500"
+                        : "border-transparent text-gray-700"
+                      }`}
+                  >
+                    {schemeName}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dropdown Selector for mobile screens */}
+            <div className="flex sm:hidden flex-col gap-2 mb-6">
+              <label htmlFor="scheme-select" className="text-xs sm:text-sm font-medium">
+                Select Scheme:
+              </label>
+              <select
+                id="scheme-select"
+                value={activeScheme}
+                onChange={(e) => setActiveScheme(e.target.value)}
+                className="p-2 rounded border border-brown text-gray-700"
+              >
+                <option value="Scheme Total">Scheme Total</option>
+                {schemes.map(({ schemeName }) => (
+                  <option key={schemeName} value={schemeName}>
+                    {schemeName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
         )}
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div className="p-4 bg-white rounded-lg shadow">
@@ -649,11 +800,15 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
             <h3 className="text-xs sm:text-lg font-medium">Returns</h3>
             <div className="mt-2 flex justify-between items-baseline gap-4">
               <span
-                className={`text-xs sm:text-xl font-semibold ${returnsValue >= 0 ? "text-green-500" : "text-red-500"}`}
+                className={`text-xs sm:text-xl font-semibold ${returnsValue >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
               >
                 {returnsValue.toFixed(2)}%
               </span>
-              <div className={`flex items-end text-sm ${isPositive ? "text-green-600" : "text-red-600"}`}>
+              <div
+                className={`flex items-end text-sm ${isPositive ? "text-green-600" : "text-red-600"
+                  }`}
+              >
                 {isPositive ? (
                   <ArrowUpIcon className="h-1 w-1" />
                 ) : (
@@ -694,26 +849,75 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           benchmarkDDStats={benchmarkDDStats}
         />
 
-
-        {/* Merged Chart: NAV & Drawdown */}
-        <div className="bg-white p-4 rounded-lg shadow mb-6">
-          {(activeScheme === "Scheme Total" && totalPortfolio?.navCurve?.length) ||
-            (activeScheme !== "Scheme Total" && selectedScheme?.navCurve?.length) ? (
-            <HighchartsReact
-              highcharts={Highcharts}
-              options={mergedChartOptions}
-              ref={navChartRef}
-            />
-          ) : (
-            <div className="p-4 text-center text-gray-600">
-              No data available.
+        {/* Merged Chart: NAV & Drawdown with Stocks Table on the right */}
+        <div className="flex sm:flex-row flex-col gap-5">
+          <div className="bg-white w-full sm:w-3/4 p-4 rounded-lg shadow mb-6">
+            {(activeScheme === "Scheme Total" && totalPortfolio?.navCurve?.length) ||
+              (activeScheme !== "Scheme Total" && selectedScheme?.navCurve?.length) ? (
+              <HighchartsReact
+                highcharts={Highcharts}
+                options={mergedChartOptions}
+                ref={navChartRef}
+              />
+            ) : (
+              <div className="p-4 text-center text-gray-600">
+                No data available.
+              </div>
+            )}
+          </div>
+          <div className="bg-white p-4 w-full sm:w-1/4  rounded-lg shadow mb-6">
+            {/* Stocks Held Table */}
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Stocks Holdings</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {/* <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Symbol
+                </th> */}
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Qty
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {dummyStocks.map((stock) => (
+                    <tr key={stock.symbol}>
+                      {/* <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                    {stock.symbol}
+                  </td> */}
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                        {stock.name}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {stock.quantity}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {formatCurrency(stock.price)}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {formatCurrency(stock.totalValue)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
         </div>
 
         <YearlyMonthlyPLTable monthlyPnL={monthlyPnLFromNormalizedData} />
 
-        <div className="my-6 border rounded-lg">
+        <div className="my-6 border bg-white rounded-lg">
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
@@ -726,89 +930,119 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           </button>
 
           {isOpen && (
-            <div className="sm:p-4">
-              <div className="overflow-x-auto w-full rounded-lg border">
-                <table className="min-w-full bg-white">
-                  <thead className="bg-lightBeige">
-                    <tr>
-                      <th className="p-4 border text-left text-xs sm:text-sm font-medium uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="p-4 border text-left text-xs sm:text-sm font-medium uppercase tracking-wider">
-                        Scheme
-                      </th>
-                      <th className="p-4 border text-right text-xs sm:text-sm font-medium uppercase tracking-wider">
-                        Cash In/Out
-                      </th>
-                      <th className="p-4 border text-right text-xs sm:text-sm font-medium uppercase tracking-wider">
-                        Dividend
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCashInOutData.map((record, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="p-4 border text-xs sm:text-sm text-gray-700">
-                          {formatDate(record.date)}
-                        </td>
-                        <td className="p-4 border text-xs sm:text-sm text-gray-700">
-                          {activeScheme === "Scheme Total" ? record.scheme : activeScheme}
-                        </td>
-                        <td className={`p-4 border text-xs sm:text-sm text-right ${record.amount > 0 ? "text-green-600" : "text-red-600"}`}>
-                          {formatCurrency(record.amount)}
-                        </td>
-                        <td className={`p-4 border text-xs sm:text-sm text-right ${(record.dividend || 0) > 0 ? "text-green-600" : "text-red-600"}`}>
-                          {formatCurrency(record.dividend || 0)}
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="bg-gray-100 font-semibold">
-                      <td className="p-4 border text-xs sm:text-sm text-gray-900">
-                        Total
-                      </td>
-                      <td className="p-4 border text-xs sm:text-sm text-right"></td>
-                      <td className="p-4 border text-xs sm:text-sm text-right">
-                        {formatCurrency(totalAmount)}
-                      </td>
-                      <td className="p-4 border text-xs sm:text-sm text-right">
-                        {formatCurrency(totalDividend)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            <div className="sm:p-4 rounded-lg shadow mb-6">
+              <div className="overflow-x-auto">
+                <div className="align-middle inline-block min-w-full">
+                  <div className="overflow-hidden rounded-lg border border-brown">
+                    <table className="min-w-full divide-y divide-gray-200 tabular-nums">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th
+                            className="px-4 py-2 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                            style={{ cursor: "pointer" }}
+                          >
+                            Date
+                          </th>
+                          <th
+                            className="px-4 py-2 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                            style={{ cursor: "pointer" }}
+                          >
+                            Scheme
+                          </th>
+                          <th
+                            className="px-4 py-2 text-right text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                            style={{ cursor: "pointer" }}
+                          >
+                            Cash In/Out
+                          </th>
+                          <th
+                            className="px-4 py-2 text-right text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                            style={{ cursor: "pointer" }}
+                          >
+                            Dividend
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredCashInOutData.map((record, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {formatDate(record.date)}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {activeScheme === "Scheme Total" ? record.scheme : activeScheme}
+                            </td>
+                            <td
+                              className={`px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right ${record.amount > 0 ? "text-green-600" : "text-red-600"
+                                }`}
+                            >
+                              {formatCurrency(record.amount)}
+                            </td>
+                            <td
+                              className={`px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right ${(record.dividend || 0) > 0 ? "text-green-600" : "text-red-600"
+                                }`}
+                            >
+                              {formatCurrency(record.dividend || 0)}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="bg-gray-100 font-semibold">
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            Total
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900"></td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {formatCurrency(totalAmount)}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {formatCurrency(totalDividend)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
-              <div className="mt-2 text-xs sm:text-sm text-gray-600">
+              <div className="mt-2 text-xs font-light text-gray-500">
                 <p>
-                  Total Cash In: <span className="text-green-600">{formatCurrency(totalIn)}</span>
+                  Total Cash In:{" "}
+                  <span className="text-green-600">{formatCurrency(totalIn)}</span>
                 </p>
                 <p>
-                  Total Cash Out: <span className="text-red-600">{formatCurrency(totalOut)}</span>
+                  Total Cash Out:{" "}
+                  <span className="text-red-600">{formatCurrency(totalOut)}</span>
                 </p>
                 <p>
-                  Total Dividend: <span className="text-green-600">{formatCurrency(totalDividend)}</span>
+                  Total Dividend:{" "}
+                  <span className="text-green-600">{formatCurrency(totalDividend)}</span>
                 </p>
                 <p>
-                  Net Flow: <span className={netFlow >= 0 ? "text-green-600" : "text-red-600"}>
+                  Net Flow:{" "}
+                  <span className={netFlow >= 0 ? "text-green-600" : "text-red-600"}>
                     {formatCurrency(netFlow)}
                   </span>
                 </p>
               </div>
             </div>
           )}
+
         </div>
       </>
     );
+
   };
 
+
+
   return (
-    <div className="p-2">
+    <div className="sm:px-2">
       {endDate && (
         <Text className="sm:text-sm italic text-xs font-subheading text-brown text-right">
           Data as of: {formatDate(endDate)}
         </Text>
       )}
       <div className="flex justify-between items-center mb-4">
-        <Heading className="sm:text-subheading italic text-xs font-subheading text-brown mb-4 mt-4">
+        <Heading className="text-3xl font-bold mb-4 mt-4">
           Welcome, {clientName}
         </Heading>
       </div>
