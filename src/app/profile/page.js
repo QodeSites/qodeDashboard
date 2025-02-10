@@ -44,7 +44,7 @@ const ClientProfilePage = () => {
 
   return (
     <DefaultLayout>
-      <div className="min-h-screen bg-white dark:bg-black">
+      <div className="min-h-screen bg-white ">
         {/* Pass the fetched data into your ProfilePage component */}
         <ProfilePage data={data?.portfolioDetails} />
       </div>

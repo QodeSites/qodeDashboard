@@ -1157,7 +1157,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
         <div className="flex justify-between items-center mb-18 mt-18">
           {startDate && (
-            <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">
+            <Text className="sm:text-sm italic text-xs font-subheading text-brown  text-left">
               Inception Date: {formatDate(startDate)}
             </Text>
           )}
@@ -1227,9 +1227,9 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full flex items-center justify-between p-2 border-brown border rounded-lg bg-lightBeige dark:bg-gray-800 text-sm font-medium text-black dark:text-gray-400 uppercase tracking-wider focus:outline-none"
+            className="w-full flex items-center justify-between p-2 border-brown border rounded-lg bg-lightBeige  text-sm font-medium text-black  uppercase tracking-wider focus:outline-none"
           >
-            <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-left">Cash In/Out</Text>
+            <Text className="sm:text-sm italic text-xs font-subheading text-brown  text-left">Cash In/Out</Text>
             <span className="text-xs sm:text-xl">
               {isOpen ? "−" : "+"}
             </span>
@@ -1238,17 +1238,17 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           {/* Accordion Content */}
           {isOpen && (
             <div className="sm:p-2">
-              <div className="overflow-x-auto w-full rounded-lg border border-brown dark:border-brown">
-                <table className="min-w-full bg-white dark:bg-black">
+              <div className="overflow-x-auto w-full rounded-lg border border-brown ">
+                <table className="min-w-full bg-white ">
                   <thead className="bg-lightBeige">
                     <tr>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-18  sm:p-1 border-b border-brown  text-left text-xs sm:text-sm  font-medium text-black  uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-left text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-18  sm:p-1 border-b border-brown  text-left text-xs sm:text-sm  font-medium text-black  uppercase tracking-wider">
                         Scheme
                       </th>
-                      <th className="p-18  sm:p-1 border-b border-brown dark:border-brown text-right text-xs sm:text-sm  font-medium text-black dark:text-gray-400 uppercase tracking-wider">
+                      <th className="p-18  sm:p-1 border-b border-brown  text-right text-xs sm:text-sm  font-medium text-black  uppercase tracking-wider">
                         Cash In/Out
                       </th>
                     </tr>
@@ -1257,16 +1257,16 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                     {filteredCashInOutData.map((record, index) => (
                       <tr
                         key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                        className="hover:bg-gray-50 "
                       >
-                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-gray-700 dark:text-gray-300">
+                        <td className="p-18  sm:p-1 border-b border-brown  text-xs sm:text-sm  text-gray-700 ">
                           {formatDate(record.date)}
                         </td>
-                        <td className="p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-gray-700 dark:text-gray-300">
+                        <td className="p-18  sm:p-1 border-b border-brown  text-xs sm:text-sm  text-gray-700 ">
                           {record.scheme}
                         </td>
                         <td
-                          className={`p-18  sm:p-1 border-b border-brown dark:border-brown text-xs sm:text-sm  text-right ${record.capital_in_out > 0
+                          className={`p-18  sm:p-1 border-b border-brown  text-xs sm:text-sm  text-right ${record.capital_in_out > 0
                             ? "text-green-600"
                             : "text-red-600"
                             }`}
@@ -1275,19 +1275,19 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                         </td>
                       </tr>
                     ))}
-                    <tr className="bg-gray-100 dark:bg-gray-800 font-semibold">
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-gray-900 dark:text-gray-100">
+                    <tr className="bg-gray-100  font-semibold">
+                      <td className="p-18  sm:p-1 border-t border-brown  text-xs sm:text-sm  text-gray-900 ">
                         Total
                       </td>
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-right text-gray-900 dark:text-gray-100"></td>
-                      <td className="p-18  sm:p-1 border-t border-brown dark:border-brown text-xs sm:text-sm  text-right text-gray-900 dark:text-gray-100">
+                      <td className="p-18  sm:p-1 border-t border-brown  text-xs sm:text-sm  text-right text-gray-900 "></td>
+                      <td className="p-18  sm:p-1 border-t border-brown  text-xs sm:text-sm  text-right text-gray-900 ">
                         {formatCurrency(cashFlowTotals.netFlow)}
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <div className="mt-2 text-xs sm:text-sm  text-gray-600 dark:text-gray-400">
+              <div className="mt-2 text-xs sm:text-sm  text-gray-600 ">
                 <p>
                   Total Cash In:{" "}
                   <span className="text-green-600">
@@ -1323,12 +1323,12 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   return (
     <div className="p-0 sm:p-1">
       {endDate && (
-        <Text className="sm:text-sm italic text-xs font-subheading text-brown dark:text-beige text-right">
+        <Text className="sm:text-sm italic text-xs font-subheading text-brown  text-right">
           Data as of: {formatDate(endDate)}
         </Text>
       )}
       <div className="flex justify-between items-center mb-4">
-        <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown dark:text-beige mb-18 mt-4">
+        <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown  mb-18 mt-4">
           Welcome, {username}
         </Heading>
       </div>

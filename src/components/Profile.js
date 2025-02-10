@@ -21,17 +21,17 @@ const ProfilePage = ({ data }) => {
 
   const personalInfo = [
     {
-      icon: <User className="w-1 h-1 sm:w-1 sm:h-1 text-brown dark:text-beige" />,
+      icon: <User className="w-1 h-1 sm:w-1 sm:h-1 text-brown " />,
       label: "Full Name",
       value: data.name,
     },
     {
-      icon: <CreditCard className="w-1 h-1 sm:w-1 sm:h-1 text-brown dark:text-beige" />,
+      icon: <CreditCard className="w-1 h-1 sm:w-1 sm:h-1 text-brown " />,
       label: "Nuvama Code",
       value: data.nuvama_code,
     },
     {
-      icon: <Building className="w-1 h-1 sm:w-1 sm:h-1 text-brown dark:text-beige" />,
+      icon: <Building className="w-1 h-1 sm:w-1 sm:h-1 text-brown " />,
       label: "Account Type",
       value: data.account,
     },
@@ -39,25 +39,25 @@ const ProfilePage = ({ data }) => {
 
   const accountDetails = [
     {
-      icon: <Wallet className="w-1 h-1 sm:w-1 sm:h-1 text-brown dark:text-beige" />,
+      icon: <Wallet className="w-1 h-1 sm:w-1 sm:h-1 text-brown " />,
       label: "Initial Investment",
       value: `₹${formatNumber(data.initial_investment)}`,
     },
     {
-      icon: <Shield className="w-1 h-1 sm:w-1 sm:h-1 text-brown dark:text-beige" />,
+      icon: <Shield className="w-1 h-1 sm:w-1 sm:h-1 text-brown " />,
       label: "Strategy",
       value: data.strategy,
     },
   ];
 
   return (
-    <div className="max-w-5xl mx-auto p-1 bg-white dark:bg-black">
+    <div className="max-w-5xl mx-auto p-1 bg-white ">
       {/* Header Section */}
       <div className="mb-6">
-        <Heading className="italic text-brown dark:text-beige font-bold text-xl sm:text-2xl">
+        <Heading className="italic text-brown  font-bold text-xl sm:text-2xl">
           Account Profile
         </Heading>
-        <Text className="text-sm text-gray-600 dark:text-gray-400">
+        <Text className="text-sm text-gray-600 ">
           Manage your account information and settings
         </Text>
       </div>
@@ -65,24 +65,24 @@ const ProfilePage = ({ data }) => {
       {/* Main Content */}
       <div className="space-y-6">
         {/* Personal Information Section */}
-        <div className="p-2 border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded">
-          <Text className="text-lg sm:text-xl text-brown dark:text-beige font-semibold mb-4">
+        <div className="p-2 border border-gray-100  bg-gray-50 rounded">
+          <Text className="text-lg sm:text-xl text-brown  font-semibold mb-4">
             Personal Information
           </Text>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
             {personalInfo.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center space-x-4 p-1 border border-gray-100 dark:border-gray-800 
-                          bg-white dark:bg-black rounded transition-colors duration-200 
-                          hover:shadow-md dark:hover:shadow-gray-800"
+                className="flex items-center space-x-4 p-1 border border-gray-100  
+                          bg-white  rounded transition-colors duration-200 
+                          hover:shadow-md "
               >
                 {item.icon}
                 <div>
-                  <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  <Text className="text-xs text-gray-500  mb-1">
                     {item.label}
                   </Text>
-                  <Text className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <Text className="text-sm font-medium text-gray-900 ">
                     {item.value}
                   </Text>
                 </div>
@@ -92,24 +92,24 @@ const ProfilePage = ({ data }) => {
         </div>
 
         {/* Account Details Section */}
-        <div className="p-2 border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded">
-          <Text className="text-lg sm:text-xl text-brown dark:text-beige font-semibold mb-4">
+        <div className="p-2 border border-gray-100  bg-gray-50 rounded">
+          <Text className="text-lg sm:text-xl text-brown  font-semibold mb-4">
             Account Details
           </Text>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
             {accountDetails.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center space-x-4 p-1 border border-gray-100 dark:border-gray-800
-                          bg-white dark:bg-black rounded transition-colors duration-200
-                          hover:shadow-md dark:hover:shadow-gray-800"
+                className="flex items-center space-x-4 p-1 border border-gray-100 
+                          bg-white  rounded transition-colors duration-200
+                          hover:shadow-md "
               >
                 {item.icon}
                 <div>
-                  <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  <Text className="text-xs text-gray-500  mb-1">
                     {item.label}
                   </Text>
-                  <Text className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <Text className="text-sm font-medium text-gray-900 ">
                     {item.value}
                   </Text>
                 </div>
@@ -120,7 +120,7 @@ const ProfilePage = ({ data }) => {
 
         {/* Risk Disclaimer */}
         <div className="mt-6">
-          <Text className="text-xs text-gray-500 dark:text-gray-400 italic">
+          <Text className="text-xs text-gray-500  italic">
             * Investment values and returns are subject to market risks. Past performance is not indicative of future returns.
           </Text>
         </div>

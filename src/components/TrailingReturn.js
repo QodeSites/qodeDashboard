@@ -7,7 +7,7 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
   if (isLoading)
     return (
       <div className="flex justify-center items-center p-4">
-        <Spinner className="text-gray-700 dark:text-gray-300" />
+        <Spinner className="text-gray-700 " />
       </div>
     );
   if (error)

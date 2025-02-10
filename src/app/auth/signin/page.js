@@ -65,10 +65,10 @@ export default function SignIn() {
         >
           Qode
         </Link>
-        <Heading className="text-center text-2xl font-extralight   text-brown dark:text-brown my-6">
+        <Heading className="text-center text-2xl font-extralight   text-brown  my-6">
           Sign in to your account
         </Heading>
-        <div className="w-full max-w-md p-8 border border-gray-200 dark:border-gray-700 bg-white rounded-lg shadow-sm">
+        <div className="w-full max-w-md p-8 border border-gray-200  bg-white rounded-lg shadow-sm">
 
           {error && (
             <p className="mb-4 text-center text-red-500">{error}</p>
@@ -79,7 +79,7 @@ export default function SignIn() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-gray-700 "
               >
                 Email address
               </label>
@@ -93,8 +93,8 @@ export default function SignIn() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full text-sm px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 transition-colors ${error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    } bg-white  text-brown dark:text-gray-100`}
+                  className={`w-full text-sm px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400  transition-colors ${error ? "border-red-500" : "border-gray-300 "
+                    } bg-white  text-brown `}
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
@@ -104,7 +104,7 @@ export default function SignIn() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-gray-700 "
               >
                 Password
               </label>
@@ -118,8 +118,8 @@ export default function SignIn() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full text-sm px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 transition-colors ${error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                    } bg-white dark:bg-gray-800 text-brown dark:text-gray-100`}
+                  className={`w-full text-sm px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400  transition-colors ${error ? "border-red-500" : "border-gray-300 "
+                    } bg-white  text-brown `}
                   aria-invalid={error ? "true" : "false"}
                 />
                 <button
@@ -141,7 +141,7 @@ export default function SignIn() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full  text-white bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-200 py-2 my-2 rounded-md"
+                className="w-full  text-white bg-gray-800  transition-colors duration-200 py-2 my-2 rounded-md"
                 aria-busy={isLoading}
               >
                 {isLoading ? (
@@ -162,7 +162,7 @@ export default function SignIn() {
         </div>
       </main>
 
-      <footer className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      <footer className="py-4 text-center text-sm text-gray-500 ">
         &copy; {new Date().getFullYear()} Qode. All rights reserved.
       </footer>
     </div>

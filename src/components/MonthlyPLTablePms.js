@@ -71,7 +71,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
     // If numValue is not a number, show a dash.
     if (isNaN(numValue)) {
       return (
-        <td key={key} className="p-1 text-center text-gray-900 dark:text-gray-100">
+        <td key={key} className="p-1 text-center text-gray-900 ">
           -
         </td>
       );
@@ -80,7 +80,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
     let cellClass = "text-center p-1 ";
     if (numValue > 0) {
       // Positive PnL: green background
-      cellClass += "bg-green-100 dark:bg-green-900 font-semibold";
+      cellClass += "bg-green-100 font-semibold";
       return (
         <td key={key} className={cellClass}>
           {`+${cellValue}`}
@@ -88,7 +88,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
       );
     } else if (numValue < 0) {
       // Negative PnL: red background
-      cellClass += "bg-red-100 dark:bg-red-900 font-semibold";
+      cellClass += "bg-red-100  font-semibold";
       return (
         <td key={key} className={cellClass}>
           {`-${cellValue}`}
@@ -97,7 +97,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
     } else {
       // Zero or neutral PnL
       return (
-        <td key={key} className="p-1 text-center text-gray-900 dark:text-gray-100">
+        <td key={key} className="p-1 text-center text-gray-900 ">
           {cellValue}
         </td>
       );

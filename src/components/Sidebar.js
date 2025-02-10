@@ -31,7 +31,7 @@ const SidebarNavigation = () => {
   return (
     <>
       {/* Mobile header with hamburger */}
-      <div className="h-16 flex items-center md:hidden px-4 fixed top-0 left-0 right-0 bg-white dark:bg-black z-40 border-b border-gray-200">
+      <div className="h-16 flex items-center md:hidden px-4 fixed top-0 left-0 right-0 bg-white  z-40 border-b border-gray-200">
         <button onClick={toggleSidebar} aria-label="Toggle menu">
           <FontAwesomeIcon icon={faBars} className="w-6 h-6" />
         </button>
@@ -39,7 +39,7 @@ const SidebarNavigation = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 w-64 bg-white dark:bg-black border-r border-gray-200 transform transition-transform duration-300 z-50 flex flex-col h-screen ${
+        className={`fixed top-0 left-0 w-64 bg-white  border-r border-gray-200 transform transition-transform duration-300 z-50 flex flex-col h-screen ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
@@ -57,7 +57,7 @@ const SidebarNavigation = () => {
                 href="/"
                 onClick={() => setIsOpen(false)}
                 className={`flex items-center space-x-3 ${
-                  isLinkActive("/") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                  isLinkActive("/") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900  "
                 }`}
               >
                 <FontAwesomeIcon icon={faHome} className="w-5 h-5" />
@@ -69,7 +69,7 @@ const SidebarNavigation = () => {
                 href="/portfolio"
                 onClick={() => setIsOpen(false)}
                 className={`flex items-center space-x-3 ${
-                  isLinkActive("/portfolio") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                  isLinkActive("/portfolio") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900  "
                 }`}
               >
                 <FontAwesomeIcon icon={faChartPie} className="w-5 h-5" />
@@ -81,7 +81,7 @@ const SidebarNavigation = () => {
                 href="/account"
                 onClick={() => setIsOpen(false)}
                 className={`flex items-center space-x-3 ${
-                  isLinkActive("/account") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                  isLinkActive("/account") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900  "
                 }`}
               >
                 <FontAwesomeIcon icon={faUser} className="w-5 h-5" />
@@ -105,7 +105,7 @@ const SidebarNavigation = () => {
               </div>
             )}
             <div>
-              <p className="text-gray-700 dark:text-gray-300 font-medium">{session?.user?.name || "User"}</p>
+              <p className="text-gray-700  font-medium">{session?.user?.name || "User"}</p>
               <button onClick={handleLogout} className="text-sm text-green-500 hover:underline">
                 Logout
               </button>

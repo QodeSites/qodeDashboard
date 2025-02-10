@@ -40,7 +40,7 @@ const PortfolioDetails = ({ data, isCumulative = false }) => {
       value: formatNumber(profit, true),
       subtext: `${profit >= 0 ? '+' : '-'}${Math.abs(profitPercentage).toFixed(2)}%`,
       className: "col-span-1",
-      valueColor: profit >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+      valueColor: profit >= 0 ? 'text-green-500 ' : 'text-red-500 '
     },
     {
       icon: <ArrowUpDown className="w-4 h-4" />,

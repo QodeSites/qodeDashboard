@@ -25,7 +25,7 @@ const PortfolioDetails = dynamic(() => import("./PortfolioDetails"), {
 
 const HighchartsReact = dynamic(() => import("highcharts-react-official"), {
   ssr: false,
-  loading: () => <div className="h-80 bg-gray-200 dark:bg-gray-800 animate-pulse" />
+  loading: () => <div className="h-80 bg-gray-200  animate-pulse" />
 });
 
 const PerformanceAndDrawdownChart = () => {
