@@ -3,7 +3,6 @@ import { Spinner } from "@material-tailwind/react";
 import Text from "./common/Text";
 import Heading from "./common/Heading";
 
-// TrailingReturns Component (Updated styling and layout)
 const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
   if (isLoading)
     return (
@@ -12,9 +11,7 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
       </div>
     );
   if (error)
-    return (
-      <div className="text-red-500 text-xs p-2">Error: {error}</div>
-    );
+    return <div className="text-red-500 text-xs p-2">Error: {error}</div>;
   if (!data || !data.dailyNAV || !benchmarkData) return null;
 
   // Parse NAV values
@@ -27,7 +24,6 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
 
   // Calculate trailing return given a period (in days)
   const calculateTrailingReturn = (values, periodInDays) => {
-    // Make sure there are enough data points.
     if (values.length < periodInDays + 1) return null;
     const recentNav = values[values.length - 1];
     const pastNav = values[values.length - 1 - periodInDays];
@@ -46,7 +42,6 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
       const drawdown = ((peak - value) / peak) * 100;
       maxDrawdown = Math.max(maxDrawdown, drawdown);
     }
-    // For current drawdown, we determine the peak reached up to now.
     let currentPeak = values[0];
     for (let i = 0; i < values.length; i++) {
       if (values[i] > currentPeak) {
@@ -62,21 +57,25 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
   const benchmarkDrawdowns = calculateDrawdowns(benchmarkValues);
 
   // Define the periods for which we calculate trailing returns.
-  // (You can adjust these as needed; the first two are fixed periods, plus an “Inception” period.)
   const basePeriods = [
-    { key: "d10", label: "10D", days: 10 },
-    { key: "m1", label: "1M", days: 30 },
+    { key: "5d", label: "5D", days: 5 },
+    { key: "10d", label: "10D", days: 10 },
+    { key: "15d", label: "15D", days: 15 },
+    { key: "1m", label: "1M", days: 30 },
+    { key: "1y", label: "1Y", days: 365 },
+    { key: "2y", label: "2Y", days: 730 },
+    { key: "3y", label: "3Y", days: 1095 }
   ];
 
   const portfolioPeriods = [
     ...basePeriods,
-    { key: "since_inception", label: "Inception", days: navValues.length - 1 },
+    { key: "since_inception", label: "Inception", days: navValues.length - 1 }
   ];
 
   const benchmarkPeriods = benchmarkValues.length
     ? [
         ...basePeriods,
-        { key: "since_inception", label: "Inception", days: benchmarkValues.length - 1 },
+        { key: "since_inception", label: "Inception", days: benchmarkValues.length - 1 }
       ]
     : basePeriods;
 
@@ -84,29 +83,29 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
   const portfolioReturns = portfolioPeriods.map((period) => ({
     key: period.key,
     label: period.label,
-    value: calculateTrailingReturn(navValues, period.days),
+    value: calculateTrailingReturn(navValues, period.days)
   }));
 
   const benchmarkReturns = benchmarkPeriods.map((period) => ({
     key: period.key,
     label: period.label,
-    value: calculateTrailingReturn(benchmarkValues, period.days),
+    value: calculateTrailingReturn(benchmarkValues, period.days)
   }));
 
   return (
     <div className="p-4 bg-white mb-6 rounded-lg shadow">
-      {/* Header with title and (optionally) a download button */}
+      {/* Header */}
       <div className="flex justify-between items-start">
         <div className="flex items-center">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Trailing Returns &amp; Drawdown
+            Trailing Returns
           </h3>
         </div>
         <div
           data-cmid="portfolios:button|download_trailing_return"
           data-reach-tooltip-trigger=""
         >
-          {/* You can add your download button markup here if needed */}
+          {/* Download button placeholder */}
         </div>
       </div>
 
@@ -117,47 +116,28 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
             <div className="overflow-hidden rounded-lg">
               <table
                 role="table"
-                className="min-w-full divide-y divide-gray-200 tabular-nums"
+                className="min-w-full divide-y divide-gray-200 table-fixed"
               >
                 <thead>
                   <tr role="row">
-                    <th
-                      colSpan="1"
-                      role="columnheader"
-                      title="Toggle SortBy"
-                      className="text-left px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
-                      style={{ cursor: "pointer" }}
-                    >
+                    {/* Fixed width for Name column */}
+                    <th className="w-32 text-left px-4 py-2 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
                       Name
                     </th>
+                    {/* Each trailing return column gets a fixed width */}
                     {portfolioPeriods.map((period) => (
                       <th
                         key={period.key}
-                        colSpan="1"
-                        role="columnheader"
-                        title="Toggle SortBy"
-                        className="text-center px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
-                        style={{ cursor: "pointer" }}
+                        className="w-24 text-center px-4 py-2 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                       >
                         {period.label}
                       </th>
                     ))}
-                    <th
-                      colSpan="1"
-                      role="columnheader"
-                      title="Toggle SortBy"
-                      className="text-center px-1 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider border-l-2 border-gray-300"
-                      style={{ cursor: "pointer" }}
-                    >
+                    {/* Fixed width for drawdown columns */}
+                    <th className="w-20 text-center px-2 py-2 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider border-l-2 border-gray-300 cursor-pointer">
                       Current DD
                     </th>
-                    <th
-                      colSpan="1"
-                      role="columnheader"
-                      title="Toggle SortBy"
-                      className="text-center px-1 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
-                      style={{ cursor: "pointer" }}
-                    >
+                    <th className="w-20 text-center px-2 py-2 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
                       Max DD
                     </th>
                   </tr>
@@ -166,76 +146,54 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
                   role="rowgroup"
                   className="bg-white divide-y divide-gray-200"
                 >
-                  {/* Portfolio (Scheme) Row */}
+                  {/* Portfolio Row */}
                   <tr role="row">
-                    <td
-                      role="cell"
-                      className="text-left px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900 capitalize"
-                    >
+                    <td className="w-32 text-left px-4 py-2 whitespace-nowrap text-sm text-gray-900 capitalize">
                       Scheme (%)
                     </td>
                     {portfolioReturns.map((period) => (
                       <td
                         key={period.key}
-                        role="cell"
-                        className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                        className="w-24 text-center px-4 py-2 whitespace-nowrap text-sm text-gray-900"
                       >
-                        {period.value !== null
-                          ? period.value.toFixed(2)
-                          : "N/A"}
+                        {period.value !== null ? period.value.toFixed(2) : "-"}
                       </td>
                     ))}
-                    <td
-                      role="cell"
-                      className="text-center px-4 py-2 whitespace-nowrap text-sm border-l-2 border-gray-300 leading-5 text-gray-900"
-                    >
+                    <td className="w-20 text-center px-2 py-2 whitespace-nowrap text-sm border-l-2 border-gray-300 text-gray-900">
                       {portfolioDrawdowns.currentDrawdown !== null
                         ? portfolioDrawdowns.currentDrawdown.toFixed(2)
-                        : "N/A"}
+                        : "-"}
                     </td>
-                    <td
-                      role="cell"
-                      className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
-                    >
+                    <td className="w-20 text-center px-2 py-2 whitespace-nowrap text-sm text-gray-900">
                       {portfolioDrawdowns.maxDrawdown !== null
                         ? portfolioDrawdowns.maxDrawdown.toFixed(2)
-                        : "N/A"}
+                        : "-"}
                     </td>
                   </tr>
                   {/* Benchmark Row */}
                   <tr role="row">
-                    <td
-                      role="cell"
-                      className="text-left px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900 capitalize"
-                    >
+                    <td className="w-32 text-left px-4 py-2 whitespace-nowrap text-sm text-gray-900 capitalize">
                       Benchmark (%)
                     </td>
                     {benchmarkReturns.map((period) => (
                       <td
                         key={period.key}
-                        role="cell"
-                        className="text-center px-4 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
+                        className="w-24 text-center px-4 py-2 whitespace-nowrap text-sm text-gray-900"
                       >
                         {benchmarkData && period.value !== null
                           ? period.value.toFixed(2)
-                          : "N/A"}
+                          : "-"}
                       </td>
                     ))}
-                    <td
-                      role="cell"
-                      className="text-center px-1 py-2 whitespace-nowrap text-sm border-l-2 border-gray-300 leading-5 text-gray-900"
-                    >
+                    <td className="w-20 text-center px-2 py-2 whitespace-nowrap text-sm border-l-2 border-gray-300 text-gray-900">
                       {benchmarkData && benchmarkDrawdowns.currentDrawdown !== null
                         ? benchmarkDrawdowns.currentDrawdown.toFixed(2)
-                        : "N/A"}
+                        : "-"}
                     </td>
-                    <td
-                      role="cell"
-                      className="text-center px-1 py-2 whitespace-nowrap text-sm leading-5 text-gray-900"
-                    >
+                    <td className="w-20 text-center px-2 py-2 whitespace-nowrap text-sm text-gray-900">
                       {benchmarkData && benchmarkDrawdowns.maxDrawdown !== null
                         ? benchmarkDrawdowns.maxDrawdown.toFixed(2)
-                        : "N/A"}
+                        : "-"}
                     </td>
                   </tr>
                 </tbody>
@@ -250,7 +208,5 @@ const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
     </div>
   );
 };
-
-
 
 export default TrailingReturns;

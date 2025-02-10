@@ -204,7 +204,7 @@ const TrailingReturns = ({
                       >
                         {trailingReturns[period] !== null
                           ? trailingReturns[period].toFixed(2)
-                          : "N/A"}
+                          : "-"}
                       </td>
                     ))}
                     <td
@@ -213,7 +213,7 @@ const TrailingReturns = ({
                     >
                       {ddStats.portfolio.currentDD !== null
                         ? ddStats.portfolio.currentDD.toFixed(2)
-                        : "N/A"}
+                        : "-"}
                     </td>
                     <td
                       role="cell"
@@ -221,7 +221,7 @@ const TrailingReturns = ({
                     >
                       {ddStats.portfolio.maxDD !== null
                         ? ddStats.portfolio.maxDD.toFixed(2)
-                        : "N/A"}
+                        : "-"}
                     </td>
                   </tr>
                   <tr role="row">
@@ -239,7 +239,7 @@ const TrailingReturns = ({
                       >
                         {benchmarkTrailingReturns && benchmarkTrailingReturns[period] != null
                           ? benchmarkTrailingReturns[period].toFixed(2)
-                          : "N/A"}
+                          : "-"}
                       </td>
                     ))}
                     <td
@@ -248,7 +248,7 @@ const TrailingReturns = ({
                     >
                       {benchmarkDDStats && benchmarkDDStats.currentDD !== null
                         ? benchmarkDDStats.currentDD.toFixed(2)
-                        : "N/A"}
+                        : "-"}
                     </td>
                     <td
                       role="cell"
@@ -256,7 +256,7 @@ const TrailingReturns = ({
                     >
                       {benchmarkDDStats && benchmarkDDStats.maxDD !== null
                         ? benchmarkDDStats.maxDD.toFixed(2)
-                        : "N/A"}
+                        : "-"}
                     </td>
                   </tr>
                 </tbody>
@@ -379,7 +379,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     activeScheme === "Scheme Total"
       ? totalPortfolio?.trailingReturns || {}
       : selectedScheme?.trailingReturns || {};
-
+  console.log(trailingReturns)
   // ── Calculate Benchmark trailing returns and drawdown stats ──
   const benchmarkTrailingReturns = useMemo(() => {
     if (benchmarkData && benchmarkData.length > 0) {
@@ -534,7 +534,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     return {
       chart: {
         zoomType: "xy",
-        height: 800, // Increased chart height for better visibility
+        height: 700, // Increased chart height for better visibility
       },
       title: {
         text: "Portfolio vs Benchmark Performance & Drawdown",
@@ -557,28 +557,31 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         tickWidth: 1, // or (isMobile ? 0 : 1)
       },
       // Define two yAxes: index 0 for performance and index 1 for drawdown.
+
       yAxis: [
         {
-          // Performance yAxis (top half)
+          // Performance yAxis (top)
           title: { text: "Performance (%)" },
-          height: "50%",
+          height: "70%", // increased from 70% to give more space for performance data
           top: "0%",
-
           labels: {
             formatter: function () {
               return Math.round(this.value);
             },
             style: {
               color: "#2E8B57", // or colors.accent
-              fontSize: "10px",
+              fontSize: "8px",
             },
           },
+          min: 80,
+          tickAmount: 7,
+
           lineColor: "#2E8B57",
           tickColor: "#2E8B57",
-          tickWidth: 1, // or (isMobile ? 0 : 1)
-          gridLineColor: "#e6e6e6", // or colors.gridLines
+          tickWidth: 1,
+          gridLineColor: "#e6e6e6",
           plotLines: [{
-            value: 100, // adjust as needed (if your performance is normalized to 100)
+            value: 100, // adjust as needed
             color: "#2E8B57",
             width: 1,
             zIndex: 5,
@@ -586,55 +589,84 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           }],
         },
         {
-          // Drawdown yAxis (bottom half)
+          // Drawdown yAxis (bottom)
           title: { text: "Drawdown" },
-          height: "50%",
-          top: "50%",
+          height: "20%", // reduced from 30% to further shrink the drawdown area
+          top: "80%",    // adjusted to start right after the performance axis
           offset: 0,
-          min: -15, // or use drawdownMin if available
+          min: -15, // adjust these values based on your data range if needed
           max: 0,
-          tickAmount: 5,
+          tickAmount: 3,
           labels: {
             formatter: function () {
               return Math.round(this.value) + '%';
             },
             style: {
-              color: "#FF4560", // or your chosen color for drawdown
+              color: "#FF4560", // chosen color for drawdown
               fontSize: "10px",
             },
           },
           lineColor: "#FF4560",
           tickColor: "#FF4560",
-          tickWidth: 1, // or (isMobile ? 0 : 1)
+          tickWidth: 1,
           gridLineColor: "#e6e6e6",
         },
       ],
+
       tooltip: {
         shared: true,
         xDateFormat: "%Y-%m-%d",
         valueDecimals: 2,
         formatter: function () {
-          let tooltipText = "<b>" + Highcharts.dateFormat("%Y-%m-%d", this.x) + "</b><br/>";
+          const hoveredX = this.x;
+          const chart = this.points[0].series.chart;
 
-          // Group series by type (performance and drawdown)
-          const performancePoints = this.points.filter(point => point.series.yAxis.options.top === "0%");
-          const drawdownPoints = this.points.filter(point => point.series.yAxis.options.top === "50%");
+          // Helper: find the nearest point in a series to the given x value
+          function getNearestPoint(series, x) {
+            let nearestPoint = null;
+            let minDiff = Infinity;
+            series.data.forEach(point => {
+              const diff = Math.abs(point.x - x);
+              if (diff < minDiff) {
+                minDiff = diff;
+                nearestPoint = point;
+              }
+            });
+            return nearestPoint;
+          }
 
-          // Add performance metrics
-          tooltipText += "<br/><span style='font-weight: bold'>Performance:</span><br/>";
-          performancePoints.forEach(point => {
-            tooltipText += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: ${point.y.toFixed(2)}<br/>`;
-          });
+          // Determine the names used for your series.
+          // (These match the names you set when pushing the series earlier.)
+          const portfolioSeriesName =
+            activeScheme === "Scheme Total" ? "Portfolio" : selectedScheme?.schemeName;
 
-          // Add drawdown metrics
-          tooltipText += "<br/><span style='font-weight: bold'>Drawdown:</span><br/>";
-          drawdownPoints.forEach(point => {
-            tooltipText += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: ${point.y.toFixed(2)}%<br/>`;
-          });
+          // Get the series from the chart instance
+          const portfolioSeries = chart.series.find(s => s.name === portfolioSeriesName);
+          const benchmarkSeries = chart.series.find(s => s.name === "NIFTY 50");
+          const portfolioDrawdownSeries = chart.series.find(s => s.name === "Portfolio Drawdown");
+          const benchmarkDrawdownSeries = chart.series.find(s => s.name === "NIFTY 50 Drawdown");
+
+          // Look up the nearest point for each series
+          const portfolioPoint = portfolioSeries ? getNearestPoint(portfolioSeries, hoveredX) : null;
+          const benchmarkPoint = benchmarkSeries ? getNearestPoint(benchmarkSeries, hoveredX) : null;
+          const portfolioDrawdownPoint = portfolioDrawdownSeries ? getNearestPoint(portfolioDrawdownSeries, hoveredX) : null;
+          const benchmarkDrawdownPoint = benchmarkDrawdownSeries ? getNearestPoint(benchmarkDrawdownSeries, hoveredX) : null;
+
+          // Build the tooltip text
+          let tooltipText = "<b>" + Highcharts.dateFormat("%d-%m-%Y", hoveredX) + "</b><br/><br/>";
+
+          tooltipText += "<span style='font-weight: bold; font-size: 12px'>Performance:</span><br/>";
+          tooltipText += `<span style="color:#2E8B57">\u25CF</span> Portfolio: ${portfolioPoint ? portfolioPoint.y.toFixed(2) : 'N/A'}%<br/>`;
+          tooltipText += `<span style="color:#4169E1">\u25CF</span> Benchmark: ${benchmarkPoint ? benchmarkPoint.y.toFixed(2) : 'N/A'}%<br/>`;
+
+          tooltipText += "<br/><span style='font-weight: bold; font-size: 12px'>Drawdown:</span><br/>";
+          tooltipText += `<span style="color:#FF4560">\u25CF</span> Portfolio: ${portfolioDrawdownPoint ? portfolioDrawdownPoint.y.toFixed(2) : 'N/A'}%<br/>`;
+          tooltipText += `<span style="color:#FF8F00">\u25CF</span> Benchmark: ${benchmarkDrawdownPoint ? benchmarkDrawdownPoint.y.toFixed(2) : 'N/A'}%<br/>`;
 
           return tooltipText;
         }
       },
+
       legend: {
         enabled: true,
         itemStyle: { fontSize: "12px" }
@@ -702,19 +734,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
 
   const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center h-full">
-          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      );
-    }
-    if (error) {
-      return <div className="p-4 text-red-500">Error: {error}</div>;
-    }
-    if (!accountsData) {
-      return <div className="p-4 text-red-500">No data available.</div>;
-    }
+
 
     // Dummy stocks data for now (including some Indian stocks)
     const dummyStocks = [
@@ -741,8 +761,8 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                 <button
                   onClick={() => setActiveScheme("Scheme Total")}
                   className={`px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-wider focus:outline-none border-b-2 ${activeScheme === "Scheme Total"
-                      ? "border-green-500 text-green-500"
-                      : "border-transparent text-gray-700"
+                    ? "border-green-500 text-green-500"
+                    : "border-transparent text-gray-700"
                     }`}
                 >
                   Scheme Total
@@ -752,8 +772,8 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                     key={schemeName}
                     onClick={() => setActiveScheme(schemeName)}
                     className={`px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-wider focus:outline-none border-b-2 ${activeScheme === schemeName
-                        ? "border-green-500 text-green-500"
-                        : "border-transparent text-gray-700"
+                      ? "border-green-500 text-green-500"
+                      : "border-transparent text-gray-700"
                       }`}
                   >
                     {schemeName}
@@ -1032,7 +1052,20 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
   };
 
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return <div className="p-4 text-red-500">Error: {error}</div>;
+  }
+  if (!accountsData) {
+    return <div className="p-4 text-red-500">No data available.</div>;
+  }
 
   return (
     <div className="sm:px-2">

@@ -198,7 +198,7 @@ export const getChartOptions = (
     yAxis: [
       {
         title: { text: "Performance (%)" },
-        height: "50%",
+        height: "85%",       // Increased performance area
         top: "0%",
         min: bottomAxisMin,
         max: topAxisMax,
@@ -228,8 +228,8 @@ export const getChartOptions = (
       },
       {
         title: { text: "Drawdown (%)" },
-        height: "50%",
-        top: "50%",
+        height: "15%",       // Shrunk drawdown area further from 50% to 15%
+        top: "85%",          // Positioned immediately after the performance axis
         offset: 0,
         max: 0,
         min: drawdownMin,
@@ -262,7 +262,7 @@ export const getChartOptions = (
 
         // Group series by type
         const performancePoints = this.points.filter(point => point.series.yAxis.options.top === "0%");
-        const drawdownPoints = this.points.filter(point => point.series.yAxis.options.top === "50%");
+        const drawdownPoints = this.points.filter(point => point.series.yAxis.options.top === "85%");
 
         // Add performance metrics
         tooltipText += "<br/><b>Performance:</b><br/>";

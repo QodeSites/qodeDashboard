@@ -49,7 +49,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
 
     <div className="bg-white  p-4 rounded-lg shadow mb-6">
       <h3 className="text-lg leading-6 font-medium text-gray-900">
-        Monthly PnL Table (%)
+        Monthly Profit and Loss Table (%)
       </h3>
       <div className="w-full mt-4">
         <div className="bg-white rounded-lg shadow overflow-hidden">

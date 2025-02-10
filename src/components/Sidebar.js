@@ -44,7 +44,7 @@ const SidebarNavigation = () => {
         } md:translate-x-0`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h1 className="text-4xl font-bold playfair-display-font">Qode</h1>
+          <h1 className="text-4xl text-[#d1a47b] font-bold playfair-display-font">Qode</h1>
           <button onClick={toggleSidebar} aria-label="Close menu" className="md:hidden">
             <FontAwesomeIcon icon={faTimes} className="w-6 h-6" />
           </button>

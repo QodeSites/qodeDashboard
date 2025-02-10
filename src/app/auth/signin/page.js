@@ -61,11 +61,11 @@ export default function SignIn() {
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         <Link
           href="/"
-          className="text-brown dark:text-brown text-center playfair-display-font mb-4 font-bold text-5xl"
+          className="text-[#d1a47b] text-center playfair-display-font mb-4 font-bold text-5xl"
         >
           Qode
         </Link>
-        <Heading className="text-center text-2xl font-semibold text-brown dark:text-brown my-6">
+        <Heading className="text-center text-2xl font-extralight   text-brown dark:text-brown my-6">
           Sign in to your account
         </Heading>
         <div className="w-full max-w-md p-8 border border-gray-200 dark:border-gray-700 bg-white rounded-lg shadow-sm">
@@ -93,7 +93,7 @@ export default function SignIn() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 transition-colors ${error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                  className={`w-full text-sm px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 transition-colors ${error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                     } bg-white  text-brown dark:text-gray-100`}
                   aria-invalid={error ? "true" : "false"}
                 />
@@ -118,7 +118,7 @@ export default function SignIn() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 transition-colors ${error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                  className={`w-full text-sm px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 transition-colors ${error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                     } bg-white dark:bg-gray-800 text-brown dark:text-gray-100`}
                   aria-invalid={error ? "true" : "false"}
                 />
