@@ -35,7 +35,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
     if (numValue > 0) {
       cellClass += " bg-green-100 ";
     } else if (numValue < 0) {
-      cellClass += " bg-red-100 ";
+      cellClass += "  ";
     }
 
     return (
