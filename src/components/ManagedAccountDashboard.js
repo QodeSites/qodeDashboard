@@ -1063,7 +1063,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       <div className="flex flex-col justify-center items-center min-h-screen gap-4">
         <div className="w-8 h-8 border-4 border-[#d1a47b] border-t-transparent rounded-full animate-spin"></div>
         <p className="text-lg text-gray-700 max-w-md text-center">
-          "We don't have to be smarter than the rest we have to be more disciplined than the rest"
+          We don&apos;t have to be smarter than the rest we have to be more disciplined than the rest
         </p>
       </div>
     );
