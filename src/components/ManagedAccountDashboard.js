@@ -719,9 +719,15 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   // Helper functions for formatting dates and currency
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   };
-
+  
+  // Example usage:
+  console.log(formatDate("2023-10-05")); // Output: "05-10-2023"
+  
   const formatCurrency = (amount) => {
     return (
       "₹" +
