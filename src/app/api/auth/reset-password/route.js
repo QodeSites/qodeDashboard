@@ -1,38 +1,58 @@
-// import { NextResponse } from "next/server";
-// import prisma from "@/lib/prisma";
-// import { v4 as uuidv4 } from "uuid";
-// // import { sendResetPasswordEmail } from "@/lib/email";
-// import { addMinutes } from "date-fns";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcrypt";
+import { NextResponse } from "next/server";
 
-// export async function POST(req) {
-//   try {
-//     const { email } = await req.json();
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { email, token, password } = body;
+    console.log(email, token, password);
+    if (!email || !token || !password) {
+      return NextResponse.json(
+        { error: "Email, token, and new password are required" },
+        { status: 400 }
+      );
+    }
 
-//     if (!email) {
-//       return NextResponse.json({ message: "Email is required" }, { status: 400 });
-//     }
+    const normalizedEmail = email.toLowerCase();
+    const user = await prisma.user_master.findUnique({
+      where: { email: normalizedEmail },
+    });
 
-//     const user = await prisma.user_master.findUnique({
-//       where: { email: email.toLowerCase() },
-//     });
+    if (
+      !user ||
+      !user.reset_token ||
+      !user.reset_expires ||
+      user.reset_token !== token ||
+      new Date() > user.reset_expires
+    ) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 400 }
+      );
+    }
 
-//     if (!user) {
-//       return NextResponse.json({ message: "User not found" }, { status: 404 });
-//     }
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-//     const token = uuidv4(); // Generate unique token
-//     const expiresAt = addMinutes(new Date(), 15); // Token expires in 15 minutes
+    // Update the user: set the new password and clear reset token fields
+    await prisma.user_master.update({
+      where: { email: normalizedEmail },
+      data: {
+        password: hashedPassword,
+        reset_token: null,
+        reset_expires: null,
+      },
+    });
 
-//     await prisma.user_master.update({
-//       where: { id: user.id },
-//       data: { reset_token: token, reset_expires: expiresAt },
-//     });
-
-//     await sendResetPasswordEmail(user.email, token);
-
-//     return NextResponse.json({ message: "Password reset link sent" }, { status: 200 });
-//   } catch (error) {
-//     console.error("Error resetting password:", error);
-//     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-//   }
-// }
+    return NextResponse.json({
+      message: "Password has been reset successfully.",
+    });
+  } catch (error) {
+    console.error("Error in reset-password:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}

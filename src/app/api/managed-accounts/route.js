@@ -79,7 +79,7 @@ const PORTFOLIO_MAPPING = {
 };
 // Map account codes to client names for reference
 const CLIENT_NAMES = {
-  AC5: "Sarla Performance Fibers",
+  AC5: "Sarla Performance Fibers Limited",
   AC6: "Priyavrata Mafatlal",
   AC7: "Raj Jhaveri",
   AC8: "Satidham Industries",
@@ -164,7 +164,7 @@ function calculateTrailingReturns(navData, periods = {
   const returns = {};
 
   Object.entries(periods).forEach(([period, targetCount]) => {
-    // For periods less than a month, use index-based calculation
+    // For periods less than a month, use index-based calculation (absolute return)
     if (["5d", "10d", "15d"].includes(period)) {
       if (sortedData.length > targetCount) {
         const historicalEntry = sortedData[targetCount];
@@ -179,7 +179,7 @@ function calculateTrailingReturns(navData, periods = {
     } 
     // For periods >= 1 month, use date-based calculation
     else {
-      // Calculate target date
+      // Calculate target date based on the period
       const targetDate = new Date(currentDate);
       if (period === "1m") {
         targetDate.setMonth(targetDate.getMonth() - 1);
@@ -202,15 +202,33 @@ function calculateTrailingReturns(navData, periods = {
       }
 
       if (closestEntry) {
-        returns[period] = ((lastNav - closestEntry.nav) / closestEntry.nav) * 100;
-        
-        // For debugging
-        console.log(`${period}:`, {
-          targetDate,
-          actualDate: new Date(closestEntry.date),
-          nav: closestEntry.nav,
-          return: returns[period]
-        });
+        // For periods 1 year or longer, calculate XIRR (annualized return)
+        if (["1y", "2y", "3y"].includes(period)) {
+          const historicalDate = new Date(closestEntry.date);
+          const daysDiff = (currentDate - historicalDate) / (1000 * 60 * 60 * 24);
+          // Calculate annualized return (XIRR)
+          const annualizedReturn = Math.pow(lastNav / closestEntry.nav, 365 / daysDiff) - 1;
+          returns[period] = annualizedReturn * 100;
+
+          // For debugging
+          console.log(`${period} (XIRR):`, {
+            targetDate,
+            actualDate: historicalDate,
+            nav: closestEntry.nav,
+            annualizedReturn: returns[period]
+          });
+        } else {
+          // For periods like "1m", use absolute return if desired
+          returns[period] = ((lastNav - closestEntry.nav) / closestEntry.nav) * 100;
+
+          // For debugging
+          console.log(`${period} (Absolute):`, {
+            targetDate,
+            actualDate: new Date(closestEntry.date),
+            nav: closestEntry.nav,
+            return: returns[period]
+          });
+        }
       } else {
         returns[period] = null;
       }
@@ -219,6 +237,7 @@ function calculateTrailingReturns(navData, periods = {
 
   return returns;
 }
+
 
 function calculateMonthlyPnL(navData) {
   if (!navData || navData.length === 0) return {};

@@ -120,7 +120,7 @@ const TrailingReturns = ({
               viewBox="0 0 24 24"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="mr-3 w-4 text-green-500 inline group-hover:text-green-500 group-focus:text-green-600 transition ease-in-out duration-150"
+              className="mr-3 w-4 text-[#d1a47b] inline group-hover:text-[#d1a47b] group-focus:text-green-600 transition ease-in-out duration-150"
               height="1em"
               width="1em"
               xmlns="http://www.w3.org/2000/svg"
@@ -767,7 +767,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                 <button
                   onClick={() => setActiveScheme("Scheme Total")}
                   className={`px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-wider focus:outline-none border-b-2 ${activeScheme === "Scheme Total"
-                    ? "border-green-500 text-green-500"
+                    ? "border-[#d1a47b] text-[#d1a47b]"
                     : "border-transparent text-gray-700"
                     }`}
                 >
@@ -778,7 +778,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                     key={schemeName}
                     onClick={() => setActiveScheme(schemeName)}
                     className={`px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-wider focus:outline-none border-b-2 ${activeScheme === schemeName
-                      ? "border-green-500 text-green-500"
+                      ? "border-[#d1a47b] text-[#d1a47b]"
                       : "border-transparent text-gray-700"
                       }`}
                   >
@@ -831,7 +831,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
               >
                 {returnsValue.toFixed(2)}%
               </span>
-              <div
+              {/* <div
                 className={`flex items-end text-sm ${isPositive ? "text-green-600" : "text-red-600"
                   }`}
               >
@@ -841,7 +841,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                   <ArrowDownIcon className="h-1 w-1" />
                 )}
                 <span>{dailyPercentageChange.toFixed(2)}%</span>
-              </div>
+              </div> */}
             </div>
           </div>
           <div className="p-4 bg-white rounded-lg shadow">
@@ -852,13 +852,13 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
               </p>
               <div className="flex items-center">
                 {latestPreviousValue >= 0 ? (
-                  <ArrowUpIcon className="h-1 w-1 text-green-500" />
+                  <ArrowUpIcon className="h-1 w-1 text-[#d1a47b]" />
                 ) : (
                   <ArrowDownIcon className="h-1 w-1 text-red-500" />
                 )}
-                <span className={`text-sm ${latestPreviousValue >= 0 ? "text-green-500" : "text-red-500"}`}>
+                {/* <span className={`text-sm ${latestPreviousValue >= 0 ? "text-[#d1a47b]" : "text-red-500"}`}>
                   {formatCurrency(latestPreviousValue)}
-                </span>
+                </span> */}
               </div>
             </div>
           </div>
@@ -1060,12 +1060,14 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex flex-col justify-center items-center min-h-screen gap-4">
+        <div className="w-8 h-8 border-4 border-[#d1a47b] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-lg text-gray-700 max-w-md text-center">
+          "We don't have to be smarter than the rest we have to be more disciplined than the rest"
+        </p>
       </div>
     );
   }
-  
   if (error) {
     return <div className="p-4 text-red-500">Error: {error}</div>;
   }
@@ -1081,7 +1083,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         </Text>
       )}
       <div className="flex justify-between items-center mb-4">
-        <Heading className="text-3xl font-bold mb-4 mt-4">
+        <Heading className="text-2xl font-semibold mb-4 mt-4">
           Welcome, {clientName}
         </Heading>
       </div>

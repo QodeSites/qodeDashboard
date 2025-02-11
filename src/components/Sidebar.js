@@ -28,10 +28,18 @@ const SidebarNavigation = () => {
 
   const isLinkActive = (href) => pathname === href;
 
+  // Determine the client name from session data.
+  // If the user logged in via managed account, use the first managed_client_names value.
+  // Otherwise, if the user logged in via client_master, use the first username value.
+  const clientName =
+    session?.user?.managed_client_names?.[0] ||
+    session?.user?.usernames?.[0] ||
+    "Client";
+
   return (
     <>
       {/* Mobile header with hamburger */}
-      <div className="h-16 flex items-center md:hidden px-4 fixed top-0 left-0 right-0 bg-white  z-40 border-b border-gray-200">
+      <div className="h-16 flex items-center md:hidden px-4 fixed top-0 left-0 right-0 bg-white z-40 border-b border-gray-200">
         <button onClick={toggleSidebar} aria-label="Toggle menu">
           <FontAwesomeIcon icon={faBars} className="w-6 h-6" />
         </button>
@@ -39,9 +47,8 @@ const SidebarNavigation = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 w-64 bg-white  border-r border-gray-200 transform transition-transform duration-300 z-50 flex flex-col h-screen ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        className={`fixed top-0 left-0 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 z-50 flex flex-col h-screen ${isOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h1 className="text-4xl text-[#d1a47b] font-bold playfair-display-font">Qode</h1>
@@ -56,9 +63,8 @@ const SidebarNavigation = () => {
               <Link
                 href="/"
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center space-x-3 ${
-                  isLinkActive("/") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900  "
-                }`}
+                className={`flex items-center space-x-3 ${isLinkActive("/") ? "text-[#d1a47b] font-bold" : "text-gray-700 hover:text-gray-900"
+                  }`}
               >
                 <FontAwesomeIcon icon={faHome} className="w-5 h-5" />
                 <span>Home</span>
@@ -68,9 +74,8 @@ const SidebarNavigation = () => {
               <Link
                 href="/portfolio"
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center space-x-3 ${
-                  isLinkActive("/portfolio") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900  "
-                }`}
+                className={`flex items-center space-x-3 ${isLinkActive("/portfolio") ? "text-[#d1a47b] font-bold" : "text-gray-700 hover:text-gray-900"
+                  }`}
               >
                 <FontAwesomeIcon icon={faChartPie} className="w-5 h-5" />
                 <span>Portfolio</span>
@@ -80,9 +85,8 @@ const SidebarNavigation = () => {
               <Link
                 href="/account"
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center space-x-3 ${
-                  isLinkActive("/account") ? "text-green-500 font-bold" : "text-gray-700 hover:text-gray-900  "
-                }`}
+                className={`flex items-center space-x-3 ${isLinkActive("/account") ? "text-[#d1a47b] font-bold" : "text-gray-700 hover:text-gray-900"
+                  }`}
               >
                 <FontAwesomeIcon icon={faUser} className="w-5 h-5" />
                 <span>Account</span>
@@ -96,8 +100,8 @@ const SidebarNavigation = () => {
             {session?.user?.image ? (
               <img
                 src={session.user.image}
-                alt="User avatar"
-                className="w-10 h-10 rounded-full"
+                alt="Client avatar"
+                className="w-2 h-2 rounded-full"
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
@@ -105,8 +109,8 @@ const SidebarNavigation = () => {
               </div>
             )}
             <div>
-              <p className="text-gray-700  font-medium">{session?.user?.name || "User"}</p>
-              <button onClick={handleLogout} className="text-sm text-green-500 hover:underline">
+              <p className="text-gray-700 text-sm font-medium">{clientName}</p>
+              <button onClick={handleLogout} className="text-sm text-[#d1a47b] hover:underline">
                 Logout
               </button>
             </div>

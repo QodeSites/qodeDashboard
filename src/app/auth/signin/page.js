@@ -10,6 +10,7 @@ import Button from "@/components/common/Button";
 // Import FontAwesome components and icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import Text from "@/components/common/Text";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -57,7 +58,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="bg-gray-50  mx-auto h-screen flex flex-col justify-between overflow-hidden">
+    <div className="bg-gray-50 mx-auto h-screen flex flex-col justify-between overflow-hidden">
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         <Link
           href="/"
@@ -65,22 +66,15 @@ export default function SignIn() {
         >
           Qode
         </Link>
-        <Heading className="text-center text-2xl font-extralight   text-brown  my-6">
+        <Text className="text-center text-2xl font-extralight text-brown my-6">
           Sign in to your account
-        </Heading>
-        <div className="w-full max-w-md p-8 border border-gray-200  bg-white rounded-lg shadow-sm">
-
-          {error && (
-            <p className="mb-4 text-center text-red-500">{error}</p>
-          )}
-
+        </Text>
+        <div className="w-full max-w-md p-8 border border-gray-200 bg-white rounded-lg shadow-sm">
+          {error && <p className="mb-4 text-center text-red-500">{error}</p>}
           <form className="space-y-4" onSubmit={handleSubmit} noValidate>
             {/* Email Input */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 "
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <div className="mt-1">
@@ -93,8 +87,8 @@ export default function SignIn() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full text-sm px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400  transition-colors ${error ? "border-red-500" : "border-gray-300 "
-                    } bg-white  text-brown `}
+                  className={`w-full text-sm px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors ${error ? "border-red-500" : "border-gray-300"
+                    } bg-white text-brown`}
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
@@ -102,10 +96,7 @@ export default function SignIn() {
 
             {/* Password Input with Toggle */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 "
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <div className="mt-1 relative">
@@ -118,8 +109,8 @@ export default function SignIn() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full text-sm px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400  transition-colors ${error ? "border-red-500" : "border-gray-300 "
-                    } bg-white  text-brown `}
+                  className={`w-full text-sm px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors ${error ? "border-red-500" : "border-gray-300"
+                    } bg-white text-brown`}
                   aria-invalid={error ? "true" : "false"}
                 />
                 <button
@@ -128,20 +119,19 @@ export default function SignIn() {
                   className="absolute inset-y-0 right-0 px-3 flex items-center focus:outline-none"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  <FontAwesomeIcon
-                    icon={showPassword ? faEyeSlash : faEye}
-                    className="text-gray-500"
-                  />
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="text-gray-500" />
                 </button>
               </div>
             </div>
+
+
 
             {/* Submit Button */}
             <div className="text-center">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full  text-white bg-gray-800  transition-colors duration-200 py-2 my-2 rounded-md"
+                className="w-full text-white bg-[#d1a47b] transition-colors duration-200 py-2 my-2 rounded-md"
                 aria-busy={isLoading}
               >
                 {isLoading ? (
@@ -157,12 +147,17 @@ export default function SignIn() {
                   "Sign In"
                 )}
               </Button>
+
+              {/* Forgot Password Link */}
+              <Link href="/forgot-password" className="text-sm my-6 text-[#d1a47b] underline">
+                Forgot password?
+              </Link>
             </div>
           </form>
         </div>
       </main>
 
-      <footer className="py-4 text-center text-sm text-gray-500 ">
+      <footer className="py-4 text-center text-sm text-gray-500">
         &copy; {new Date().getFullYear()} Qode. All rights reserved.
       </footer>
     </div>
