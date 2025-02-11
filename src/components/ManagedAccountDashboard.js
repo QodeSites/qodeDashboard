@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import Heading from "./common/Heading";
@@ -300,6 +300,19 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     getAccountByCode,
     getTotalPortfolioByAccount,
   } = useManagedAccounts();
+
+
+  const [displayLoading, setDisplayLoading] = useState(true);
+
+  useEffect(() => {
+    // When the hook's loading becomes false, delay hiding the loading screen
+    if (!loading) {
+      const timer = setTimeout(() => {
+        setDisplayLoading(false);
+      }, 100); // Adjust the delay here (in milliseconds) as needed (2000ms = 2 seconds)
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   // Assume you are using the first account from accountCodes
   const accountCode =
@@ -826,7 +839,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
             <h3 className="text-xs sm:text-lg font-medium">Returns</h3>
             <div className="mt-2 flex justify-between items-baseline gap-4">
               <span
-                className={`text-xs sm:text-xl font-semibold ${returnsValue >= 0 ? "text-green-500" : "text-red-500"
+                className={`text-base ${returnsValue >= 0 ? "text-green-500" : "text-red-500"
                   }`}
               >
                 {returnsValue.toFixed(2)}%
@@ -1058,7 +1071,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
   };
 
-  if (loading) {
+  if (loading || displayLoading) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen gap-4">
         <div className="w-8 h-8 border-4 border-[#d1a47b] border-t-transparent rounded-full animate-spin"></div>
