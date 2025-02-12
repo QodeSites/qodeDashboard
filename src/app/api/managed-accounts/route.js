@@ -138,7 +138,7 @@ function calculateReturns(navData) {
   } else {
     // Annualize the return (CAGR)
     const annualizedReturn = (Math.pow((1 + totalReturn), (365 / daysDiff)) - 1) * 100;
-    console.log("Annualized Return:", annualizedReturn);
+    // console.log("Annualized Return:", annualizedReturn);
     return annualizedReturn;
   }
 }
@@ -211,23 +211,23 @@ function calculateTrailingReturns(navData, periods = {
           returns[period] = annualizedReturn * 100;
 
           // For debugging
-          console.log(`${period} (XIRR):`, {
-            targetDate,
-            actualDate: historicalDate,
-            nav: closestEntry.nav,
-            annualizedReturn: returns[period]
-          });
+          // console.log(`${period} (XIRR):`, {
+          //   targetDate,
+          //   actualDate: historicalDate,
+          //   nav: closestEntry.nav,
+          //   annualizedReturn: returns[period]
+          // });
         } else {
           // For periods like "1m", use absolute return if desired
           returns[period] = ((lastNav - closestEntry.nav) / closestEntry.nav) * 100;
 
           // For debugging
-          console.log(`${period} (Absolute):`, {
-            targetDate,
-            actualDate: new Date(closestEntry.date),
-            nav: closestEntry.nav,
-            return: returns[period]
-          });
+          // console.log(`${period} (Absolute):`, {
+          //   targetDate,
+          //   actualDate: new Date(closestEntry.date),
+          //   nav: closestEntry.nav,
+          //   return: returns[period]
+          // });
         }
       } else {
         returns[period] = null;
@@ -395,8 +395,7 @@ export async function GET(request) {
 
         const investedAmount = cashForScheme.reduce((sum, entry) => {
           const capitalAmount = entry.capital_in_out || 0;
-          const dividendAmount = entry.dividend || 0;
-          return sum + capitalAmount + dividendAmount;
+          return sum + capitalAmount;
         }, 0);
 
         schemeInvestedAmounts[scheme] = investedAmount;
