@@ -432,130 +432,209 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   };
 
 // ── MERGED CHART OPTIONS (NAV & Drawdown) ──
-const mergedChartOptions = useMemo(() => {
-  // ── Prepare Performance (NAV) Series ──
-  let performanceSeries = [];
-  let portfolioData = [];
-  if (activeScheme === "Scheme Total") {
-    const totalNavCurve = totalPortfolio?.navCurve || [];
-    portfolioData = totalNavCurve.map((item) => [
-      new Date(item.date).getTime(),
-      parseFloat(item.nav)
-    ]);
-  } else if (selectedScheme) {
-    portfolioData = (selectedScheme.navCurve || []).map((item) => [
-      new Date(item.date).getTime(),
-      parseFloat(item.nav)
-    ]);
-  }
-  if (portfolioData.length > 0) {
-    // Normalize so that the very first value becomes 0.
-    const normalizedPortfolioData = normalizeDataSeries(
-      portfolioData,
-      portfolioData[0][1]
-    );
-    performanceSeries.push({
-      name: activeScheme === "Scheme Total" ? "Portfolio" : selectedScheme.schemeName,
-      data: normalizedPortfolioData,
-      color: "#2E8B57", // Forest green for portfolio performance
-      zIndex: 2,
-      yAxis: 0, // assign to performance y-axis (top)
-      type: "line",
-      marker: { enabled: false }
-    });
-  }
+  // ── MERGED CHART OPTIONS (NAV & Drawdown) ──
+  const mergedChartOptions = useMemo(() => {
+    // ── Prepare Performance (NAV) Series ──
+    let performanceSeries = [];
+    let portfolioData = [];
+    if (activeScheme === "Scheme Total") {
+      const totalNavCurve = totalPortfolio?.navCurve || [];
+      portfolioData = totalNavCurve.map((item) => [
+        new Date(item.date).getTime(),
+        parseFloat(item.nav)
+      ]);
+    } else if (selectedScheme) {
+      portfolioData = (selectedScheme.navCurve || []).map((item) => [
+        new Date(item.date).getTime(),
+        parseFloat(item.nav)
+      ]);
+    }
+    if (portfolioData.length > 0) {
+      // Normalize so that the very first value becomes 0.
+      const normalizedPortfolioData = normalizeDataSeries(
+        portfolioData,
+        portfolioData[0][1]
+      );
+      performanceSeries.push({
+        name: activeScheme === "Scheme Total" ? "Portfolio" : selectedScheme.schemeName,
+        data: normalizedPortfolioData,
+        color: "#2E8B57", // Forest green for portfolio performance.
+        zIndex: 2,
+        yAxis: 0, // assign to performance y-axis (top)
+        type: "line",
+        marker: { enabled: false }
+      });
+    }
 
-  let benchmarkPerformanceSeries = [];
-  if (benchmarkData?.length) {
-    const benchmarkDataPoints = benchmarkData.map((item) => [
-      new Date(item.date).getTime(),
-      parseFloat(item.nav)
-    ]);
-    const normalizedBenchmarkData = normalizeDataSeries(
-      benchmarkDataPoints,
-      benchmarkDataPoints[0][1]
-    );
-    benchmarkPerformanceSeries.push({
-      name: "NIFTY 50",
-      data: normalizedBenchmarkData,
-      color: "#4169E1", // Royal blue for benchmark
-      zIndex: 1,
-      yAxis: 0, // performance axis
-      type: "line",
-      marker: { enabled: false }
-    });
-  }
+    let benchmarkPerformanceSeries = [];
+    if (benchmarkData?.length) {
+      const benchmarkDataPoints = benchmarkData.map((item) => [
+        new Date(item.date).getTime(),
+        parseFloat(item.nav)
+      ]);
+      const normalizedBenchmarkData = normalizeDataSeries(
+        benchmarkDataPoints,
+        benchmarkDataPoints[0][1]
+      );
+      benchmarkPerformanceSeries.push({
+        name: "NIFTY 50",
+        data: normalizedBenchmarkData,
+        color: "#4169E1", // Royal blue for benchmark.
+        zIndex: 1,
+        yAxis: 0, // performance axis
+        type: "line",
+        marker: { enabled: false }
+      });
+    }
 
-  // ── Prepare Drawdown Series Using Actual (Negative) Values ──
-  let drawdownSeries = [];
-  const portfolioCurve =
-    activeScheme === "Scheme Total"
-      ? totalPortfolio?.drawdownCurve
-      : selectedScheme?.drawdownCurve;
-  if (portfolioCurve?.length) {
-    drawdownSeries.push({
-      name: "Portfolio Drawdown",
-      data: portfolioCurve.map((point) => [
-        new Date(point.date).getTime(),
-        parseFloat(-point.drawdown)
-      ]),
-      color: "#FF4560",
-      zIndex: 2,
-      yAxis: 1, // assign to drawdown y-axis (bottom)
-      type: "area",
-      marker: { enabled: false },
-      fillOpacity: 0.2,
-      threshold: 0, // Draw from the 0 baseline
-      tooltip: { valueSuffix: "%" }
-    });
-  }
+    // ── Prepare Drawdown Series Using Actual (Negative) Values ──
+    let drawdownSeries = [];
+    const portfolioCurve =
+      activeScheme === "Scheme Total"
+        ? totalPortfolio?.drawdownCurve
+        : selectedScheme?.drawdownCurve;
+    if (portfolioCurve?.length) {
+      drawdownSeries.push({
+        name: "Portfolio Drawdown",
+        data: portfolioCurve.map((point) => [
+          new Date(point.date).getTime(),
+          parseFloat(-point.drawdown)// Multiply drawdown by 100
+        ]),
+        color: "#FF4560",
+        zIndex: 2,
+        yAxis: 1, // assign to drawdown y-axis (bottom)
+        type: "area",
+        marker: { enabled: false },
+        fillOpacity: 0.2,
+        threshold: 0, // Draw from the 0 baseline
+        tooltip: { valueSuffix: "%" }
+      });
+    }
 
-  let benchmarkDrawdownSeries = [];
-  if (benchmarkData?.length) {
-    let maxBenchmark = -Infinity;
-    const benchmarkDrawdownCurve = benchmarkData.map((point) => {
-      const timestamp = new Date(point.date).getTime();
-      const nav = parseFloat(point.nav);
-      maxBenchmark = Math.max(maxBenchmark, nav);
-      // Compute drawdown percentage (this will be negative or zero)
-      const dd = ((nav - maxBenchmark) / maxBenchmark) * 100;
-      return [timestamp, dd];
-    });
-    benchmarkDrawdownSeries.push({
-      name: "NIFTY 50 Drawdown",
-      data: benchmarkDrawdownCurve,
-      color: "#FF8F00",
-      zIndex: 1,
-      yAxis: 1, // drawdown axis
-      type: "area",
-      marker: { enabled: false },
-      fillOpacity: 0.2,
-      threshold: 0, // Draw from the 0 baseline
-      tooltip: { valueSuffix: "%" }
-    });
-  }
+    let benchmarkDrawdownSeries = [];
+    if (benchmarkData?.length) {
+      let maxBenchmark = -Infinity;
+      const benchmarkDrawdownCurve = benchmarkData.map((point) => {
+        const timestamp = new Date(point.date).getTime();
+        const nav = parseFloat(point.nav);
+        maxBenchmark = Math.max(maxBenchmark, nav);
+        // Compute drawdown percentage (this will be negative or zero).
+        const dd = ((nav - maxBenchmark) / maxBenchmark) * 100;
+        return [timestamp, dd];
+      });
+      benchmarkDrawdownSeries.push({
+        name: "NIFTY 50 Drawdown",
+        data: benchmarkDrawdownCurve,
+        color: "#FF8F00",
+        zIndex: 1,
+        yAxis: 1, // drawdown axis
+        type: "area",
+        marker: { enabled: false },
+        fillOpacity: 0.2,
+        threshold: 0, // Draw from the 0 baseline
+        tooltip: { valueSuffix: "%" }
+      });
+    }
 
-  // Combine all series
-  const mergedSeries = [
-    ...performanceSeries,
-    ...benchmarkPerformanceSeries,
-    ...drawdownSeries,
-    ...benchmarkDrawdownSeries
-  ];
+    // Combine all series.
+    const mergedSeries = [
+      ...performanceSeries,
+      ...benchmarkPerformanceSeries,
+      ...drawdownSeries,
+      ...benchmarkDrawdownSeries
+    ];
 
-  return {
-    chart: {
-      zoomType: null,
-      height: 700,
-      events: {
-        load: function () {
-          const chart = this;
-          chart.customDragStart = null;
-          chart.customIsDragging = false;
-          chart.customTooltip = null;
-          chart.dragStartPlotLine = null;
-          chart.dragCurrentPlotLine = null;
+    return {
+      chart: {
+        zoomType: "xy",
+        height: 700, // Increased chart height for better visibility
+      },
+      title: {
+        text: "Portfolio vs Benchmark Performance & Drawdown",
+        style: { fontSize: "16px" },
+      },
+      xAxis: {
+        type: "datetime",
+        title: { text: "Date" },
+        // Match the xAxis settings from your second configuration:
+        labels: {
+          formatter: function () {
+            return Highcharts.dateFormat('%Y', this.value);
+          },
+          style: {
+            color: "#2E8B57", // replace with colors.accent if available
+            fontSize: "10px",
+          },
+        },
+        gridLineColor: "#e6e6e6", // replace with colors.gridLines if available
+        tickWidth: 1, // or (isMobile ? 0 : 1)
+      },
+      // Define two yAxes: index 0 for performance and index 1 for drawdown.
 
+      yAxis: [
+        {
+          // Performance yAxis (top)
+          title: { text: "Performance (%)" },
+          height: "70%", // increased from 70% to give more space for performance data
+          top: "0%",
+          labels: {
+            formatter: function () {
+              return Math.round(this.value);
+            },
+            style: {
+              color: "#2E8B57", // or colors.accent
+              fontSize: "8px",
+            },
+          },
+          min: 80,
+          tickAmount: 7,
+
+          lineColor: "#2E8B57",
+          tickColor: "#2E8B57",
+          tickWidth: 1,
+          gridLineColor: "#e6e6e6",
+          plotLines: [{
+            value: 100, // adjust as needed
+            color: "#2E8B57",
+            width: 1,
+            zIndex: 5,
+            dashStyle: "dot"
+          }],
+        },
+        {
+          // Drawdown yAxis (bottom)
+          title: { text: "Drawdown" },
+          height: "20%", // reduced from 30% to further shrink the drawdown area
+          top: "80%",    // adjusted to start right after the performance axis
+          offset: 0,
+          min: -15, // adjust these values based on your data range if needed
+          max: 0,
+          tickAmount: 3,
+          labels: {
+            formatter: function () {
+              return Math.round(this.value) + '%';
+            },
+            style: {
+              color: "#FF4560", // chosen color for drawdown
+              fontSize: "10px",
+            },
+          },
+          lineColor: "#FF4560",
+          tickColor: "#FF4560",
+          tickWidth: 1,
+          gridLineColor: "#e6e6e6",
+        },
+      ],
+
+      tooltip: {
+        shared: true,
+        xDateFormat: "%Y-%m-%d",
+        valueDecimals: 2,
+        formatter: function () {
+          const hoveredX = this.x;
+          const chart = this.points[0].series.chart;
+
+          // Helper: find the nearest point in a series to the given x value
           function getNearestPoint(series, x) {
             let nearestPoint = null;
             let minDiff = Infinity;
@@ -569,304 +648,49 @@ const mergedChartOptions = useMemo(() => {
             return nearestPoint;
           }
 
-          function updateDragPlotLines(startX, currentX) {
-            if (chart.dragStartPlotLine) {
-              chart.dragStartPlotLine.destroy();
-            }
-            if (chart.dragCurrentPlotLine) {
-              chart.dragCurrentPlotLine.destroy();
-            }
+          // Determine the names used for your series.
+          // (These match the names you set when pushing the series earlier.)
+          const portfolioSeriesName =
+            activeScheme === "Scheme Total" ? "Portfolio" : selectedScheme?.schemeName;
 
-            chart.dragStartPlotLine = chart.xAxis[0].addPlotLine({
-              value: startX,
-              color: '#666',
-              width: 1,
-              dashStyle: 'dash',
-              zIndex: 5,
-              id: 'dragStart'
-            });
+          // Get the series from the chart instance
+          const portfolioSeries = chart.series.find(s => s.name === portfolioSeriesName);
+          const benchmarkSeries = chart.series.find(s => s.name === "NIFTY 50");
+          const portfolioDrawdownSeries = chart.series.find(s => s.name === "Portfolio Drawdown");
+          const benchmarkDrawdownSeries = chart.series.find(s => s.name === "NIFTY 50 Drawdown");
 
-            chart.dragCurrentPlotLine = chart.xAxis[0].addPlotLine({
-              value: currentX,
-              color: '#666',
-              width: 1,
-              dashStyle: 'dash',
-              zIndex: 5,
-              id: 'dragCurrent'
-            });
-          }
+          // Look up the nearest point for each series
+          const portfolioPoint = portfolioSeries ? getNearestPoint(portfolioSeries, hoveredX) : null;
+          const benchmarkPoint = benchmarkSeries ? getNearestPoint(benchmarkSeries, hoveredX) : null;
+          const portfolioDrawdownPoint = portfolioDrawdownSeries ? getNearestPoint(portfolioDrawdownSeries, hoveredX) : null;
+          const benchmarkDrawdownPoint = benchmarkDrawdownSeries ? getNearestPoint(benchmarkDrawdownSeries, hoveredX) : null;
 
-          function removeDragPlotLines() {
-            if (chart.dragStartPlotLine) {
-              chart.dragStartPlotLine.destroy();
-              chart.dragStartPlotLine = null;
-            }
-            if (chart.dragCurrentPlotLine) {
-              chart.dragCurrentPlotLine.destroy();
-              chart.dragCurrentPlotLine = null;
-            }
-          }
+          // Build the tooltip text
+          let tooltipText = "<b>" + Highcharts.dateFormat("%d-%m-%Y", hoveredX) + "</b><br/><br/>";
 
-          // ── MOUSE DOWN: Start Dragging ──
-          chart.container.addEventListener('mousedown', function (e) {
-            const normalizedEvent = chart.pointer.normalize(e);
-            chart.customDragStart = chart.xAxis[0].toValue(normalizedEvent.chartX);
-            chart.customIsDragging = true;
+          tooltipText += "<span style='font-weight: bold; font-size: 12px'>Performance:</span><br/>";
+          tooltipText += `<span style="color:#2E8B57">\u25CF</span> Portfolio: ${portfolioPoint ? portfolioPoint.y.toFixed(2) : 'N/A'}%<br/>`;
+          tooltipText += `<span style="color:#4169E1">\u25CF</span> Benchmark: ${benchmarkPoint ? benchmarkPoint.y.toFixed(2) : 'N/A'}%<br/>`;
 
-            // Disable the default tooltip
-            chart.tooltip.options.enabled = false;
-            chart.tooltip.hide();
+          tooltipText += "<br/><span style='font-weight: bold; font-size: 12px'>Drawdown:</span><br/>";
+          tooltipText += `<span style="color:#FF4560">\u25CF</span> Portfolio: ${portfolioDrawdownPoint ? portfolioDrawdownPoint.y.toFixed(2) : 'N/A'}%<br/>`;
+          tooltipText += `<span style="color:#FF8F00">\u25CF</span> Benchmark: ${benchmarkDrawdownPoint ? benchmarkDrawdownPoint.y.toFixed(2) : 'N/A'}%<br/>`;
 
-            // Add initial plot lines
-            updateDragPlotLines(chart.customDragStart, chart.customDragStart);
-          }, true); // using capture phase
-
-          // ── MOUSE MOVE: Update drag visualization and returns ──
-          chart.container.addEventListener('mousemove', function (e) {
-            if (chart.customIsDragging && chart.customDragStart !== null) {
-              const normalizedEvent = chart.pointer.normalize(e);
-              const currentX = chart.xAxis[0].toValue(normalizedEvent.chartX);
-
-              // Update plot lines
-              updateDragPlotLines(chart.customDragStart, currentX);
-
-              // Calculate returns
-              const portfolioSeriesName = activeScheme === "Scheme Total"
-                ? "Portfolio"
-                : selectedScheme?.schemeName;
-              const portfolioSeries = chart.series.find(s => s.name === portfolioSeriesName);
-
-              if (portfolioSeries) {
-                const startPoint = getNearestPoint(portfolioSeries, chart.customDragStart);
-                const currentPoint = getNearestPoint(portfolioSeries, currentX);
-
-                if (startPoint && currentPoint) {
-                  const returnDiff = currentPoint.y - startPoint.y;
-                  const startDate = Highcharts.dateFormat('%d-%m-%Y', startPoint.x);
-                  const endDate = Highcharts.dateFormat('%d-%m-%Y', currentPoint.x);
-
-                  // Create or update returns tooltip
-                  if (!chart.customTooltip) {
-                    chart.customTooltip = chart.renderer
-                      .label('', 0, 0, 'callout')
-                      .attr({
-                        fill: 'rgba(255, 255, 255, 0.95)',
-                        padding: 8,
-                        r: 5,
-                        zIndex: 10,
-                        stroke: '#666',
-                        'stroke-width': 1
-                      })
-                      .css({
-                        color: '#333',
-                        fontSize: '12px'
-                      })
-                      .add();
-                  }
-
-                  const tooltipText =
-                    `<b>Return: ${returnDiff.toFixed(2)}%</b><br/>` +
-                    `From: ${startDate}<br/>` +
-                    `To: ${endDate}`;
-
-                  chart.customTooltip
-                    .attr({
-                      text: tooltipText
-                    })
-                    .animate({
-                      x: normalizedEvent.chartX + 10,
-                      y: normalizedEvent.chartY - 50
-                    }, { duration: 50 });
-                }
-              }
-            }
-          }, true); // using capture phase
-
-          // ── MOUSE UP / MOUSE OUT: Clean up ──
-          function endDragging() {
-            chart.customIsDragging = false;
-            chart.customDragStart = null;
-
-            // Re-enable default tooltip
-            chart.tooltip.options.enabled = true;
-
-            // Remove custom tooltip
-            if (chart.customTooltip) {
-              chart.customTooltip.destroy();
-              chart.customTooltip = null;
-            }
-
-            // Remove plot lines
-            removeDragPlotLines();
-          }
-
-          chart.container.addEventListener('mouseup', endDragging, true);
-          chart.container.addEventListener('mouseout', endDragging, true);
-        }
-      }
-    },
-
-    title: {
-      text: "Portfolio vs Benchmark Performance & Drawdown",
-      style: { fontSize: "16px" }
-    },
-
-    xAxis: {
-      type: "datetime",
-      title: { text: "Date" },
-      labels: {
-        formatter: function () {
-          return Highcharts.dateFormat('%Y', this.value);
-        },
-        style: {
-          color: "#2E8B57",
-          fontSize: "10px"
+          return tooltipText;
         }
       },
-      gridLineColor: "#e6e6e6",
-      tickWidth: 1
-    },
 
-    yAxis: [
-      {
-        // Performance yAxis (top)
-        title: { text: "Performance (%)" },
-        height: "70%",
-        top: "0%",
-        labels: {
-          formatter: function () {
-            return Math.round(this.value);
-          },
-          style: {
-            color: "#2E8B57",
-            fontSize: "8px"
-          }
-        },
-        min: 80,
-        tickAmount: 7,
-        lineColor: "#2E8B57",
-        tickColor: "#2E8B57",
-        tickWidth: 1,
-        gridLineColor: "#e6e6e6",
-        plotLines: [{
-          value: 100,
-          color: "#2E8B57",
-          width: 1,
-          zIndex: 5,
-          dashStyle: "dot"
-        }]
+      legend: {
+        enabled: true,
+        itemStyle: { fontSize: "12px" }
       },
-      {
-        // Drawdown yAxis (bottom)
-        title: { text: "Drawdown" },
-        height: "20%",
-        top: "80%",
-        offset: 0,
-        min: -15,
-        max: 0,
-        tickAmount: 3,
-        labels: {
-          formatter: function () {
-            return Math.round(this.value) + '%';
-          },
-          style: {
-            color: "#FF4560",
-            fontSize: "10px"
-          }
-        },
-        lineColor: "#FF4560",
-        tickColor: "#FF4560",
-        tickWidth: 1,
-        gridLineColor: "#e6e6e6"
-      }
-    ],
-
-    tooltip: {
-      enabled: true,
-      shared: true,
-      xDateFormat: "%Y-%m-%d",
-      valueDecimals: 2,
-      formatter: function () {
-        if (this.points[0].series.chart.customIsDragging) {
-          return false;
-        }
-
-        const hoveredX = this.x;
-        const chart = this.points[0].series.chart;
-
-        function getNearestPoint(series, x) {
-          let nearestPoint = null;
-          let minDiff = Infinity;
-          series.data.forEach(point => {
-            const diff = Math.abs(point.x - x);
-            if (diff < minDiff) {
-              minDiff = diff;
-              nearestPoint = point;
-            }
-          });
-          return nearestPoint;
-        }
-
-        const portfolioSeriesName =
-          activeScheme === "Scheme Total" ? "Portfolio" : selectedScheme?.schemeName;
-        const portfolioSeries = chart.series.find(
-          (s) => s.name === portfolioSeriesName
-        );
-        const benchmarkSeries = chart.series.find((s) => s.name === "NIFTY 50");
-        const portfolioDrawdownSeries = chart.series.find(
-          (s) => s.name === "Portfolio Drawdown"
-        );
-        const benchmarkDrawdownSeries = chart.series.find(
-          (s) => s.name === "NIFTY 50 Drawdown"
-        );
-
-        const portfolioPoint = portfolioSeries ? getNearestPoint(portfolioSeries, hoveredX) : null;
-        const benchmarkPoint = benchmarkSeries ? getNearestPoint(benchmarkSeries, hoveredX) : null;
-        const portfolioDrawdownPoint = portfolioDrawdownSeries ? getNearestPoint(portfolioDrawdownSeries, hoveredX) : null;
-        const benchmarkDrawdownPoint = benchmarkDrawdownSeries ? getNearestPoint(benchmarkDrawdownSeries, hoveredX) : null;
-
-        let tooltipText = "<b>" + Highcharts.dateFormat("%d-%m-%Y", hoveredX) + "</b><br/><br/>";
-        tooltipText += "<span style='font-weight: bold; font-size: 12px'>Performance:</span><br/>";
-        tooltipText += `<span style="color:#2E8B57">\u25CF</span> Portfolio: ${portfolioPoint ? portfolioPoint.y.toFixed(2) : 'N/A'}%<br/>`;
-        tooltipText += `<span style="color:#4169E1">\u25CF</span> Benchmark: ${benchmarkPoint ? benchmarkPoint.y.toFixed(2) : 'N/A'}%<br/><br/>`;
-        tooltipText += "<span style='font-weight: bold; font-size: 12px'>Drawdown:</span><br/>";
-        tooltipText += `<span style="color:#FF4560">\u25CF</span> Portfolio: ${portfolioDrawdownPoint ? portfolioDrawdownPoint.y.toFixed(2) : 'N/A'}%<br/>`;
-        tooltipText += `<span style="color:#FF8F00">\u25CF</span> Benchmark: ${benchmarkDrawdownPoint ? benchmarkDrawdownPoint.y.toFixed(2) : 'N/A'}%<br/>`;
-        return tooltipText;
-      }
-    },
-
-    legend: {
-      enabled: true,
-      itemStyle: { fontSize: "12px" }
-    },
-
-    plotOptions: {
-      line: { marker: { enabled: false } },
-      area: {
-        fillOpacity: 0.2,
-        marker: { enabled: false },
-        states: {
-          hover: {
-            enabled: true // Disable hover effects while dragging
-          }
-        }
-      }
-    },
-
-    series: mergedSeries,
-
-    // Additional options to handle cursor and interactions
-    credits: {
-      enabled: false
-    },
-
-    time: {
-      useUTC: false
-    }
-  };
-}, [activeScheme, totalPortfolio, selectedScheme, benchmarkData]);
-
+      plotOptions: {
+        line: { marker: { enabled: false } },
+        area: { fillOpacity: 0.2, marker: { enabled: false } }
+      },
+      series: mergedSeries
+    };
+  }, [activeScheme, totalPortfolio, selectedScheme, benchmarkData]);
   // For monthly P&L data
   const monthlyPnLFromNormalizedData =
     activeScheme === "Scheme Total"

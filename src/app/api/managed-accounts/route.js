@@ -153,75 +153,85 @@ function calculateReturns(navData, cashInflow) {
   }
 }
 
-function calculateTrailingReturns(navData, periods = {
-  "5d": 5,
-  "10d": 10,
-  "15d": 15,
-  "1m": 30,
-  "1y": 366,
-  "2y": 731,
-  "3y": 1095
-}) {
+function calculateTrailingReturns(
+  navData,
+  periods = {
+    "5d": 5,
+    "10d": 10,
+    "15d": 15,
+    "1m": 30,
+    "1y": 366,
+    "2y": 731,
+    "3y": 1095,
+  }
+) {
   if (!navData || navData.length === 0) return {};
 
-  const sortedData = [...navData].sort((a, b) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime()
+  // Sort data so that the most recent date is first.
+  const sortedData = [...navData].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
   );
 
   const lastNav = sortedData[0].nav;
   const currentDate = new Date(sortedData[0].date);
   const returns = {};
 
+  // Helper to find an entry matching a given date (YYYY-MM-DD), checking up to maxDaysBack days
+  const getClosestEntryForTargetDate = (targetDate, sortedData, maxDaysBack = 10) => {
+    let searchDate = new Date(targetDate);
+    for (let i = 0; i < maxDaysBack; i++) {
+      const candidate = sortedData.find((entry) => {
+        const entryDate = new Date(entry.date);
+        return (
+          entryDate.toISOString().slice(0, 10) ===
+          searchDate.toISOString().slice(0, 10)
+        );
+      });
+      if (candidate) return candidate;
+      // Subtract one day and try again.
+      searchDate.setDate(searchDate.getDate() - 1);
+    }
+    return null;
+  };
+
   Object.entries(periods).forEach(([period, targetCount]) => {
     if (["5d", "10d", "15d"].includes(period)) {
+      // Count-based periods: use the nth element from the sorted array.
       if (sortedData.length > targetCount) {
         const historicalEntry = sortedData[targetCount];
-        if (historicalEntry) {
-          returns[period] = ((lastNav - historicalEntry.nav) / historicalEntry.nav) * 100;
-        } else {
-          returns[period] = null;
-        }
+        returns[period] =
+          historicalEntry !== undefined
+            ? ((lastNav - historicalEntry.nav) / historicalEntry.nav) * 100
+            : null;
       } else {
         returns[period] = null;
       }
     } else {
+      // Date-based periods: compute the target date.
       const targetDate = new Date(currentDate);
       if (period === "1m") {
         targetDate.setMonth(targetDate.getMonth() - 1);
       } else if (period === "1y") {
         targetDate.setFullYear(targetDate.getFullYear() - 1);
+        // For 1y, always start search from one day earlier than the computed target date.
+        targetDate.setDate(targetDate.getDate() - 1);
       } else if (period === "2y") {
         targetDate.setFullYear(targetDate.getFullYear() - 2);
       } else if (period === "3y") {
         targetDate.setFullYear(targetDate.getFullYear() - 3);
       }
 
-      let closestEntry = null;
-      for (const entry of sortedData) {
-        const entryDate = new Date(entry.date);
-        if (entryDate <= targetDate) {
-          closestEntry = entry;
-          break;
-        }
-      }
+      // Look for an entry on the target date (or the closest previous day)
+      const closestEntry = getClosestEntryForTargetDate(targetDate, sortedData, 10);
 
       if (closestEntry) {
         if (["1y", "2y", "3y"].includes(period)) {
-          const historicalDate = new Date(closestEntry.date);
-          let tPeriod;
-          if (period === '1y') {
-            tPeriod = 1
-          } else if (period === '2y') {
-            tPeriod = 2
-          } else {
-            tPeriod = 3
-          }
-          console.log('historicalDate', historicalDate)
-          const daysDiff = (currentDate - historicalDate) / (1000 * 60 * 60 * 24);
-          console.log('historicalDate', daysDiff)
+          // For multi-year periods, calculate the annualized return.
+          const tPeriod = period === "1y" ? 1 : period === "2y" ? 2 : 3;
           const annualizedReturn = Math.pow(lastNav / closestEntry.nav, 1 / tPeriod) - 1;
           returns[period] = annualizedReturn * 100;
         } else {
+          // For periods like 1m, use simple return.
           returns[period] = ((lastNav - closestEntry.nav) / closestEntry.nav) * 100;
         }
       } else {
@@ -232,6 +242,7 @@ function calculateTrailingReturns(navData, periods = {
 
   return returns;
 }
+
 
 function calculateMonthlyPnL(navData) {
   if (!navData || navData.length === 0) return {};
