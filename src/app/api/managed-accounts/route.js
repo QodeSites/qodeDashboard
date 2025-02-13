@@ -13,7 +13,7 @@ const PORTFOLIO_MAPPING = {
     },
     "Scheme B": {
       current: "Sarla Performance fibers Zerodha Total Portfolio B",
-      metrics: "Sarla Performance fibers Total Portfolio B"
+      metrics: "Sarla Performance fibers Zerodha Total Portfolio B"
     },
     "Scheme C": {
       current: "Sarla Performance fibers Zerodha Total Portfolio C",
@@ -254,7 +254,6 @@ function calculateTrailingReturns(
   return returns;
 }
 
-
 function calculateMonthlyPnL(navData) {
   console.log('\n=== Starting PnL Calculation ===');
   console.log('Input data:', JSON.stringify(navData, null, 2));
@@ -447,7 +446,6 @@ export async function GET(request) {
       const schemeInvestedAmounts = {};
 
       // Process individual schemes
-      // Process individual schemes
       for (const scheme of schemes) {
         const portfolioNames = getPortfolioNames(accountCode, scheme);
 
@@ -489,6 +487,23 @@ export async function GET(request) {
             ? calculateTotalProfit(metricsData, cashForScheme)
             : calculateTotalProfit(currentData, cashForScheme);
 
+        // Calculate trailing returns:
+        // - For Scheme A, include the 3y period (default periods)
+        // - For all other schemes, calculate without the 3y period.
+        let trailingReturns;
+        if (scheme === "Scheme A") {
+          trailingReturns = calculateTrailingReturns(navCurve);
+        } else {
+          trailingReturns = calculateTrailingReturns(navCurve, {
+            "5d": 5,
+            "10d": 10,
+            "15d": 15,
+            "1m": 30,
+            "1y": 366,
+            "2y": 731,
+          });
+        }
+
         results[accountCode].schemes[scheme] = {
           currentPortfolioValue:
             currentData.length > 0
@@ -496,7 +511,7 @@ export async function GET(request) {
               : 0,
           investedAmount,
           returns: calculateReturns(navCurve, cashForScheme),
-          trailingReturns: calculateTrailingReturns(navCurve),
+          trailingReturns,
           monthlyPnL: calculateMonthlyPnL(navCurve),
           navCurve,
           totalProfit,
@@ -514,7 +529,6 @@ export async function GET(request) {
           })),
         };
       }
-
 
       // Process total portfolio metrics
       const totalPortfolioNames = PORTFOLIO_MAPPING[accountCode]._total;
@@ -545,6 +559,7 @@ export async function GET(request) {
           : 0,
         investedAmount: totalInvestedAmount,
         returns: calculateReturns(totalNavCurve),
+        // For totalPortfolio we always include the 3y period (default)
         trailingReturns: calculateTrailingReturns(totalNavCurve),
         monthlyPnL: calculateMonthlyPnL(totalNavCurve),
         navCurve: totalNavCurve,
