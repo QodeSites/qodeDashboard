@@ -12,8 +12,8 @@ const PORTFOLIO_MAPPING = {
       metrics: "Sarla Performance fibers Zerodha Total Portfolio A"
     },
     "Scheme B": {
-      current: "Sarla Performance fibers Zerodha Total Portfolio B",
-      metrics: "Sarla Performance fibers Total Portfolio B"
+      current: "Sarla Performance fibers Total Portfolio B",
+      metrics: "Sarla Performance fibers Zerodha Total Portfolio B"
     },
     "Scheme C": {
       current: "Sarla Performance fibers Zerodha Total Portfolio C",
@@ -77,7 +77,7 @@ const PORTFOLIO_MAPPING = {
     }
   }
 };
-// Map account codes to client names for reference
+
 const CLIENT_NAMES = {
   AC5: "Sarla Performance Fibers Limited",
   AC6: "Priyavrata Mafatlal",
@@ -86,6 +86,19 @@ const CLIENT_NAMES = {
   AC9: "Deepti Parikh"
 };
 
+function calculateTotalProfit(masterSheetData, cashFlowData) {
+  // Sum up all daily P&L values
+  const totalDailyPL = masterSheetData.reduce((sum, entry) => {
+    return sum + (entry.daily_pl || 0);
+  }, 0);
+
+  // Sum up all dividends
+  const totalDividends = cashFlowData.reduce((sum, entry) => {
+    return sum + (entry.dividend || 0);
+  }, 0);
+
+  return totalDailyPL + totalDividends;
+}
 
 function calculateDrawdownMetrics(navData) {
   if (!navData || navData.length === 0) return { currentDD: 0, mdd: 0, ddCurve: [] };
@@ -115,46 +128,42 @@ function calculateDrawdownMetrics(navData) {
   };
 }
 
-function calculateReturns(navData) {
-  // console.log("NAV Data:", navData);
-
+function calculateReturns(navData,cashInflow) {
   if (!navData || navData.length < 2) {
     console.log("Insufficient NAV data points");
     return 0;
   }
 
+  // console.log(cashInflow)
+
   const firstDate = new Date(navData[0].date);
   const lastDate = new Date(navData[navData.length - 1].date);
   const daysDiff = (lastDate - firstDate) / (1000 * 60 * 60 * 24);
 
-
   const firstNav = navData[0].nav;
   const lastNav = navData[navData.length - 1].nav;
-  const totalReturn = (lastNav / firstNav) - 1; // total return as a decimal
+  const totalReturn = (lastNav / firstNav) - 1;
 
   if (daysDiff <= 365) {
     const absoluteReturn = totalReturn * 100;
     return absoluteReturn;
   } else {
-    // Annualize the return (CAGR)
     const annualizedReturn = (Math.pow((1 + totalReturn), (365 / daysDiff)) - 1) * 100;
-    // console.log("Annualized Return:", annualizedReturn);
     return annualizedReturn;
   }
 }
 
 function calculateTrailingReturns(navData, periods = {
-  "5d": 5,     // Index 5 to get Jan 30
-  "10d": 10,   // Index 10 to get Jan 23
-  "15d": 15,   // Index 15 to get Jan 16
-  "1m": 30,    // One month
-  "1y": 365,   // One year
-  "2y": 730,   // Two years
-  "3y": 1095   // Three years
+  "5d": 5,
+  "10d": 10,
+  "15d": 15,
+  "1m": 30,
+  "1y": 366,
+  "2y": 731,
+  "3y": 1095
 }) {
   if (!navData || navData.length === 0) return {};
 
-  // Sort data by date in descending order
   const sortedData = [...navData].sort((a, b) =>
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -164,7 +173,6 @@ function calculateTrailingReturns(navData, periods = {
   const returns = {};
 
   Object.entries(periods).forEach(([period, targetCount]) => {
-    // For periods less than a month, use index-based calculation (absolute return)
     if (["5d", "10d", "15d"].includes(period)) {
       if (sortedData.length > targetCount) {
         const historicalEntry = sortedData[targetCount];
@@ -176,10 +184,7 @@ function calculateTrailingReturns(navData, periods = {
       } else {
         returns[period] = null;
       }
-    } 
-    // For periods >= 1 month, use date-based calculation
-    else {
-      // Calculate target date based on the period
+    } else {
       const targetDate = new Date(currentDate);
       if (period === "1m") {
         targetDate.setMonth(targetDate.getMonth() - 1);
@@ -191,7 +196,6 @@ function calculateTrailingReturns(navData, periods = {
         targetDate.setFullYear(targetDate.getFullYear() - 3);
       }
 
-      // Find the closest date entry that's earlier than or equal to the target date
       let closestEntry = null;
       for (const entry of sortedData) {
         const entryDate = new Date(entry.date);
@@ -202,32 +206,23 @@ function calculateTrailingReturns(navData, periods = {
       }
 
       if (closestEntry) {
-        // For periods 1 year or longer, calculate XIRR (annualized return)
         if (["1y", "2y", "3y"].includes(period)) {
           const historicalDate = new Date(closestEntry.date);
+          let tPeriod;
+          if(period==='1y') {
+            tPeriod = 1
+          }else if(period === '2y') {
+            tPeriod = 2
+          }else{
+            tPeriod = 3
+          }
+          console.log('historicalDate',historicalDate)
           const daysDiff = (currentDate - historicalDate) / (1000 * 60 * 60 * 24);
-          // Calculate annualized return (XIRR)
-          const annualizedReturn = Math.pow(lastNav / closestEntry.nav, 365 / daysDiff) - 1;
+          console.log('historicalDate',daysDiff)
+          const annualizedReturn = Math.pow(lastNav / closestEntry.nav, 1 / tPeriod) - 1;
           returns[period] = annualizedReturn * 100;
-
-          // For debugging
-          // console.log(`${period} (XIRR):`, {
-          //   targetDate,
-          //   actualDate: historicalDate,
-          //   nav: closestEntry.nav,
-          //   annualizedReturn: returns[period]
-          // });
         } else {
-          // For periods like "1m", use absolute return if desired
           returns[period] = ((lastNav - closestEntry.nav) / closestEntry.nav) * 100;
-
-          // For debugging
-          // console.log(`${period} (Absolute):`, {
-          //   targetDate,
-          //   actualDate: new Date(closestEntry.date),
-          //   nav: closestEntry.nav,
-          //   return: returns[period]
-          // });
         }
       } else {
         returns[period] = null;
@@ -237,7 +232,6 @@ function calculateTrailingReturns(navData, periods = {
 
   return returns;
 }
-
 
 function calculateMonthlyPnL(navData) {
   if (!navData || navData.length === 0) return {};
@@ -362,6 +356,14 @@ export async function GET(request) {
       }),
       prisma.master_sheet.findMany({
         where: { account_tag: { in: accountCodes } },
+        select: {
+          date: true,
+          account_tag: true,
+          account_names: true,
+          nav: true,
+          portfolio_value: true,
+          daily_pl: true,
+        },
         orderBy: { date: "asc" },
       }),
     ]);
@@ -406,6 +408,7 @@ export async function GET(request) {
         }));
 
         const drawdownMetrics = calculateDrawdownMetrics(navCurve);
+        const totalProfit = calculateTotalProfit(currentData, cashForScheme);
 
         results[accountCode].schemes[scheme] = {
           currentPortfolioValue: currentData.length > 0
@@ -416,6 +419,8 @@ export async function GET(request) {
           trailingReturns: calculateTrailingReturns(navCurve),
           monthlyPnL: calculateMonthlyPnL(navCurve),
           navCurve,
+          totalProfit,
+          dividends: cashForScheme.reduce((sum, flow) => sum + (flow.dividend || 0), 0),
           currentDrawdown: drawdownMetrics.currentDD,
           maxDrawdown: drawdownMetrics.mdd,
           drawdownCurve: drawdownMetrics.ddCurve,
@@ -435,6 +440,9 @@ export async function GET(request) {
       const totalMetricsData = masterSheetData.filter(
         (entry) => entry.account_names === totalPortfolioNames.metrics
       );
+      const totalCashFlows = cashInOutData.filter(
+        (entry) => entry.account_code === accountCode
+      );
 
       const totalInvestedAmount = Object.values(schemeInvestedAmounts)
         .reduce((sum, amount) => sum + amount, 0);
@@ -445,14 +453,8 @@ export async function GET(request) {
       }));
 
       const totalDrawdownMetrics = calculateDrawdownMetrics(totalNavCurve);
-      const totalCashFlows = cashInOutData
-        .filter(flow => flow.account_code === accountCode)
-        .map(flow => ({
-          date: flow.date,
-          scheme: flow.scheme, // Added scheme property
-          amount: flow.capital_in_out,
-          dividend: flow.dividend
-        }));
+      const totalPortfolioProfit = calculateTotalProfit(totalCurrentData, totalCashFlows);
+
       results[accountCode].totalPortfolio = {
         currentPortfolioValue: totalCurrentData.length > 0
           ? totalCurrentData[totalCurrentData.length - 1].portfolio_value || 0
@@ -462,11 +464,18 @@ export async function GET(request) {
         trailingReturns: calculateTrailingReturns(totalNavCurve),
         monthlyPnL: calculateMonthlyPnL(totalNavCurve),
         navCurve: totalNavCurve,
+        totalProfit: totalPortfolioProfit,
+        dividends: totalCashFlows.reduce((sum, flow) => sum + (flow.dividend || 0), 0),
         currentDrawdown: totalDrawdownMetrics.currentDD,
         maxDrawdown: totalDrawdownMetrics.mdd,
         drawdownCurve: totalDrawdownMetrics.ddCurve,
         schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
-        cashFlows: totalCashFlows
+        cashFlows: totalCashFlows.map(flow => ({
+          date: flow.date,
+          scheme: flow.scheme,
+          amount: flow.capital_in_out,
+          dividend: flow.dividend
+        }))
       };
     }
 

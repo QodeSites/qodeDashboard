@@ -45,6 +45,7 @@ const useManagedAccounts = () => {
                 drawdown: schemeData.drawdown,
                 drawdownCurve: schemeData.drawdownCurve, // Include drawdown curve here
                 cashFlows: schemeData.cashFlows,
+                totalProfit: schemeData.totalProfit
               })
             );
 
@@ -62,7 +63,8 @@ const useManagedAccounts = () => {
                 navCurve: totalPortfolio.navCurve,
                 drawdown: totalPortfolio.drawdown,
                 drawdownCurve: totalPortfolio.drawdownCurve, // Include drawdown curve here as well
-                cashFlows: totalPortfolio.cashFlows
+                cashFlows: totalPortfolio.cashFlows,
+                totalProfit: totalPortfolio.totalProfit
               },
             };
           }
