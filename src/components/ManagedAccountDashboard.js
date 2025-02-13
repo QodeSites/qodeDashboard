@@ -382,7 +382,6 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
   const dailyPercentageChange = 0;
   const isPositive = returnsValue >= 0;
-  const totalProfit =  activeScheme === "Scheme Total" ? totalPortfolio?.totalProfit : selectedScheme?.totalProfit;
 
   const latestPreviousValue = 0; // placeholder
 
@@ -431,7 +430,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     ]);
   };
 
-// ── MERGED CHART OPTIONS (NAV & Drawdown) ──
+  // ── MERGED CHART OPTIONS (NAV & Drawdown) ──
   // ── MERGED CHART OPTIONS (NAV & Drawdown) ──
   const mergedChartOptions = useMemo(() => {
     // ── Prepare Performance (NAV) Series ──
@@ -711,11 +710,23 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     (sum, record) => sum + record.amount,
     0
   );
-  
+
   const totalDividend = filteredCashInOutData.reduce(
     (sum, record) => sum + (record.dividend || 0),
     0
   );
+  let totalProfit;
+  if (accountCode === "AC5" && activeScheme === "Scheme A") {
+    // For AC5 Scheme A, override totalProfit as: Amount Invested - Current Portfolio Value + Dividend
+    totalProfit = portfolioValue - investedAmount + totalDividend;
+  } else {
+    totalProfit =
+      activeScheme === "Scheme Total"
+        ? totalPortfolio?.totalProfit
+        : selectedScheme?.totalProfit;
+  }
+
+
   const netFlow = totalAmount + totalDividend;
   const { totalIn, totalOut } = filteredCashInOutData.reduce(
     (acc, record) => {
@@ -816,6 +827,12 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
               </select>
             </div>
           </>
+        )}
+
+        {accountCode === "AC5" && activeScheme === "Scheme C" && (
+          <div className="p-4 bg-red-100 text-red-700 text-center font-medium mb-4">
+            Scheme C is not active anymore
+          </div>
         )}
 
 

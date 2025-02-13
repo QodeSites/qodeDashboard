@@ -222,17 +222,28 @@ function calculateTrailingReturns(
       }
 
       // Look for an entry on the target date (or the closest previous day)
-      const closestEntry = getClosestEntryForTargetDate(targetDate, sortedData, 10);
+      let candidate = getClosestEntryForTargetDate(targetDate, sortedData, 10);
 
-      if (closestEntry) {
-        if (["1y", "2y", "3y"].includes(period)) {
-          // For multi-year periods, calculate the annualized return.
-          const tPeriod = period === "1y" ? 1 : period === "2y" ? 2 : 3;
-          const annualizedReturn = Math.pow(lastNav / closestEntry.nav, 1 / tPeriod) - 1;
+      // Only for "3y": if no candidate is found, fallback to the oldest available entry.
+      if (period === "3y" && !candidate) {
+        candidate = sortedData[sortedData.length - 1];
+      }
+
+      if (candidate) {
+        if (["1y", "2y"].includes(period)) {
+          // For 1y and 2y, calculate the annualized return using a fixed period.
+          const tPeriod = period === "1y" ? 1 : 2;
+          const annualizedReturn = Math.pow(lastNav / candidate.nav, 1 / tPeriod) - 1;
+          returns[period] = annualizedReturn * 100;
+        } else if (period === "3y") {
+          // For 3y, calculate the annualized return using the actual period length.
+          const candidateDate = new Date(candidate.date);
+          const actualPeriodInYears = (currentDate - candidateDate) / (365 * 24 * 60 * 60 * 1000);
+          const annualizedReturn = Math.pow(lastNav / candidate.nav, 1 / actualPeriodInYears) - 1;
           returns[period] = annualizedReturn * 100;
         } else {
           // For periods like 1m, use simple return.
-          returns[period] = ((lastNav - closestEntry.nav) / closestEntry.nav) * 100;
+          returns[period] = ((lastNav - candidate.nav) / candidate.nav) * 100;
         }
       } else {
         returns[period] = null;
@@ -245,50 +256,93 @@ function calculateTrailingReturns(
 
 
 function calculateMonthlyPnL(navData) {
-  if (!navData || navData.length === 0) return {};
+  console.log('\n=== Starting PnL Calculation ===');
+  console.log('Input data:', JSON.stringify(navData, null, 2));
 
+  if (!navData || navData.length === 0) {
+    console.log('No data provided or empty array');
+    return {};
+  }
+
+  // Group by month and track last NAV for each month
   const dataByMonth = navData.reduce((acc, entry) => {
     const date = new Date(entry.date);
     const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
     if (!acc[yearMonth]) {
-      acc[yearMonth] = [];
+      acc[yearMonth] = {
+        points: [],
+        lastNav: null,
+        lastDate: null
+      };
+      console.log(`\nCreating new month bucket for ${yearMonth}`);
     }
-    acc[yearMonth].push({
+
+    acc[yearMonth].points.push({
       date: entry.date,
       nav: entry.nav
     });
 
+    // Always update last NAV and date as we want the latest available
+    acc[yearMonth].lastNav = entry.nav;
+    acc[yearMonth].lastDate = entry.date;
+
+    console.log(`Added to ${yearMonth}: Date=${entry.date}, NAV=${entry.nav}`);
     return acc;
   }, {});
 
+  console.log('\n=== Data Grouped By Month ===');
+  console.log(JSON.stringify(dataByMonth, null, 2));
+
   const sortedMonths = Object.keys(dataByMonth).sort();
+  console.log('\nSorted months:', sortedMonths);
+  
   const monthlyPnL = {};
 
   sortedMonths.forEach((yearMonth, index) => {
+    console.log(`\n=== Processing ${yearMonth} ===`);
+    
     const currentMonthData = dataByMonth[yearMonth];
-    const currentMonthEnd = currentMonthData[currentMonthData.length - 1].nav;
+    const currentMonthEnd = currentMonthData.lastNav;
+    console.log(`Month end NAV: ${currentMonthEnd}`);
 
     let startNav;
+    let startDate;
     if (index === 0) {
-      startNav = currentMonthData[0].nav;
+      // For first month, use its first available NAV
+      startNav = currentMonthData.points[0].nav;
+      startDate = currentMonthData.points[0].date;
+      console.log(`First month - using first day's NAV as start: ${startNav}`);
     } else {
+      // For subsequent months, use previous month's last available NAV
       const previousMonth = sortedMonths[index - 1];
-      const previousMonthData = dataByMonth[previousMonth];
-      startNav = previousMonthData[previousMonthData.length - 1].nav;
+      startNav = dataByMonth[previousMonth].lastNav;
+      startDate = dataByMonth[previousMonth].lastDate;
+      console.log(`Using previous month (${previousMonth}) last NAV as start: ${startNav}`);
     }
 
+    const pnl = ((currentMonthEnd - startNav) / startNav) * 100;
+    console.log(`PnL Calculation: ((${currentMonthEnd} - ${startNav}) / ${startNav}) * 100 = ${pnl.toFixed(2)}%`);
+
     monthlyPnL[yearMonth] = {
-      startDate: index === 0 ? currentMonthData[0].date : dataByMonth[sortedMonths[index - 1]][dataByMonth[sortedMonths[index - 1]].length - 1].date,
-      endDate: currentMonthData[currentMonthData.length - 1].date,
+      startDate: startDate,
+      endDate: currentMonthData.lastDate,
       startNav,
       endNav: currentMonthEnd,
-      pnl: ((currentMonthEnd - startNav) / startNav) * 100,
-      navPoints: currentMonthData.map(point => ({
-        date: point.date,
-        nav: point.nav
-      }))
+      pnl,
+      navPoints: currentMonthData.points
     };
+  });
+
+  console.log('\n=== Monthly PnL Results ===');
+  Object.entries(monthlyPnL).forEach(([month, data]) => {
+    console.log(`\n${month}:`);
+    console.log(`  Start Date: ${data.startDate}`);
+    console.log(`  End Date: ${data.endDate}`);
+    console.log(`  Start NAV: ${data.startNav}`);
+    console.log(`  End NAV: ${data.endNav}`);
+    console.log(`  PnL: ${data.pnl.toFixed(2)}%`);
+    console.log(`  NAV Points: ${data.navPoints.length}`);
   });
 
   const pnlByYear = {};
