@@ -12,8 +12,8 @@ const PORTFOLIO_MAPPING = {
       metrics: "Sarla Performance fibers Zerodha Total Portfolio A"
     },
     "Scheme B": {
-      current: "Sarla Performance fibers Total Portfolio B",
-      metrics: "Sarla Performance fibers Zerodha Total Portfolio B"
+      current: "Sarla Performance fibers Zerodha Total Portfolio B",
+      metrics: "Sarla Performance fibers Total Portfolio B"
     },
     "Scheme C": {
       current: "Sarla Performance fibers Zerodha Total Portfolio C",
@@ -128,7 +128,7 @@ function calculateDrawdownMetrics(navData) {
   };
 }
 
-function calculateReturns(navData,cashInflow) {
+function calculateReturns(navData, cashInflow) {
   if (!navData || navData.length < 2) {
     console.log("Insufficient NAV data points");
     return 0;
@@ -209,16 +209,16 @@ function calculateTrailingReturns(navData, periods = {
         if (["1y", "2y", "3y"].includes(period)) {
           const historicalDate = new Date(closestEntry.date);
           let tPeriod;
-          if(period==='1y') {
+          if (period === '1y') {
             tPeriod = 1
-          }else if(period === '2y') {
+          } else if (period === '2y') {
             tPeriod = 2
-          }else{
+          } else {
             tPeriod = 3
           }
-          console.log('historicalDate',historicalDate)
+          console.log('historicalDate', historicalDate)
           const daysDiff = (currentDate - historicalDate) / (1000 * 60 * 60 * 24);
-          console.log('historicalDate',daysDiff)
+          console.log('historicalDate', daysDiff)
           const annualizedReturn = Math.pow(lastNav / closestEntry.nav, 1 / tPeriod) - 1;
           returns[period] = annualizedReturn * 100;
         } else {
@@ -382,15 +382,24 @@ export async function GET(request) {
       const schemeInvestedAmounts = {};
 
       // Process individual schemes
+      // Process individual schemes
       for (const scheme of schemes) {
         const portfolioNames = getPortfolioNames(accountCode, scheme);
 
         const currentData = masterSheetData.filter(
           (entry) => entry.account_names === portfolioNames.current
         );
+        
+        // For AC5 Scheme B, override the metrics name to exclude "Zerodha"
+        const metricsName =
+          accountCode === "AC5" && scheme === "Scheme B"
+            ? "Sarla Performance fibers Total Portfolio B"
+            : portfolioNames.metrics;
+        
         const metricsData = masterSheetData.filter(
-          (entry) => entry.account_names === portfolioNames.metrics
+          (entry) => entry.account_names === metricsName
         );
+        
         const cashForScheme = cashInOutData.filter(
           (entry) => entry.account_code === accountCode && entry.scheme === scheme
         );
@@ -404,33 +413,43 @@ export async function GET(request) {
 
         const navCurve = metricsData.map((e) => ({
           date: e.date,
-          nav: e.nav
+          nav: e.nav,
         }));
 
         const drawdownMetrics = calculateDrawdownMetrics(navCurve);
-        const totalProfit = calculateTotalProfit(currentData, cashForScheme);
+
+        // Use metricsData for totalProfit if it's AC5 Scheme B
+        const totalProfit =
+          accountCode === "AC5" && scheme === "Scheme B"
+            ? calculateTotalProfit(metricsData, cashForScheme)
+            : calculateTotalProfit(currentData, cashForScheme);
 
         results[accountCode].schemes[scheme] = {
-          currentPortfolioValue: currentData.length > 0
-            ? currentData[currentData.length - 1].portfolio_value || 0
-            : 0,
+          currentPortfolioValue:
+            currentData.length > 0
+              ? currentData[currentData.length - 1].portfolio_value || 0
+              : 0,
           investedAmount,
           returns: calculateReturns(navCurve, cashForScheme),
           trailingReturns: calculateTrailingReturns(navCurve),
           monthlyPnL: calculateMonthlyPnL(navCurve),
           navCurve,
           totalProfit,
-          dividends: cashForScheme.reduce((sum, flow) => sum + (flow.dividend || 0), 0),
+          dividends: cashForScheme.reduce(
+            (sum, flow) => sum + (flow.dividend || 0),
+            0
+          ),
           currentDrawdown: drawdownMetrics.currentDD,
           maxDrawdown: drawdownMetrics.mdd,
           drawdownCurve: drawdownMetrics.ddCurve,
-          cashFlows: cashForScheme.map(flow => ({
+          cashFlows: cashForScheme.map((flow) => ({
             date: flow.date,
             amount: flow.capital_in_out,
-            dividend: flow.dividend
-          }))
+            dividend: flow.dividend,
+          })),
         };
       }
+
 
       // Process total portfolio metrics
       const totalPortfolioNames = PORTFOLIO_MAPPING[accountCode]._total;

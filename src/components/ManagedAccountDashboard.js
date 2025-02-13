@@ -330,7 +330,6 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   const schemes =
     currentAccount && currentAccount.schemes ? currentAccount.schemes : [];
 
-  // When an individual scheme is selected, get its data.
   // For "Scheme Total" we use totalPortfolio data.
   const selectedScheme =
     activeScheme === "Scheme Total"
@@ -888,6 +887,7 @@ const mergedChartOptions = useMemo(() => {
     (sum, record) => sum + record.amount,
     0
   );
+  
   const totalDividend = filteredCashInOutData.reduce(
     (sum, record) => sum + (record.dividend || 0),
     0
@@ -914,9 +914,6 @@ const mergedChartOptions = useMemo(() => {
     return `${day}-${month}-${year}`;
   };
 
-  // Example usage:
-  console.log(formatDate("2023-10-05")); // Output: "05-10-2023"
-
   const formatCurrency = (amount) => {
     return (
       "₹" +
@@ -930,8 +927,6 @@ const mergedChartOptions = useMemo(() => {
 
   const renderContent = () => {
 
-
-    // Dummy stocks data for now (including some Indian stocks)
     const dummyStocks = [
       { symbol: "AAPL", name: "Apple Inc.", quantity: 10, price: 150, totalValue: 1500 },
       { symbol: "GOOG", name: "Alphabet Inc.", quantity: 5, price: 2800, totalValue: 14000 },
