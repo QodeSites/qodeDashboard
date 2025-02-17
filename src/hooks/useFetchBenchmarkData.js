@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 
 const useFetchBenchmarkData = (indices, startDate, endDate) => {
-    console.log('indices,startDate,endDate',indices,startDate,endDate)
     const [benchmarkData, setBenchmarkData] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -10,7 +9,7 @@ const useFetchBenchmarkData = (indices, startDate, endDate) => {
     const cacheKey = `${indices.join(',')}-${startDate}-${endDate}`;
 
     useEffect(() => {
-        console.log("useEffect triggered with new dates - indices:", indices, "startDate:", startDate, "endDate:", endDate);
+        // console.log("useEffect triggered with new dates - indices:", indices, "startDate:", startDate, "endDate:", endDate);
 
         if (!indices || indices.length === 0) return;
         if (!startDate || !endDate) return;

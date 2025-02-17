@@ -246,7 +246,7 @@ const PerformanceAndDrawdownChart = () => {
   };
 
   const calculateReturns = (data, key) => {
-    // console.log("datasss", data);
+    // // console.log("datasss", data);
     if (data.length < 2) return "0";
     const startValue = parseFloat(data[0][key]);
     const endValue = parseFloat(data[data.length - 1][key]);

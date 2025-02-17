@@ -1,39 +1,49 @@
-import Highcharts from 'highcharts';
+import Highcharts from "highcharts";
 
 export const formatDate = (timestamp) => {
-  return new Date(timestamp).toLocaleDateString('en-GB');
+  return new Date(timestamp).toLocaleDateString("en-GB");
 };
 
-// Helper function to calculate drawdown
-const calculateDrawdown = (data) => {
-  let peak = data[0][1];
-  return data.map(point => {
-    const value = point[1];
-    peak = Math.max(peak, value);
-    const drawdown = ((value - peak) / peak) * 100;
-    return [point[0], drawdown];
-  });
+// Helper to rebase a performance series so that its value at commonStart becomes 100.
+const rebaseSeries = (seriesData, commonStart) => {
+  // Filter out points before the common start date.
+  const filtered = seriesData.filter((point) => point[0] >= commonStart);
+  if (filtered.length === 0) return [];
+  const baselineValue = filtered[0][1];
+  if (baselineValue === 0) return filtered;
+  return filtered.map((point) => [point[0], (point[1] / baselineValue) * 100]);
 };
+
+// For drawdown series, we simply filter out points before commonStart.
+const filterSeries = (seriesData, commonStart) => {
+  return seriesData.filter((point) => point[0] >= commonStart);
+};
+
+// Helper to filter series by common end timestamp.
+const filterSeriesByEnd = (seriesData, commonEnd) =>
+  seriesData.filter((point) => point[0] <= commonEnd);
 
 export const getChartOptions = (
-  chartData, 
-  strategy, 
-  isMobile, 
-  strategyName, 
+  chartData,
+  strategy,
+  isMobile,
+  strategyName,
   theme,
-  benchmarkSeries = []
+  benchmarkSeries = [],
+  isInvested = false // true if investor is invested; false if showing model portfolio
 ) => {
   if (!chartData || chartData.length === 0) {
     console.error("Data is not available for: ", strategy);
     return {};
   }
+  console.log("chart data", chartData);
 
-  // Define colors with additional benchmark colors from mergedChartOptions
-  const colors = {
-    portfolio: "#2E8B57",  // Sea Green for portfolio (primary series)
-    benchmark: "#4169E1",  // Royal Blue for benchmark
-    portfolioDrawdown: "#FF4560", // Red for portfolio drawdown
-    benchmarkDrawdown: "#FF8F00", // Orange for benchmark drawdown
+  // Define two color palettes.
+  const investedColors = {
+    portfolio: "#2E8B57", // Sea Green for client portfolio
+    benchmark: "#4169E1", // Royal Blue for benchmark performance when invested
+    portfolioDrawdown: "#FF4560", // Red for client drawdown
+    benchmarkDrawdown: "#FF8F00", // Orange for model drawdown when invested
     gridLines: "#e6e6e6",
     background: (theme && theme.background) || "#ffffff",
     tooltipBg: (theme && theme.tooltipBg) || "#f0f0f0",
@@ -41,19 +51,23 @@ export const getChartOptions = (
     text: (theme && theme.text) || "#333333",
   };
 
-  // Prepare gradients
-  const drawdownGradients = {
-    portfolio: [
-      [0, 'rgba(255, 69, 96, 0.8)'],
-      [1, 'rgba(255, 69, 96, 0.2)']
-    ],
-    benchmark: [
-      [0, 'rgba(255, 143, 0, 0.8)'],
-      [1, 'rgba(255, 143, 0, 0.2)']
-    ]
+  const nonInvestedColors = {
+    // When not invested, use alternative colors for model portfolio series.
+    portfolio: "#2E8B57", // Sea Green for client portfolio
+    benchmark: "#4169E1", // Royal Blue for benchmark performance (BSE500)
+    portfolioDrawdown: "#FF4560", // Red for client drawdown
+    benchmarkDrawdown: "#FF8F00", // Lemon Yellow for benchmark drawdown
+    gridLines: "#e6e6e6",
+    background: (theme && theme.background) || "#ffffff",
+    tooltipBg: (theme && theme.tooltipBg) || "#f0f0f0",
+    tooltipBorder: (theme && theme.tooltipBorder) || "#cccccc",
+    text: (theme && theme.text) || "#333333",
   };
 
-  // Prepare the chart data
+  // Choose the appropriate palette.
+  const colors = isInvested ? investedColors : nonInvestedColors;
+
+  // Prepare the chart data for the portfolio.
   const prepareChartData = (data) => {
     const initialNav = parseFloat(data[0].nav);
     return data.map((item) => ({
@@ -64,13 +78,85 @@ export const getChartOptions = (
   };
 
   const preparedData = prepareChartData(chartData);
-  const strategySeries = preparedData.map((item) => [item.x, item.strategyValue]);
-  const drawdownSeries = preparedData.map((item) => [item.x, item.drawdown]);
+  const portfolioSeriesData = preparedData.map((item) => [item.x, item.strategyValue]);
+  const portfolioDrawdownData = preparedData.map((item) => [item.x, item.drawdown]);
 
-  // Calculate benchmark drawdowns using the formula from mergedChartOptions
+  // Determine the common start timestamp.
+  const allStarts = [];
+  if (portfolioSeriesData.length > 0) {
+    allStarts.push(portfolioSeriesData[0][0]);
+  }
+  benchmarkSeries.forEach((series) => {
+    if (series.data && series.data.length > 0) {
+      allStarts.push(series.data[0][0]);
+    }
+  });
+  const commonStart = Math.max(...allStarts);
+
+  // Rebase portfolio performance series and filter drawdown.
+  const rebasedPortfolioSeries = rebaseSeries(portfolioSeriesData, commonStart);
+  const filteredPortfolioDrawdown = filterSeries(portfolioDrawdownData, commonStart);
+
+  // Rebase each benchmark series.
+  let rebasedBenchmarkSeries = benchmarkSeries.map((series) => ({
+    ...series,
+    data: rebaseSeries(series.data, commonStart),
+  }));
+
+  // Determine a common end timestamp so that all series align.
+  const portfolioEnd = rebasedPortfolioSeries[rebasedPortfolioSeries.length - 1][0];
+  const benchmarkEnds = rebasedBenchmarkSeries.map(
+    (series) => series.data[series.data.length - 1][0]
+  );
+  const commonEnd = Math.min(portfolioEnd, ...benchmarkEnds);
+
+  // Filter all series so they end at the commonEnd.
+  const finalPortfolioSeries = filterSeriesByEnd(rebasedPortfolioSeries, commonEnd);
+  const finalPortfolioDrawdown = filterSeriesByEnd(filteredPortfolioDrawdown, commonEnd);
+  rebasedBenchmarkSeries = rebasedBenchmarkSeries.map((series) => ({
+    ...series,
+    data: filterSeriesByEnd(series.data, commonEnd),
+  }));
+
+  // Format benchmark series for the chart.
+  const formattedBenchmarkSeries = rebasedBenchmarkSeries.map((series) => {
+    // For BSE500, use Royal Blue.
+    if (series.name === "BSE500") {
+      return {
+        name: series.name,
+        data: series.data,
+        color: "#4169E1", // Royal Blue for benchmark performance
+        lineWidth: 2,
+        yAxis: 0,
+        zIndex: 1,
+        marker: {
+          enabled: false,
+          symbol: "circle",
+          states: { hover: { enabled: true, radius: 5 } },
+        },
+        type: "line", // Equity curve as a line chart.
+      };
+    }
+    return {
+      name: series.name,
+      data: series.data,
+      color: colors.portfolio,
+      lineWidth: 2,
+      yAxis: 0,
+      zIndex: 1,
+      marker: {
+        enabled: false,
+        symbol: "circle",
+        states: { hover: { enabled: true, radius: 5 } },
+      },
+      type: "line", // Equity curve as a line chart.
+    };
+  });
+
+  // Calculate benchmark drawdowns.
   const calculateBenchmarkDrawdown = (data) => {
     let maxValue = -Infinity;
-    return data.map(point => {
+    return data.map((point) => {
       const [timestamp, value] = point;
       maxValue = Math.max(maxValue, value);
       const drawdown = ((value - maxValue) / maxValue) * 100;
@@ -78,119 +164,131 @@ export const getChartOptions = (
     });
   };
 
-  // Create benchmark series with consistent styling
-  const formattedBenchmarkSeries = benchmarkSeries.map(series => ({
-    name: series.name,
-    data: series.data,
-    color: colors.benchmark,
-    lineWidth: 2,
-    yAxis: 0,
-    zIndex: 1,
-    marker: {
-      enabled: false,
-      symbol: 'circle',
-      states: { hover: { enabled: true, radius: 5 } }
-    },
-  }));
-
-  // Create benchmark drawdown series
-  const benchmarkDrawdowns = benchmarkSeries.map(series => ({
-    name: `${series.name} Drawdown`,
-    data: calculateBenchmarkDrawdown(series.data),
-    type: 'area',
-    yAxis: 1,
-    threshold: 0,
-    lineWidth: 1,
-    color: {
-      linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-      stops: drawdownGradients.benchmark
-    },
-    fillOpacity: 0.31,
-    marker: {
-      enabled: false,
-      symbol: 'circle',
-      states: { hover: { enabled: true, radius: 5 } }
-    }
-  }));
-
-  // Calculate value ranges including benchmark data
-  const allValues = [
-    ...preparedData.map(item => item.strategyValue),
-    ...benchmarkSeries.flatMap(series => series.data.map(point => point[1]))
-  ];
-  const maxValue = Math.max(...allValues);
-  const minValue = Math.min(...allValues);
-  const range = maxValue - minValue;
-  const padding = range * 0.1;
-  const topAxisMax = Math.ceil((maxValue + padding) / 10) * 10;
-  const bottomAxisMin = Math.floor((minValue - padding) / 10) * 10;
-  const tickInterval = range <= 10 ? 1 : Math.ceil(range / 5);
-
-  // Calculate drawdown minimum including benchmark drawdowns
-  const allDrawdowns = [
-    ...preparedData.map(item => item.drawdown),
-    ...benchmarkDrawdowns.flatMap(series => series.data.map(point => point[1]))
-  ];
-  const minDrawdown = Math.min(...allDrawdowns);
-  const drawdownMin = Math.floor(minDrawdown / 10) * 10;
-
-  // Build series array with consistent styling
-  const allSeries = [
-    {
-      name: strategyName,
-      data: strategySeries,
-      color: colors.portfolio,
-      lineWidth: 2,
-      marker: {
-        enabled: false,
-        symbol: 'circle',
-        states: { hover: { enabled: true, radius: 5 } }
-      },
-      type: "line",
-      yAxis: 0,
-      zIndex: 2,
-    },
-    {
-      name: "Strategy Drawdown",
-      data: drawdownSeries,
-      type: "area",
+  // Format benchmark drawdown series.
+  const formattedBenchmarkDrawdownSeries = rebasedBenchmarkSeries.map((series) => {
+    const drawdownColor =
+      series.name === "BSE500" ? "#FF8F00" : colors.portfolioDrawdown; // Lemon Yellow for BSE500 drawdown.
+    return {
+      name: `${series.name} Drawdown`,
+      data: calculateBenchmarkDrawdown(series.data),
+      type: "area", // Drawdown as area chart.
       yAxis: 1,
       threshold: 0,
       lineWidth: 1,
-      color: {
-        linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-        stops: drawdownGradients.portfolio
-      },
-      fillOpacity: 0.31,
+      color: drawdownColor,
+      fillOpacity: 0.2,
+      tooltip: { valueSuffix: "%" },
       marker: {
         enabled: false,
-        symbol: 'circle',
-        states: { hover: { enabled: true, radius: 5 } }
-      }
-    },
-    ...formattedBenchmarkSeries,
-    ...benchmarkDrawdowns
-  ];
+        symbol: "circle",
+        states: { hover: { enabled: true, radius: 5 } },
+      },
+    };
+  });
 
-  // Define chart options with merged styling
+  // Build the series array.
+  let allSeries = [];
+  if (isInvested) {
+    // For invested strategies: include client's portfolio performance and drawdown.
+    allSeries.push(
+      {
+        name: strategyName,
+        data: finalPortfolioSeries,
+        color: investedColors.portfolio,
+        lineWidth: 2,
+        marker: {
+          enabled: false,
+          symbol: "circle",
+          states: { hover: { enabled: true, radius: 5 } },
+        },
+        type: "line", // Equity curve as a line chart.
+        yAxis: 0,
+        zIndex: 2,
+      },
+      {
+        name: "Strategy Drawdown",
+        data: finalPortfolioDrawdown,
+        type: "area", // Drawdown equity curve as area chart.
+        yAxis: 1,
+        threshold: 0,
+        lineWidth: 1,
+        color: investedColors.portfolioDrawdown,
+        fillOpacity: 0.2,
+        tooltip: { valueSuffix: "%" },
+        marker: {
+          enabled: false,
+          symbol: "circle",
+          states: { hover: { enabled: true, radius: 5 } },
+        }
+      }
+    );
+    // Optionally include BSE500 series if present.
+    const bse500Perf = rebasedBenchmarkSeries.filter(
+      (series) => series.name === "BSE500"
+    );
+    if (bse500Perf.length > 0) {
+      const formattedBSE500 = bse500Perf.map((series) => ({
+        name: series.name,
+        data: series.data,
+        color: "#4169E1", // Royal Blue for benchmark performance
+        lineWidth: 2,
+        yAxis: 0,
+        zIndex: 1,
+        marker: {
+          enabled: false,
+          symbol: "circle",
+          states: { hover: { enabled: true, radius: 5 } },
+        },
+        type: "line", // Equity curve as a line chart.
+      }));
+      allSeries.push(...formattedBSE500);
+      const bse500Drawdown = formattedBenchmarkDrawdownSeries.filter((series) =>
+        series.name.startsWith("BSE500")
+      );
+      if (bse500Drawdown.length > 0) {
+        allSeries.push(...bse500Drawdown);
+      }
+    }
+  } else {
+    // For non-invested strategies: show only benchmark series and their drawdown series.
+    allSeries.push(...formattedBenchmarkSeries, ...formattedBenchmarkDrawdownSeries);
+  }
+
+  // Calculate axis ranges using the rebased data.
+  const allValues = [
+    ...finalPortfolioSeries.map((item) => item[1]),
+    ...rebasedBenchmarkSeries.flatMap((series) =>
+      series.data.map((point) => point[1])
+    ),
+  ];
+  const maxValueOverall = Math.max(...allValues);
+  const minValueOverall = Math.min(...allValues);
+  const valueRange = maxValueOverall - minValueOverall;
+  const padding = valueRange * 0.1;
+  const tickInterval = valueRange <= 10 ? 1 : Math.ceil(valueRange / 5);
+
+  // Calculate drawdown minimum.
+  const allDrawdowns = [
+    ...finalPortfolioDrawdown.map((item) => item[1]),
+    ...formattedBenchmarkDrawdownSeries.flatMap((series) =>
+      series.data.map((point) => point[1])
+    ),
+  ];
+  const minDrawdownOverall = Math.min(...allDrawdowns);
+  const drawdownMin = Math.floor(minDrawdownOverall / 10) * 10;
+
   return {
     title: {
-      text: "Strategy Performance & Drawdown",
-      style: { 
-        fontSize: "16px",
-        color: colors.text 
-      },
+      text: "",
+      style: { fontSize: "12px", color: colors.text },
     },
     xAxis: {
       type: "datetime",
       labels: {
         formatter: function () {
-          return Highcharts.dateFormat('%Y', this.value);
+          return Highcharts.dateFormat("%Y", this.value);
         },
-        style: {
-          color: colors.portfolio,
-          fontSize: "10px",
-        },
+        style: { color: colors.text, fontSize: "10px" },
       },
       gridLineColor: colors.gridLines,
       tickWidth: isMobile ? 0 : 1,
@@ -198,54 +296,46 @@ export const getChartOptions = (
     yAxis: [
       {
         title: { text: "Performance (%)" },
-        height: "85%",       // Increased performance area
+        height: "60%",
         top: "0%",
-        min: bottomAxisMin,
-        max: topAxisMax,
+        min: 60,
         tickInterval,
-        tickAmount: 5,
-        left: isMobile ? 0 : 40,
+        tickAmount: 7,
         labels: {
           formatter: function () {
             return Math.round(this.value);
           },
-          style: {
-            color: colors.portfolio,
-            fontSize: "10px",
-          },
+          style: { color: colors.text, fontSize: "10px" },
         },
-        lineColor: colors.portfolio,
-        tickColor: colors.portfolio,
+        lineColor: colors.text,
+        tickColor: colors.text,
         tickWidth: isMobile ? 0 : 1,
         gridLineColor: colors.gridLines,
-        plotLines: [{
-          value: 100,
-          color: colors.portfolio,
-          width: 1,
-          zIndex: 5,
-          dashStyle: 'dot'
-        }],
+        plotLines: [
+          {
+            value: 100,
+            color: colors.text,
+            width: 1,
+            zIndex: 5,
+            dashStyle: "dot",
+          },
+        ],
       },
       {
         title: { text: "Drawdown (%)" },
-        height: "15%",       // Shrunk drawdown area further from 50% to 15%
-        top: "85%",          // Positioned immediately after the performance axis
+        height: "20%",
+        top: "70%",
         offset: 0,
         max: 0,
-        min: drawdownMin,
-        tickAmount: 4,
-        left: isMobile ? 0 : 35,
+        tickAmount: 3,
         labels: {
           formatter: function () {
-            return Math.round(this.value) + '%';
+            return Math.round(this.value) + "%";
           },
-          style: {
-            color: colors.portfolioDrawdown,
-            fontSize: "10px",
-          },
+          style: { color: colors.benchmarkDrawdown, fontSize: "10px" },
         },
-        lineColor: colors.portfolioDrawdown,
-        tickColor: colors.portfolioDrawdown,
+        lineColor: colors.benchmarkDrawdown,
+        tickColor: colors.benchmarkDrawdown,
         tickWidth: isMobile ? 0 : 1,
         gridLineColor: colors.gridLines,
       },
@@ -255,51 +345,48 @@ export const getChartOptions = (
       outside: isMobile,
       backgroundColor: colors.tooltipBg,
       borderColor: colors.tooltipBorder,
-      style: { color: colors.text, fontSize: '12px' },
+      style: { color: colors.text, fontSize: "12px" },
       formatter: function () {
-        let tooltipText = `<div style="padding:10px;">
-          <b>${Highcharts.dateFormat("%Y-%m-%d", this.x)}</b><br/>`;
-
-        // Group series by type
-        const performancePoints = this.points.filter(point => point.series.yAxis.options.top === "0%");
-        const drawdownPoints = this.points.filter(point => point.series.yAxis.options.top === "85%");
-
-        // Add performance metrics
+        let tooltipText = `<div style="padding:10px;"><b>${Highcharts.dateFormat(
+          "%Y-%m-%d",
+          this.x
+        )}</b><br/>`;
+        const performancePoints = this.points.filter(
+          (point) => point.series.yAxis.options.top === "0%"
+        );
+        const drawdownPoints = this.points.filter(
+          (point) => point.series.yAxis.options.top === "70%"
+        );
         tooltipText += "<br/><b>Performance:</b><br/>";
-        performancePoints.forEach(point => {
-          tooltipText += `<span style="color:${point.series.color}">\u25CF</span> 
-            ${point.series.name}: ${point.y.toFixed(2)}<br/>`;
+        performancePoints.forEach((point) => {
+          tooltipText += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: ${point.y.toFixed(
+            2
+          )}<br/>`;
         });
-
-        // Add drawdown metrics
         tooltipText += `<hr style="border: 0.5px solid ${colors.gridLines};"/>`;
         tooltipText += "<b>Drawdown:</b><br/>";
-        drawdownPoints.forEach(point => {
-          tooltipText += `<span style="color:${typeof point.series.color === 'object' ? 
-            point.series.color.stops[0][1] : point.series.color}">\u25CF</span> 
-            ${point.series.name}: ${point.y.toFixed(2)}%<br/>`;
+        drawdownPoints.forEach((point) => {
+          tooltipText += `<span style="color:${point.series.color}">\u25CF</span> ${point.series.name}: ${point.y.toFixed(
+            2
+          )}%<br/>`;
         });
-
         return tooltipText + "</div>";
-      }
+      },
     },
     chart: {
-      height: isMobile ? 500 : 800,
+      height: isMobile ? 500 : 600,
       backgroundColor: colors.background,
       zoomType: "xy",
-      marginLeft: isMobile ? 0 : 10,
-      marginRight: isMobile ? 0 : 2,
-      spacingBottom: 20,
     },
     legend: {
       enabled: true,
       itemStyle: { color: colors.text },
-      itemHoverStyle: { color: colors.portfolio },
-      align: 'left',
-      verticalAlign: 'top',
-      layout: 'horizontal',
+      itemHoverStyle: { color: colors.text },
+      align: "left",
+      verticalAlign: "top",
+      layout: "horizontal",
       x: 0,
-      y: 0
+      y: 0,
     },
     credits: { enabled: false },
     exporting: { enabled: !isMobile },
@@ -309,7 +396,6 @@ export const getChartOptions = (
         states: { hover: { enabled: true, lineWidthPlus: 1 } },
       },
     },
-    series: allSeries
+    series: allSeries,
   };
 };
-

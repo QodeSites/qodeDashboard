@@ -18,7 +18,7 @@ export async function GET(req) {
     }
 
     try {
-        console.log("Attempting to verify user with user_id:", user_id);
+        // console.log("Attempting to verify user with user_id:", user_id);
 
         // Fetch the user by id first
         const user = await prisma.tblusers.findUnique({
@@ -40,7 +40,7 @@ export async function GET(req) {
             data: { is_verified: true },
         });
 
-        console.log("User verification successful:", updatedUser);
+        // console.log("User verification successful:", updatedUser);
 
         // Send verification confirmation email
         try {
@@ -48,7 +48,7 @@ export async function GET(req) {
                 to: user.email,
                 ...emailService.getVerificationConfirmationTemplate(user.username)
             });
-            console.log("Verification confirmation email sent successfully");
+            // console.log("Verification confirmation email sent successfully");
         } catch (emailError) {
             // Log email error but don't fail the verification process
             console.error("Failed to send verification confirmation email:", emailError);

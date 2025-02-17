@@ -88,7 +88,7 @@ const PerformanceAndDrawdownChart = () => {
   const calculateCAGR = useMemo(
     () =>
       (data, timeRange = "3Y", portfolioType = "total_portfolio_nav") => {
-        console.log(data);
+        // console.log(data);
         const parseDate = (date) => {
           if (!date) return null; // Handle undefined date
           const [year, month, day] = date.split("-").map(Number);
@@ -185,7 +185,7 @@ const PerformanceAndDrawdownChart = () => {
 
 
   const calculateReturns = (data, key) => {
-    // console.log("datasss", data);
+    // // console.log("datasss", data);
     if (data.length < 2) return "0";
     const startValue = parseFloat(data[0][key]);
     const endValue = parseFloat(data[data.length - 1][key]);
@@ -194,7 +194,7 @@ const PerformanceAndDrawdownChart = () => {
 
   const strategyReturns = calculateReturns(filteredData, "total_portfolio_nav");
   const niftyReturns = calculateReturns(filteredData, "benchmark_values");
-  // console.log(filteredData);
+  // // console.log(filteredData);
   if (isLoading || !filteredData.length) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
@@ -210,7 +210,7 @@ const PerformanceAndDrawdownChart = () => {
   const chartOptions = getChartOptions(filteredData);
   const top10Drawdowns = calculateTop10Drawdown(filteredData);
   const monthlyPL = calculateMonthlyPL(filteredData);
-  console.log("filteredData", filteredData);
+  // console.log("filteredData", filteredData);
 
   const strategyCagr = calculateCAGR(
     filteredData,

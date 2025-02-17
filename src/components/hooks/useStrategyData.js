@@ -30,8 +30,8 @@ const useStrategyData = (strategy) => {
   }, [strategy]);
 
   const calculateReturns = (period) => {
-    // console.log("strategy data: ", data);
-    // console.log("strategy: ", strategy);
+    // // console.log("strategy data: ", data);
+    // // console.log("strategy: ", strategy);
     if (!data || data.length < 2) return "0";
 
     const latestData = data[data.length - 1];
@@ -67,7 +67,7 @@ const useStrategyData = (strategy) => {
     const startValue = data[startIndex]["total_portfolio_nav"];
     const endValue = latestData["total_portfolio_nav"];
 
-    console.log("startvalue", data[startIndex]);
+    // console.log("startvalue", data[startIndex]);
 
     if (startValue === undefined || endValue === undefined) return "0";
 

@@ -96,7 +96,7 @@ const TrailingReturns = ({
   // We assume the trailing returns object keys are the same for both scheme and benchmark.
   const periods = Object.keys(trailingReturns);
   return (
-    <div className="p-4 bg-white mb-6 rounded-lg shadow">
+    <div>
       {/* Header with title and download button */}
       <div className="flex justify-between items-start">
         <div className="flex items-center">
@@ -148,7 +148,7 @@ const TrailingReturns = ({
                       colSpan="1"
                       role="columnheader"
                       title="Toggle SortBy"
-                      className="text-left px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                      className="text-left px-4 py-2 bg-gray-50  text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
                       style={{ cursor: "pointer" }}
                     >
                       Name
@@ -159,7 +159,7 @@ const TrailingReturns = ({
                         colSpan="1"
                         role="columnheader"
                         title="Toggle SortBy"
-                        className="text-center px-4 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                        className="text-center px-4 py-2 bg-gray-50  text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
                         style={{ cursor: "pointer" }}
                       >
                         {period}
@@ -169,7 +169,7 @@ const TrailingReturns = ({
                       colSpan="1"
                       role="columnheader"
                       title="Toggle SortBy"
-                      className="text-center px-1 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider border-l-2 border-gray-300"
+                      className="text-center px-1 py-2 bg-gray-50  text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider border-l-2 border-gray-300"
                       style={{ cursor: "pointer" }}
                     >
                       Current DD
@@ -178,7 +178,7 @@ const TrailingReturns = ({
                       colSpan="1"
                       role="columnheader"
                       title="Toggle SortBy"
-                      className="text-center px-1 py-2 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase  tracking-wider"
+                      className="text-center px-1 py-2 bg-gray-50  text-xs leading-4 font-medium text-gray-500 uppercase  tracking-wider"
                       style={{ cursor: "pointer" }}
                     >
                       Max DD
@@ -314,6 +314,9 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     }
   }, [loading]);
 
+
+  
+
   // Assume you are using the first account from accountCodes
   const accountCode =
     accountCodes && accountCodes.length > 0 ? accountCodes[0] : null;
@@ -390,7 +393,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     activeScheme === "Scheme Total"
       ? totalPortfolio?.trailingReturns || {}
       : selectedScheme?.trailingReturns || {};
-  console.log(trailingReturns)
+  // console.log(trailingReturns)
   // ── Calculate Benchmark trailing returns and drawdown stats ──
   const benchmarkTrailingReturns = useMemo(() => {
     if (benchmarkData && benchmarkData.length > 0) {
@@ -549,7 +552,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         height: 700, // Increased chart height for better visibility
       },
       title: {
-        text: "Portfolio vs Benchmark Performance & Drawdown",
+        text: "",
         style: { fontSize: "16px" },
       },
       xAxis: {
@@ -759,6 +762,8 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     );
   };
 
+  
+  
 
   const renderContent = () => {
 
@@ -893,16 +898,20 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           </div>
         </div>
 
-        <TrailingReturns
-          trailingReturns={trailingReturns}
-          ddStats={ddStats}
-          benchmarkTrailingReturns={benchmarkTrailingReturns}
-          benchmarkDDStats={benchmarkDDStats}
-        />
+       
 
         {/* Merged Chart: NAV & Drawdown with Stocks Table on the right */}
         <div className="flex sm:flex-row flex-col gap-5">
           <div className="bg-white w-full sm:w-3/4 p-4 rounded-lg shadow mb-6">
+            <TrailingReturns
+              trailingReturns={trailingReturns}
+              ddStats={ddStats}
+              benchmarkTrailingReturns={benchmarkTrailingReturns}
+              benchmarkDDStats={benchmarkDDStats}
+            />
+            <h3 className="text-lg mt-8 mb-4 leading-6 font-medium text-gray-900">
+              Equity Curve
+            </h3>
             {(activeScheme === "Scheme Total" && totalPortfolio?.navCurve?.length) ||
               (activeScheme !== "Scheme Total" && selectedScheme?.navCurve?.length) ? (
               <HighchartsReact
@@ -1101,14 +1110,14 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   }
 
   return (
-    <div className="sm:px-2">
+    <div className="sm:px-2 max-w-7xl mx-auto">
       {endDate && (
         <Text className="sm:text-sm  text-xs font-subheading text-brown text-right">
           Data as of: {formatDate(endDate)}
         </Text>
       )}
       <div className="flex justify-between items-center mb-4">
-        <Heading className="text-2xl font-semibold mb-4 mt-4">
+        <Heading className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:leading-9 sm:truncate">
           Welcome, {clientName}
         </Heading>
       </div>

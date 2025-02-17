@@ -99,7 +99,7 @@ class EmailService {
                 ...options,
                 html: this.wrapWithTemplate(options.html, options.subject)
             });
-            console.log('Email sent successfully:', result.messageId);
+            // console.log('Email sent successfully:', result.messageId);
             return result;
         } catch (error) {
             console.error('Failed to send email:', error);

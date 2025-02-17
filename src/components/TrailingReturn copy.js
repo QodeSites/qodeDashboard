@@ -5,7 +5,7 @@ import { Spinner } from "@material-tailwind/react";
 
 
 const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
-    console.log(name);
+    // console.log(name);
 
     const [returns, setReturns] = useState({
         "10D": {},
@@ -60,7 +60,7 @@ const TrailingReturns = ({ strategy, isLoading, error, data, name }) => {
             const days = period === "10D" ? 10 : 7;
             const startDate = new Date(latestDate.getTime() - days * 24 * 60 * 60 * 1000);
             const filteredData = sortedData.filter((item) => new Date(item.date) >= startDate);
-            console.log(filteredData);
+            // console.log(filteredData);
 
             calculatedReturns[period] = {
                 [name]: calculateCAGR(filteredData, period, "total_portfolio_nav"),  // pass period instead of "Custom"

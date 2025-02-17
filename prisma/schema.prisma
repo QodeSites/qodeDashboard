@@ -138,6 +138,12 @@ model user_master {
   updated_at      DateTime?       @default(now()) @db.Timestamp(6)
   reset_token     String?         @unique @db.VarChar(255)
   reset_expires   DateTime?       @db.Timestamp(6)
+  full_name       String?         @db.VarChar(100)
+  mobile          String?         @db.VarChar(15)
+  account_type    String?         @db.VarChar(50)
+  state           String?         @db.VarChar(50)
+  pin_code        String?         @db.VarChar(10)
+  last_login      DateTime?       @db.Timestamp(6)
   client_master   client_master[]
 
   @@schema("pms_clients_tracker")

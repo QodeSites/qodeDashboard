@@ -23,7 +23,7 @@ const useManagedAccounts = () => {
         const response = await axios.get(
           "/api/managed-accounts?user_id=" + session.user.id
         );
-        console.log("Managed Accounts Response:", response.data);
+        // console.log("Managed Accounts Response:", response.data);
 
         const { accounts } = response.data.data;
 

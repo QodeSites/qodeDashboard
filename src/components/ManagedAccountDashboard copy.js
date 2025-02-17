@@ -281,7 +281,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           );
           const latestEntry = sortedStrategyData[0];
           const parsedValue = parseFloat(latestEntry?.portfolio_value) || 0;
-          //console.log(strategy.strategy, parsedValue);
+          //// console.log(strategy.strategy, parsedValue);
           return {
             name: strategy.strategy,
             y: parsedValue,
@@ -381,18 +381,18 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   // Prepare benchmark series data
   const benchmarkSeries = useMemo(() => {
     if (!benchmarkData || Object.keys(benchmarkData).length === 0) {
-      //console.log("benchmarkData is empty or not provided");
+      //// console.log("benchmarkData is empty or not provided");
       return [];
     }
     const benchmarkArray = Object.values(benchmarkData);
     if (!Array.isArray(benchmarkArray) || benchmarkArray.length === 0) {
-      //console.log("benchmarkArray is not an array or is empty");
+      //// console.log("benchmarkArray is not an array or is empty");
       return [];
     }
     const sortedBenchmarkData = benchmarkArray
       .slice()
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-    //console.log("sortedBenchmarkData:", sortedBenchmarkData);
+    //// console.log("sortedBenchmarkData:", sortedBenchmarkData);
 
     const portfolioStartTimestamp = normalizedData.length ? normalizedData[0][0] : null;
     let filteredBenchmarkData = sortedBenchmarkData;
@@ -484,20 +484,20 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       };
 
     const totalSchemeName = getStrategyName(activeScheme);
-    //console.log("totalSchemeName:", totalSchemeName);
+    //// console.log("totalSchemeName:", totalSchemeName);
 
     // Use Array.find to locate the correct strategy object
     const strategyObj = activeSchemeData.strategies.find(
       (s) => s.strategy === totalSchemeName
     );
-    //console.log("strategyObj:", strategyObj);
+    //// console.log("strategyObj:", strategyObj);
 
     const strategiesData = strategyObj?.masterSheetData;
-    //console.log("strategiesData:", strategiesData);
+    //// console.log("strategiesData:", strategiesData);
 
     const latestRecord =
       strategiesData && strategiesData.length > 0 ? strategiesData[strategiesData.length - 1] : null;
-    //console.log("latestRecord:", latestRecord);
+    //// console.log("latestRecord:", latestRecord);
 
     const latestPortfolioValue = latestRecord
       ? parseFloat(latestRecord.portfolio_value) || 0
@@ -1038,7 +1038,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     if (!Array.isArray(data)) {
       return <div className="p-1 text-red-500">No data available.</div>;
     }
-    //console.log("accountNames:", accountNames);
+    //// console.log("accountNames:", accountNames);
     return (
       <>
         {isSarlaAccount ? (
@@ -1157,7 +1157,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
         <div className="flex justify-between items-center mb-18 mt-18">
           {startDate && (
-            <Text className="sm:text-sm italic text-xs font-subheading text-brown  text-left">
+            <Text className="sm:text-sm  text-xs font-subheading text-brown  text-left">
               Inception Date: {formatDate(startDate)}
             </Text>
           )}
@@ -1229,7 +1229,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
             onClick={() => setIsOpen(!isOpen)}
             className="w-full flex items-center justify-between p-2 border-brown border rounded-lg bg-lightBeige  text-sm font-medium text-black  uppercase tracking-wider focus:outline-none"
           >
-            <Text className="sm:text-sm italic text-xs font-subheading text-brown  text-left">Cash In/Out</Text>
+            <Text className="sm:text-sm  text-xs font-subheading text-brown  text-left">Cash In/Out</Text>
             <span className="text-xs sm:text-xl">
               {isOpen ? "−" : "+"}
             </span>
@@ -1323,12 +1323,12 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   return (
     <div className="p-0 sm:p-1">
       {endDate && (
-        <Text className="sm:text-sm italic text-xs font-subheading text-brown  text-right">
+        <Text className="sm:text-sm  text-xs font-subheading text-brown  text-right">
           Data as of: {formatDate(endDate)}
         </Text>
       )}
       <div className="flex justify-between items-center mb-4">
-        <Heading className="sm:text-subheading italic text-mobileSubHeading font-subheading text-brown  mb-18 mt-4">
+        <Heading className="sm:text-subheading  text-mobileSubHeading font-subheading text-brown  mb-18 mt-4">
           Welcome, {username}
         </Heading>
       </div>

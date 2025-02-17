@@ -152,7 +152,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
                   const monthData = groupedByYear[year][monthLabel];
                   const cellKey = `${year}-${monthLabel}`;
                   return monthData ? (
-                    renderPnLCell(monthData.pnl.toFixed(2), cellKey)
+                    renderPnLCell(monthData?.pnl?.toFixed(2), cellKey)
                   ) : (
                     <td
                       key={cellKey}

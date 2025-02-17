@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
+  // console.log(monthlyPnL)
   // Convert monthlyPnL to an array if it isn't already one.
   const monthlyPnLArray = Array.isArray(monthlyPnL)
     ? monthlyPnL

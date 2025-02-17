@@ -17,7 +17,7 @@ export async function POST(req) {
     });
 
     if (existingUser) {
-      console.log("Registration failed: User already exists");
+      // console.log("Registration failed: User already exists");
       return NextResponse.json(
         { error: "User with this email already exists" },
         { status: 400 }

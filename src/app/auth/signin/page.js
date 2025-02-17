@@ -62,11 +62,11 @@ export default function SignIn() {
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         <Link
           href="/"
-          className="text-[#d1a47b] text-center playfair-display-font mb-4 font-bold text-5xl"
+          className="text-[#d1a47b] text-center playfair-display-font mb-4 font-bold text-6xl"
         >
           Qode
         </Link>
-        <Text className="text-center text-2xl font-extralight text-brown my-6">
+        <Text className="text-center text-2xl font-normal text-brown my-6">
           Sign in to your account
         </Text>
         <div className="w-full max-w-md p-8 border border-gray-200 bg-white rounded-lg shadow-sm">

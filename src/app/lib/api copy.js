@@ -68,7 +68,7 @@ export const useFetchHoldings = (url) => {
 };
 
 const fetchStrategyData = async (strategy, timeRange, startDate, endDate) => {
-  console.log(timeRange);
+  // console.log(timeRange);
   try {
     const response = await fetch("/mainData.json");
 

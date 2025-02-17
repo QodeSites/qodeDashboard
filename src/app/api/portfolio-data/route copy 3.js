@@ -67,18 +67,12 @@ async function fetchCashInOutData(nuvamaCodes) {
   return await prisma.$queryRaw`
     SELECT date, nuvama_code, cash_in_out 
     FROM pms_clients_tracker.pms_cash_in_out 
-    WHERE nuvama_code = ANY(${nuvamaCodes}::varchar[]) 
-    AND (nuvama_code LIKE 'QTF%' 
-         OR nuvama_code LIKE 'QGF%' 
-         OR nuvama_code LIKE 'QFH%' 
-         OR nuvama_code LIKE 'QAW%')
+    WHERE nuvama_code = ANY(${nuvamaCodes}::varchar[])
     ORDER BY date ASC
-`;
+  `;
 }
 
-/**
- * Processes the cumulative view data
- */
+/* Processes the cumulative view data*/
 async function processCumulativeView(userNuvamaCodes, userEmail) {
   // Fetch all required data in parallel
   const [allPortfolioDetails, allDailyNAV, cashInOutData] = await Promise.all([
@@ -200,7 +194,6 @@ async function processCumulativeView(userNuvamaCodes, userEmail) {
   };
 }
 
-
 async function processIndividualView(nuvama_code, userEmail) {
   const [dailyNAV, portfolioDetails, cashInOutData] = await Promise.all([
     prisma.daily_nav.findMany({
@@ -253,7 +246,8 @@ export async function GET(request) {
 
     // Normalize user email for case-insensitive comparison
     const userEmail = session.user.email.toLowerCase();
-
+    const user_id = session.user.id
+    console.log('user_id',user_id)
     // Get URL parameters
     const { searchParams } = new URL(request.url);
     const nuvama_code = searchParams.get("nuvama_code");

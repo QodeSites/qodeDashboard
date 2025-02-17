@@ -130,11 +130,11 @@ function calculateDrawdownMetrics(navData) {
 
 function calculateReturns(navData, cashInflow) {
   if (!navData || navData.length < 2) {
-    console.log("Insufficient NAV data points");
+    // console.log("Insufficient NAV data points");
     return 0;
   }
 
-  // console.log(cashInflow)
+  // // console.log(cashInflow)
 
   const firstDate = new Date(navData[0].date);
   const lastDate = new Date(navData[navData.length - 1].date);
@@ -255,11 +255,11 @@ function calculateTrailingReturns(
 }
 
 function calculateMonthlyPnL(navData) {
-  console.log('\n=== Starting PnL Calculation ===');
-  console.log('Input data:', JSON.stringify(navData, null, 2));
+  // console.log('\n=== Starting PnL Calculation ===');
+  // console.log('Input data:', JSON.stringify(navData, null, 2));
 
   if (!navData || navData.length === 0) {
-    console.log('No data provided or empty array');
+    // console.log('No data provided or empty array');
     return {};
   }
 
@@ -274,7 +274,7 @@ function calculateMonthlyPnL(navData) {
         lastNav: null,
         lastDate: null
       };
-      console.log(`\nCreating new month bucket for ${yearMonth}`);
+      // console.log(`\nCreating new month bucket for ${yearMonth}`);
     }
 
     acc[yearMonth].points.push({
@@ -286,24 +286,24 @@ function calculateMonthlyPnL(navData) {
     acc[yearMonth].lastNav = entry.nav;
     acc[yearMonth].lastDate = entry.date;
 
-    console.log(`Added to ${yearMonth}: Date=${entry.date}, NAV=${entry.nav}`);
+    // console.log(`Added to ${yearMonth}: Date=${entry.date}, NAV=${entry.nav}`);
     return acc;
   }, {});
 
-  console.log('\n=== Data Grouped By Month ===');
-  console.log(JSON.stringify(dataByMonth, null, 2));
+  // console.log('\n=== Data Grouped By Month ===');
+  // console.log(JSON.stringify(dataByMonth, null, 2));
 
   const sortedMonths = Object.keys(dataByMonth).sort();
-  console.log('\nSorted months:', sortedMonths);
+  // console.log('\nSorted months:', sortedMonths);
   
   const monthlyPnL = {};
 
   sortedMonths.forEach((yearMonth, index) => {
-    console.log(`\n=== Processing ${yearMonth} ===`);
+    // console.log(`\n=== Processing ${yearMonth} ===`);
     
     const currentMonthData = dataByMonth[yearMonth];
     const currentMonthEnd = currentMonthData.lastNav;
-    console.log(`Month end NAV: ${currentMonthEnd}`);
+    // console.log(`Month end NAV: ${currentMonthEnd}`);
 
     let startNav;
     let startDate;
@@ -311,17 +311,17 @@ function calculateMonthlyPnL(navData) {
       // For first month, use its first available NAV
       startNav = currentMonthData.points[0].nav;
       startDate = currentMonthData.points[0].date;
-      console.log(`First month - using first day's NAV as start: ${startNav}`);
+      // console.log(`First month - using first day's NAV as start: ${startNav}`);
     } else {
       // For subsequent months, use previous month's last available NAV
       const previousMonth = sortedMonths[index - 1];
       startNav = dataByMonth[previousMonth].lastNav;
       startDate = dataByMonth[previousMonth].lastDate;
-      console.log(`Using previous month (${previousMonth}) last NAV as start: ${startNav}`);
+      // console.log(`Using previous month (${previousMonth}) last NAV as start: ${startNav}`);
     }
 
     const pnl = ((currentMonthEnd - startNav) / startNav) * 100;
-    console.log(`PnL Calculation: ((${currentMonthEnd} - ${startNav}) / ${startNav}) * 100 = ${pnl.toFixed(2)}%`);
+    // console.log(`PnL Calculation: ((${currentMonthEnd} - ${startNav}) / ${startNav}) * 100 = ${pnl.toFixed(2)}%`);
 
     monthlyPnL[yearMonth] = {
       startDate: startDate,
@@ -333,15 +333,15 @@ function calculateMonthlyPnL(navData) {
     };
   });
 
-  console.log('\n=== Monthly PnL Results ===');
+  // console.log('\n=== Monthly PnL Results ===');
   Object.entries(monthlyPnL).forEach(([month, data]) => {
-    console.log(`\n${month}:`);
-    console.log(`  Start Date: ${data.startDate}`);
-    console.log(`  End Date: ${data.endDate}`);
-    console.log(`  Start NAV: ${data.startNav}`);
-    console.log(`  End NAV: ${data.endNav}`);
-    console.log(`  PnL: ${data.pnl.toFixed(2)}%`);
-    console.log(`  NAV Points: ${data.navPoints.length}`);
+    // console.log(`\n${month}:`);
+    // console.log(`  Start Date: ${data.startDate}`);
+    // console.log(`  End Date: ${data.endDate}`);
+    // console.log(`  Start NAV: ${data.startNav}`);
+    // console.log(`  End NAV: ${data.endNav}`);
+    // console.log(`  PnL: ${data.pnl.toFixed(2)}%`);
+    // console.log(`  NAV Points: ${data.navPoints.length}`);
   });
 
   const pnlByYear = {};

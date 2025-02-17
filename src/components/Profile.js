@@ -54,7 +54,7 @@ const ProfilePage = ({ data }) => {
     <div className="max-w-5xl mx-auto p-1 bg-white ">
       {/* Header Section */}
       <div className="mb-6">
-        <Heading className="italic text-brown  font-bold text-xl sm:text-2xl">
+        <Heading className=" text-brown  font-bold text-xl sm:text-2xl">
           Account Profile
         </Heading>
         <Text className="text-sm text-gray-600 ">
@@ -120,7 +120,7 @@ const ProfilePage = ({ data }) => {
 
         {/* Risk Disclaimer */}
         <div className="mt-6">
-          <Text className="text-xs text-gray-500  italic">
+          <Text className="text-xs text-gray-500  ">
             * Investment values and returns are subject to market risks. Past performance is not indicative of future returns.
           </Text>
         </div>

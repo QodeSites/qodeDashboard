@@ -16,7 +16,7 @@
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@next/font": "^14.2.15",
-    "@prisma/client": "^6.2.1",
+    "@prisma/client": "^6.3.1",
     "@radix-ui/react-toast": "^1.2.2",
     "@tanstack/react-table": "^8.20.5",
     "axios": "^1.7.9",
@@ -49,7 +49,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",
-    "prisma": "^6.2.1",
+    "prisma": "^6.3.1",
     "tailwindcss": "^3.4.15"
   }
 }

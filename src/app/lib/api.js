@@ -63,7 +63,7 @@ const fetchStrategyData = async (strategy, timeRange, startDate, endDate) => {
       throw new Error("Failed to fetch data");
     }
     const data = await response.json();
-    console.log("dataasssss", data);
+    // console.log("dataasssss", data);
 
     if (!data || data.length === 0) {
       throw new Error(`No data found for strategy: ${strategy}`);

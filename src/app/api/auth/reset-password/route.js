@@ -6,7 +6,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const { email, token, password } = body;
-    console.log(email, token, password);
+    // console.log(email, token, password);
     if (!email || !token || !password) {
       return NextResponse.json(
         { error: "Email, token, and new password are required" },

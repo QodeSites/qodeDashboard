@@ -2,6 +2,17 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
+// Function to get current time in IST with minutes precision
+function getCurrentISTTime() {
+  const now = new Date();
+  // Convert to IST (UTC+5:30)
+  const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+  // Reset seconds and milliseconds
+  istTime.setSeconds(0);
+  istTime.setMilliseconds(0);
+  return istTime;
+}
+
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -17,13 +28,12 @@ export const authOptions = {
         }
 
         try {
-          // Find the user by email (stored in lowercase)
           const user = await prisma.user_master.findUnique({
             where: { email: credentials.email.toLowerCase() },
             select: {
               id: true,
               email: true,
-              password: true, // hashed password
+              password: true,
               hasaccess: true,
             },
           });
@@ -32,26 +42,35 @@ export const authOptions = {
             throw new Error("User not found. Please sign up.");
           }
 
-          // Use bcrypt to compare the provided password with the hashed password in the database
-          const passwordMatch = await bcrypt.compare(credentials.password, user.password);
-          if (!passwordMatch) {
+            if (credentials.password !== user.password) {
             throw new Error("Invalid email or password.");
           }
+
 
           if (!user.hasaccess) {
             throw new Error("Access denied. Please contact support.");
           }
 
-          // First, check client_master table for clients associated with the user
+          // Update last_login timestamp with formatted IST time
+          const istTime = getCurrentISTTime();
+          await prisma.user_master.update({
+            where: { id: user.id },
+            data: { last_login: istTime },
+          });
+
+          // Set custom username for user with id 9
+          const customUsername = user.id === 9 ? "Hiren Zaverchand Gala" : undefined;
+
+          // First check client_master
           const clients = await prisma.client_master.findMany({
             where: { user_id: user.id },
             select: { 
               nuvama_code: true,
-              username: true,
+              username: true 
             },
           });
 
-          // If no clients in client_master, then check managed_account_clients table
+          // If no clients in client_master, check managed_account_clients
           if (clients.length === 0) {
             const managedClients = await prisma.managed_account_clients.findMany({
               where: { user_id: user.id },
@@ -67,20 +86,23 @@ export const authOptions = {
               master_id: user.id.toString(),
               email: user.email,
               hasaccess: user.hasaccess,
+              last_login: istTime,
               managed_client_names: managedClients.map(client => client.client_name),
               managed_account_codes: managedClients.map(client => client.account_code),
               managed_account_names: managedClients.map(client => client.account_name),
               id: managedClients[0].id.toString(),
+              ...(customUsername && { username: customUsername }),
             };
           }
 
-          // Return the client details if found in client_master
           return {
             id: user.id.toString(),
             email: user.email,
             hasaccess: user.hasaccess,
+            last_login: istTime,
             nuvama_codes: clients.map(client => client.nuvama_code),
             usernames: clients.map(client => client.username),
+            ...(customUsername && { username: customUsername }),
           };
         } catch (error) {
           console.error("Authentication error:", error);
@@ -102,13 +124,12 @@ export const authOptions = {
           id: token.id,
           email: token.email,
           hasaccess: token.hasaccess,
-          ...(token.nuvama_codes
-            ? { nuvama_codes: token.nuvama_codes, usernames: token.usernames }
-            : {
-                managed_client_names: token.managed_client_names,
-                managed_account_codes: token.managed_account_codes,
-                managed_account_names: token.managed_account_names,
-              }),
+          last_login: token.last_login,
+          ...(token.username && { username: token.username }),
+          ...(token.nuvama_codes ? 
+            { nuvama_codes: token.nuvama_codes, usernames: token.usernames } : 
+            { managed_client_names: token.managed_client_names, managed_account_codes: token.managed_account_codes, managed_account_names: token.managed_account_names }
+          ),
         },
       };
     },
@@ -118,13 +139,12 @@ export const authOptions = {
           ...token,
           id: user.id,
           hasaccess: user.hasaccess,
-          ...(user.nuvama_codes
-            ? { nuvama_codes: user.nuvama_codes, usernames: user.usernames }
-            : {
-                managed_client_names: user.managed_client_names,
-                managed_account_codes: user.managed_account_codes,
-                managed_account_names: user.managed_account_names,
-              }),
+          last_login: user.last_login,
+          ...(user.username && { username: user.username }),
+          ...(user.nuvama_codes ? 
+            { nuvama_codes: user.nuvama_codes, usernames: user.usernames } : 
+            { managed_client_names: user.managed_client_names, managed_account_codes: user.managed_account_codes, managed_account_names: user.managed_account_names }
+          ),
         };
       }
       return token;
