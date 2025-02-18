@@ -85,10 +85,10 @@ export default function Account() {
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
                     Billing Information
                   </h3>
-                  <p className="max-w-4xl text-sm leading-5 text-gray-500">
+                  {/* <p className="max-w-4xl text-sm leading-5 text-gray-500">
                     You can make changes to your billing information at the time
                     of your next payment.
-                  </p>
+                  </p> */}
                 </div>
                 <div className="mt-4">
                   <div className="sm:grid sm:grid-cols-4 sm:gap-4 py-2 sm:py-1">

@@ -1,4 +1,3 @@
-// components/YearlyMonthlyPLTable.jsx
 import React from "react";
 import PropTypes from "prop-types";
 
@@ -21,33 +20,21 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
 
   // Define the month labels (two-digit) and their corresponding abbreviated names.
   const monthLabels = [
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
+    "01", "02", "03", "04", "05", "06",
+    "07", "08", "09", "10", "11", "12"
   ];
   const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
+
+  // Calculate PnL if it's 0
+  const calculatePnL = (item) => {
+    if (item.pnl === 0 && item.firstNAV && item.lastNAV) {
+      return ((item.lastNAV - item.firstNAV) / item.firstNAV) * 100;
+    }
+    return item.pnl;
+  };
 
   // Group the monthlyPnL data by year using two-digit month labels.
   const groupedByYear = {};
@@ -59,7 +46,13 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
     if (!groupedByYear[year]) {
       groupedByYear[year] = {};
     }
-    groupedByYear[year][monthLabel] = item;
+    
+    // Calculate PnL if it's 0
+    const calculatedPnL = calculatePnL(item);
+    groupedByYear[year][monthLabel] = {
+      ...item,
+      pnl: calculatedPnL
+    };
   });
 
   // Get a sorted list of years (ascending order)
@@ -71,7 +64,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
     // If numValue is not a number, show a dash.
     if (isNaN(numValue)) {
       return (
-        <td key={key} className="p-1 text-center text-gray-900 ">
+        <td key={key} className="p-1 text-center text-gray-900">
           -
         </td>
       );
@@ -88,7 +81,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
       );
     } else if (numValue < 0) {
       // Negative PnL: red background
-      cellClass += "bg-red-100  font-semibold";
+      cellClass += "bg-red-100 font-semibold";
       return (
         <td key={key} className={cellClass}>
           {`-${cellValue}`}
@@ -97,7 +90,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
     } else {
       // Zero or neutral PnL
       return (
-        <td key={key} className="p-1 text-center text-gray-900 ">
+        <td key={key} className="p-1 text-center text-gray-900">
           {cellValue}
         </td>
       );
@@ -110,7 +103,6 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
       <h3 className="text-lg leading-6 mb-4 font-medium text-gray-900">
         Monthly PnL Table (%)
       </h3>
-
 
       {/* Table Container */}
       <div className="overflow-x-auto border text-xs sm:text-lg border-t-0 border-gray-200 rounded-lg">
@@ -132,7 +124,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
                   key={monthLabels[index]}
                   role="columnheader"
                   title="Toggle SortBy"
-                  className=" px-4 py-2 bg-gray-50 text-center text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-4 py-2 bg-gray-50 text-center text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
                   style={{ cursor: "pointer" }}
                 >
                   {monthName}
@@ -144,7 +136,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
             {sortedYears.map((year) => (
               <tr key={year} className="hover:bg-gray-50 border-none">
                 {/* Year cell */}
-                <td className="p-2  text-center font-semibold text-gray-900">
+                <td className="p-2 text-center font-semibold text-gray-900">
                   {year}
                 </td>
                 {/* Month cells */}
@@ -152,12 +144,9 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
                   const monthData = groupedByYear[year][monthLabel];
                   const cellKey = `${year}-${monthLabel}`;
                   return monthData ? (
-                    renderPnLCell(monthData?.pnl?.toFixed(2), cellKey)
+                    renderPnLCell(monthData?.pnl, cellKey)
                   ) : (
-                    <td
-                      key={cellKey}
-                      className="p-2 text-center text-gray-900"
-                    >
+                    <td key={cellKey} className="p-2 text-center text-gray-900">
                       -
                     </td>
                   );
@@ -169,16 +158,16 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
       </div>
     </div>
   );
-
 };
 
 YearlyMonthlyPLTable.propTypes = {
   monthlyPnL: PropTypes.arrayOf(
     PropTypes.shape({
       year: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-      month: PropTypes.string.isRequired, // Expected to be the full month name (e.g., "November")
+      month: PropTypes.string.isRequired,
       pnl: PropTypes.number.isRequired,
-      // Additional properties can be added here if needed
+      firstNAV: PropTypes.number,
+      lastNAV: PropTypes.number,
     })
   ).isRequired,
 };

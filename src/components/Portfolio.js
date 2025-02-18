@@ -48,7 +48,7 @@ const PerformanceAndDrawdownChart = () => {
   }
   // activeTab is the strategy being viewed;
   // selectedNuvama is the investor’s own code.
-  const [activeTab, setActiveTab] = useState(null);
+  const [activeTab, setActiveTab] = useState('TOTAL');
 
   const {
     data,
@@ -60,7 +60,7 @@ const PerformanceAndDrawdownChart = () => {
     handleViewModeChange,
   } = useFetchStrategyData();
 
-  console.log("daasgdaeuh", data);
+  // console.log("daasgdaeuh", data);
 
   const { timeRange } = useCustomTimeRange();
   const { isMobile } = useMobileWidth();
@@ -127,12 +127,6 @@ const PerformanceAndDrawdownChart = () => {
     () => (sortedDailyNAV.length ? sortedDailyNAV[sortedDailyNAV.length - 1].date : null),
     [sortedDailyNAV]
   );
-
-  useEffect(() => {
-    // Uncomment if needed for debugging
-    // console.log("startDate:", startDate);
-    // console.log("endDate:", endDate);
-  }, [startDate, endDate]);
 
   // Fetch benchmark/model data for the active strategy.
   const {
@@ -416,19 +410,6 @@ const PerformanceAndDrawdownChart = () => {
     return { totalIn, totalOut, netFlow };
   }, [data.cashInOutData, filteredCashInOutData, activeTab, isInvestedInStrategy]);
 
-  // Portfolio summary: if not invested, show zeros.
-  const portfolioSummary = useMemo(() => {
-    if (isInvestedInStrategy) {
-      return data?.portfolioDetails;
-    } else {
-      return {
-        name: data?.portfolioDetails?.name || "Portfolio",
-        totalInvested: 0,
-        currentValue: 0,
-        returns: 0,
-      };
-    }
-  }, [data, isInvestedInStrategy]);
 
   // Monthly PnL: if not invested, set all pnl values to 0.
   const monthlyPnLData = useMemo(() => {
@@ -454,17 +435,38 @@ const PerformanceAndDrawdownChart = () => {
   }, []);
 
   // Style helper for strategy buttons.
-  const strategyButtonClass = (strategy) =>
-    `px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-wider focus:outline-none border-b-2 ${activeTab === strategy
-      ? "border-[#d1a47b] text-[#d1a47b]"
-      : "border-transparent text-gray-700"
-    } ${
-    // For admin users, use the existing logic.
-    // For non-admin users, if the strategy is NOT in the user's invested strategies, add reduced opacity.
-    !isAdminUser && !investedStrategies.includes(strategy)
-      ? "opacity-50 cursor-pointer"
-      : ""
-    }`;
+  const strategyButtonClass = (strategy) => {
+    const baseClasses =
+      "px-4 py-2 text-xs sm:text-sm font-medium uppercase tracking-wider focus:outline-none border-b-2";
+    const activeClasses =
+      activeTab === strategy
+        ? "border-[#d1a47b] text-[#d1a47b]"
+        : "border-transparent text-gray-700";
+    
+    let investedClasses = "";
+    if (isAdminUser) {
+      // For admin users, apply green styling only if the selected nuvama's strategy matches.
+      investedClasses =
+        selectedNuvama && extractStrategy(selectedNuvama) === strategy
+          ? "bg-green-100 font-bold"
+          : "";
+    } else {
+      // For non-admin users, apply green styling if the strategy is among invested strategies.
+      investedClasses = investedStrategies.includes(strategy)
+        ? "bg-green-100 font-bold"
+        : "";
+    }
+    
+    // For non-admin users, if not invested then add reduced opacity.
+    const nonInvestedClasses =
+      !isAdminUser && !investedStrategies.includes(strategy)
+        ? "opacity-50 cursor-pointer"
+        : "";
+    
+    return `${baseClasses} ${activeClasses} ${investedClasses} ${nonInvestedClasses}`;
+  };
+  
+
 
   // Combined loading and error states.
   const combinedLoading = isLoading || isBenchmarkLoading || isBse500Loading;
@@ -477,7 +479,7 @@ const PerformanceAndDrawdownChart = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
           <div>
-            <Heading className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:leading-9 sm:truncate">
+            <Heading className="text-2xl font-bold leading-7 text-gray-900 sm:text-2xl sm:leading-9 sm:truncate">
               {clientName ? `Welcome, ${clientName}` : "Welcome, Guest"}
             </Heading>
             <Text className="text-sm text-gray-600">
@@ -514,10 +516,10 @@ const PerformanceAndDrawdownChart = () => {
                   {isAdminUser
                     ? selectedNuvama &&
                       extractStrategy(selectedNuvama) === "QAW"
-                      ? "(Invested)"
+                      ? ""
                       : ""
                     : investedStrategies.includes("QAW")
-                    ? "(Invested)"
+                    ? ""
                     : ""}
                 </option>
                 <option value="QGF">
@@ -525,10 +527,10 @@ const PerformanceAndDrawdownChart = () => {
                   {isAdminUser
                     ? selectedNuvama &&
                       extractStrategy(selectedNuvama) === "QGF"
-                      ? "(Invested)"
+                      ? ""
                       : ""
                     : investedStrategies.includes("QGF")
-                    ? "(Invested)"
+                    ? ""
                     : ""}
                 </option>
                 <option value="QFH">
@@ -536,10 +538,10 @@ const PerformanceAndDrawdownChart = () => {
                   {isAdminUser
                     ? selectedNuvama &&
                       extractStrategy(selectedNuvama) === "QFH"
-                      ? "(Invested)"
+                      ? ""
                       : ""
                     : investedStrategies.includes("QFH")
-                    ? "(Invested)"
+                    ? ""
                     : ""}
                 </option>
                 <option value="QTF">
@@ -547,10 +549,10 @@ const PerformanceAndDrawdownChart = () => {
                   {isAdminUser
                     ? selectedNuvama &&
                       extractStrategy(selectedNuvama) === "QTF"
-                      ? "(Invested)"
+                      ? ""
                       : ""
                     : investedStrategies.includes("QTF")
-                    ? "(Invested)"
+                    ? ""
                     : ""}
                 </option>
               </select>
@@ -581,10 +583,10 @@ const PerformanceAndDrawdownChart = () => {
                   {isAdminUser
                     ? selectedNuvama &&
                       extractStrategy(selectedNuvama) === "QAW"
-                      ? "(Invested)"
+                      ? ""
                       : ""
                     : investedStrategies.includes("QAW")
-                    ? "(Invested)"
+                    ? ""
                     : ""}
                 </button>
                 <button
@@ -602,10 +604,10 @@ const PerformanceAndDrawdownChart = () => {
                   {isAdminUser
                     ? selectedNuvama &&
                       extractStrategy(selectedNuvama) === "QGF"
-                      ? "(Invested)"
+                      ? ""
                       : ""
                     : investedStrategies.includes("QGF")
-                    ? "(Invested)"
+                    ? ""
                     : ""}
                 </button>
                 <button
@@ -623,10 +625,10 @@ const PerformanceAndDrawdownChart = () => {
                   {isAdminUser
                     ? selectedNuvama &&
                       extractStrategy(selectedNuvama) === "QFH"
-                      ? "(Invested)"
+                      ? ""
                       : ""
                     : investedStrategies.includes("QFH")
-                    ? "(Invested)"
+                    ? ""
                     : ""}
                 </button>
                 <button
@@ -644,10 +646,10 @@ const PerformanceAndDrawdownChart = () => {
                   {isAdminUser
                     ? selectedNuvama &&
                       extractStrategy(selectedNuvama) === "QTF"
-                      ? "(Invested)"
+                      ? ""
                       : ""
                     : investedStrategies.includes("QTF")
-                    ? "(Invested)"
+                    ? ""
                     : ""}
                 </button>
               </div>
