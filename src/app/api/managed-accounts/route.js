@@ -377,6 +377,22 @@ function getPortfolioNames(accountCode, scheme) {
   return PORTFOLIO_MAPPING[accountCode][scheme];
 }
 
+/**
+ * Fetch all user_master details based on the user id stored in the session.
+ * @param {number} userId - The id of the logged in user.
+ * @returns {Promise<Object>} - The user_master record including related client_master data.
+ */
+async function fetchUserMasterDetails(userId) {
+  const userDetails = await prisma.user_master.findUnique({
+    where: { id: userId },
+    include: {
+      client_master: true, // Include any related client_master records
+    },
+  });
+  return userDetails;
+}
+
+
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -386,6 +402,20 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("user_id");
+    let user_id = Number(session?.user?.user_id)
+    const view_type = searchParams.get("view_type")
+    if (view_type === "account") {
+      // Fetch the user_master details based on the user id from session
+      const userMasterDetails = await fetchUserMasterDetails(user_id);
+      // Fetch any account details associated with the logged in user
+      // const accountDetails = await fetchAccountDetails(userId);
+      return NextResponse.json({
+        view_type: "account",
+        userMasterDetails,
+        // accountDetails
+      });
+    }
+    console.log('session',session)
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const pageSize = Math.max(1, parseInt(searchParams.get("pageSize") || String(DEFAULT_PAGE_SIZE)));
 

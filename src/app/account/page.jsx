@@ -1,7 +1,66 @@
+"use client";
+
 import DefaultLayout from "@/components/Layouts/Layouts";
-import React from "react";
+import { useSession } from "next-auth/react";
+import React, { useEffect, useState } from "react";
 
 export default function Account() {
+    const { data: session, status } = useSession();
+  
+  const [accountData, setAccountData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+
+  // Check if managed_account_codes exists and has at least one entry
+  const isManagedAccounts =
+    session?.user?.managed_account_codes &&
+    session.user.managed_account_codes.length > 0;
+
+  let apiUrl = isManagedAccounts ? "/api/managed-accounts?view_type=account" : "/api/portfolio-data?view_type=account"
+  useEffect(() => {
+    // Fetch account details from your API
+    const fetchAccountData = async () => {
+      try {
+        const res = await fetch(apiUrl);
+        if (!res.ok) {
+          throw new Error("Failed to fetch account details");
+        }
+        const data = await res.json();
+        setAccountData(data);
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccountData();
+  }, []);
+
+  if (loading) {
+    return (
+      <DefaultLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 h-full">
+          <p>Loading account details...</p>
+        </div>
+      </DefaultLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DefaultLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 h-full">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </DefaultLayout>
+    );
+  }
+
+  // Destructure the userMasterDetails and accountDetails from the API response
+  const { userMasterDetails, accountDetails } = accountData || {};
+
   return (
     <DefaultLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 h-full">
@@ -9,75 +68,18 @@ export default function Account() {
           <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:leading-9 sm:truncate">
             Account
           </h1>
-          <div className="sm:hidden my-4">
-            {/* <select
-              aria-label="Selected tab"
-              data-cmid="account:submenu_select|_account_profile"
-              className="mt-1 form-select block w-full pl-3 pr-10 py-2 border-gray-300 text-base leading-6 sm:text-sm sm:leading-5 focus:outline-none focus:ring-green-300 focus:border-green-300 transition ease-in-out duration-150"
-            > */}
-              {/* <option value="/account/profile">Profile</option>
-              <option value="/account/subscription">Subscription</option>
-              <option value="/account/notifications">Notifications</option> */}
-            {/* </select> */}
-          </div>
-          <div className="hidden sm:block mt-2 mb-4">
-            {/* <div>
-              <nav className="-mb-px flex">
-                <a
-                  data-cmid="account_profile_submenu:link|profile"
-                  className="whitespace-nowrap py-4 border-b-2 font-medium text-sm leading-5 focus:outline-none focus:ring-1 focus:ring-offset-4 focus:ring-offset-gray-50 focus:ring-green-300 border-green-500 text-green-600"
-                  href="/account/profile"
-                >
-                  Profile
-                </a>
-                <a
-                  data-cmid="account_subscription_submenu:link|subscription"
-                  className="whitespace-nowrap py-4 border-b-2 font-medium text-sm leading-5 focus:outline-none focus:ring-1 focus:ring-offset-4 focus:ring-offset-gray-50 focus:ring-green-300 ml-8 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  href="/account/subscription"
-                >
-                  Subscription
-                </a>
-                <a
-                  data-cmid="account_notifications_submenu:link|notifications"
-                  className="whitespace-nowrap py-4 border-b-2 font-medium text-sm leading-5 focus:outline-none focus:ring-1 focus:ring-offset-4 focus:ring-offset-gray-50 focus:ring-green-300 ml-8 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  href="/account/notifications"
-                >
-                  Notifications
-                </a>
-              </nav>
-            </div> */}
-          </div>
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+
+          {/* Account Profile Section */}
+          <div className="bg-white overflow-hidden shadow rounded-lg my-6">
             <div className="px-4 py-5 sm:p-6">
               <section className="mb-8">
                 <h6 className="text-lg leading-6 font-medium text-gray-900">
-                  Rishabh Nahar
+                  {userMasterDetails?.full_name || "Name not available"}
                 </h6>
-                <p>rishabhnahar@gmail.com</p>
-                {/* <button
-                  type="button"
-                  aria-disabled="false"
-                  className="inline-flex items-center justify-center leading-5 focus:outline-none transition ease-in-out duration-150 px-4 py-2 text-xs text-green-600 hover:text-green-500 mt-4"
-                  data-cmid="account_profile:button|reset_password"
-                >
-                  <svg
-                    stroke="currentColor"
-                    fill="none"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mr-1"
-                    height="1em"
-                    width="1em"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                  </svg>
-                  Reset Password
-                </button> */}
+                <p>{userMasterDetails?.email || "Email not available"}</p>
               </section>
+
+              {/* Billing / Profile Information Section */}
               <section>
                 <div className="pb-5 border-b border-gray-200 space-y-2">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -93,63 +95,73 @@ export default function Account() {
                     <dt className="text-sm leading-5 font-medium text-gray-500">
                       Full name
                     </dt>
-                    <dd
-                      className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2"
-                      data-cmid="account_profile:info|full_name"
-                    >
-                      Rishabh Nahar
+                    <dd className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2">
+                      {userMasterDetails?.full_name || "-"}
                     </dd>
                   </div>
                   <div className="sm:grid sm:grid-cols-4 sm:gap-4 py-2 sm:py-1">
                     <dt className="text-sm leading-5 font-medium text-gray-500">
                       Mobile
                     </dt>
-                    <dd
-                      className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2"
-                      data-cmid="account_profile:info|mobile"
-                    >
-                      9920111053
+                    <dd className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2">
+                      {userMasterDetails?.mobile || "-"}
                     </dd>
                   </div>
                   <div className="sm:grid sm:grid-cols-4 sm:gap-4 py-2 sm:py-1">
                     <dt className="text-sm leading-5 font-medium text-gray-500">
                       Account type
                     </dt>
-                    <dd
-                      className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2"
-                      data-cmid="account_profile:info|account_type"
-                    >
-                      Individual
+                    <dd className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2">
+                      {userMasterDetails?.account_type || "-"}
                     </dd>
                   </div>
                   <div className="sm:grid sm:grid-cols-4 sm:gap-4 py-2 sm:py-1">
                     <dt className="text-sm leading-5 font-medium text-gray-500">
                       State
                     </dt>
-                    <dd
-                      className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2"
-                      data-cmid="account_profile:info|state"
-                    >
-                      Maharashtra
+                    <dd className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2">
+                      {userMasterDetails?.state || "-"}
                     </dd>
                   </div>
                   <div className="sm:grid sm:grid-cols-4 sm:gap-4 py-2 sm:py-1">
                     <dt className="text-sm leading-5 font-medium text-gray-500">
                       Pin Code
                     </dt>
-                    <dd
-                      className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2"
-                      data-cmid="account_profile:info|pin_code"
-                    >
-                      400030
+                    <dd className="mt-1 sm:mt-0 text-sm leading-5 text-gray-900 sm:col-span-2">
+                      {userMasterDetails?.pin_code || "-"}
                     </dd>
                   </div>
                 </div>
               </section>
             </div>
           </div>
+
+          {/* Optional: Render account details if available */}
+          {accountDetails && accountDetails.length > 0 && (
+            <div className="bg-white overflow-hidden shadow rounded-lg my-6">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Managed Accounts
+                </h3>
+                <ul className="mt-4 divide-y divide-gray-200">
+                  {accountDetails.map((account) => (
+                    <li key={account.id} className="py-4 flex flex-col sm:flex-row justify-between">
+                      <span className="text-sm font-medium text-gray-900">
+                        {account.client_name || "Account Name"}
+                      </span>
+                      {account.account_code && (
+                        <span className="text-sm text-gray-500">
+                          Code: {account.account_code}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </DefaultLayout>
   );
-};
+}

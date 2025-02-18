@@ -79,6 +79,22 @@ async function fetchCashInOutData(nuvamaCodes) {
 }
 
 /**
+ * Fetch all user_master details based on the user id stored in the session.
+ * @param {number} userId - The id of the logged in user.
+ * @returns {Promise<Object>} - The user_master record including related client_master data.
+ */
+async function fetchUserMasterDetails(userId) {
+  const userDetails = await prisma.user_master.findUnique({
+    where: { id: userId },
+    include: {
+      client_master: true, // Include any related client_master records
+    },
+  });
+  return userDetails;
+}
+
+
+/**
  * Processes the cumulative view data
  */
 async function processCumulativeView(userNuvamaCodes, userEmail) {
@@ -299,6 +315,20 @@ export async function GET(request) {
 
         const result = await processIndividualView(nuvama_code, userEmail);
         return NextResponse.json(result);
+      }
+
+      let userId = Number(session?.user?.id)
+
+      if (view_type === "account") {
+        // Fetch the user_master details based on the user id from session
+        const userMasterDetails = await fetchUserMasterDetails(userId);
+        // Fetch any account details associated with the logged in user
+        // const accountDetails = await fetchAccountDetails(userId);
+        return NextResponse.json({
+          view_type: "account",
+          userMasterDetails,
+          // accountDetails
+        });
       }
 
       return NextResponse.json(
