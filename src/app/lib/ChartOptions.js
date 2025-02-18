@@ -295,7 +295,7 @@ export const getChartOptions = (
     },
     yAxis: [
       {
-        title: { text: "Performance (%)" },
+        title: isMobile ? "" :  "Performance (%)" ,
         height: "60%",
         top: "0%",
         min: 60,
@@ -322,7 +322,7 @@ export const getChartOptions = (
         ],
       },
       {
-        title: { text: "Drawdown (%)" },
+        title: isMobile ? "" : "Drawdown (%)",
         height: "20%",
         top: "70%",
         offset: 0,
