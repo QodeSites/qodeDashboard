@@ -64,7 +64,7 @@ function calculateMonthlyPnL(dailyNAV) {
  * @returns {Promise<Array>} - Promise resolving to cash in/out data
  */
 async function fetchCashInOutData(nuvamaCodes) {
-  return await prisma.$queryRaw`
+  const result = await prisma.$queryRaw`
     SELECT date, nuvama_code, cash_in_out 
     FROM pms_clients_tracker.pms_cash_in_out 
     WHERE nuvama_code = ANY(${nuvamaCodes}::varchar[]) 
@@ -73,7 +73,9 @@ async function fetchCashInOutData(nuvamaCodes) {
          OR nuvama_code LIKE 'QFH%' 
          OR nuvama_code LIKE 'QAW%')
     ORDER BY date ASC
-`;
+  `;
+  console.log("Fetched cash in/out data:", result);
+  return result;
 }
 
 /**
@@ -84,9 +86,17 @@ async function processCumulativeView(userNuvamaCodes, userEmail) {
   const [allPortfolioDetails, allDailyNAV, cashInOutData] = await Promise.all([
     prisma.portfolio_details.findMany({
       where: {
-        nuvama_code: {
-          in: userNuvamaCodes,
-        },
+        AND: [
+          { nuvama_code: { in: userNuvamaCodes } },
+          {
+            OR: [
+              { nuvama_code: { startsWith: 'QTF' } },
+              { nuvama_code: { startsWith: 'QGF' } },
+              { nuvama_code: { startsWith: 'QFH' } },
+              { nuvama_code: { startsWith: 'QAW' } }
+            ]
+          }
+        ]
       },
     }),
     prisma.daily_nav.findMany({
@@ -208,7 +218,15 @@ async function processIndividualView(nuvama_code, userEmail) {
       orderBy: { date: "asc" },
     }),
     prisma.portfolio_details.findFirst({
-      where: { nuvama_code },
+      where: {
+        nuvama_code,
+        OR: [
+          { nuvama_code: { startsWith: 'QTF' } },
+          { nuvama_code: { startsWith: 'QGF' } },
+          { nuvama_code: { startsWith: 'QFH' } },
+          { nuvama_code: { startsWith: 'QAW' } }
+        ]
+      },
     }),
     fetchCashInOutData([nuvama_code])
   ]);
