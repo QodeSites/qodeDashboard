@@ -1,6 +1,5 @@
-// SidebarNavigation.jsx
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
@@ -12,6 +11,37 @@ const SidebarNavigation = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [safeAreaBottom, setSafeAreaBottom] = useState(0);
+
+  // Detect Safari and apply safe area inset
+  useEffect(() => {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      // Function to update safe area inset based on environment
+      const updateSafeArea = () => {
+        // Safari detection (imperfect but works for most cases)
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
+        if (isSafari && window.innerWidth <= 768) {
+          // For mobile Safari, provide extra padding at bottom
+          // The value 20px is an estimate - adjust based on testing
+          setSafeAreaBottom(20);
+        } else {
+          setSafeAreaBottom(0);
+        }
+      };
+
+      // Set initial value
+      updateSafeArea();
+      
+      // Update on resize
+      window.addEventListener('resize', updateSafeArea);
+      
+      return () => {
+        window.removeEventListener('resize', updateSafeArea);
+      };
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -29,8 +59,6 @@ const SidebarNavigation = () => {
   const isLinkActive = (href) => pathname === href;
 
   // Determine the client name from session data.
-  // If the user logged in via managed account, use the first managed_client_names value.
-  // Otherwise, if the user logged in via client_master, use the first username value.
   const sessionUserId = Number(session?.user?.id);
   let clientName =
     session?.user?.managed_client_names?.[0] ||
@@ -53,6 +81,10 @@ const SidebarNavigation = () => {
       <aside
         className={`fixed top-0 left-0 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 z-50 flex flex-col h-screen ${isOpen ? "translate-x-0" : "-translate-x-full"
           } md:translate-x-0`}
+        style={{ 
+          height: `calc(100vh - ${safeAreaBottom}px)`,
+          paddingBottom: `${safeAreaBottom}px`
+        }}
       >
         <div className="flex items-center justify-between p-4 border-b mb-8 border-gray-200">
           <h1 className="text-4xl text-[#d1a47b] font-bold playfair-display-font">Qode</h1>
@@ -105,7 +137,7 @@ const SidebarNavigation = () => {
               <img
                 src={session.user.image}
                 alt="Client avatar"
-                className="w-2 h-2 rounded-full"
+                className="w-10 h-10 rounded-full"
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">

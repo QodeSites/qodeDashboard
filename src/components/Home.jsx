@@ -39,11 +39,11 @@ const HomePage = () => {
                 <meta name="author" content="Qode" />
                 <link rel="canonical" href="https://www.qodeinvest.com/blogs" />
             </Head>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 h-full">
+            <div className="max-w-7xl mx-auto px-0 sm:px-6 md:px-8 h-full">
                 {/* White card with a link to our website */}
-                <p className="text-3xl font-bold my-4 px-4">Home</p>
+                <p className="text-3xl font-bold my-4 sm:px-4">Home</p>
 
-                <div className="px-4">
+                <div className="sm:px-4">
                     <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
                         {/* <a
                             href="https://premium.capitalmind.in/getting-started/"
@@ -132,7 +132,7 @@ const HomePage = () => {
                 </div>
 
 
-                <p className="text-xl font-semibold my-4 px-4">Latest Posts</p>
+                <p className="text-xl font-semibold my-4 sm:px-4">Latest Posts</p>
                 {loading ? (
                     <div className="flex justify-center items-center h-40">
                         <Spinner />
@@ -151,7 +151,7 @@ const HomePage = () => {
                             return (
                                 <div
                                     key={post.id}
-                                    className="p-4 transition duration-200 cursor-pointer"
+                                    className="sm:p-4 transition duration-200 cursor-pointer"
                                     target="__blank"
                                     onClick={() =>
                                         (window.location.href = `https://www.qodeinvest.com/blogs/${post.slug}`)
