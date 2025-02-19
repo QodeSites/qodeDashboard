@@ -3,13 +3,7 @@ import { Spinner } from "@material-tailwind/react";
 
 const TrailingReturns = ({ data, isLoading, error, benchmarkData }) => {
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-4">
-        <Spinner className="text-gray-700" />
-      </div>
-    );
-  }
+
 
   if (error) {
     return <div className="text-red-500 text-xs p-2">Error: {error}</div>;
