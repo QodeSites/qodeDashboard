@@ -58,6 +58,15 @@ const PerformanceAndDrawdownChart = () => {
   // selectedNuvama is the investor’s own code.
   const [activeTab, setActiveTab] = useState("TOTAL");
 
+  useEffect(() => {
+    // This code will only run on the client side
+    Highcharts.setOptions({
+      time: {
+        useUTC: false
+      }
+    });
+  }, []);
+
   const {
     data,
     isLoading,

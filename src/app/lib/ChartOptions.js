@@ -1,11 +1,11 @@
 import Highcharts from "highcharts";
 
-// Disable UTC so that Highcharts uses local time
-Highcharts.setOptions({
-  time: {
-    useUTC: false
-  }
-});
+// // Disable UTC so that Highcharts uses local time
+// Highcharts.setOptions({
+//   time: {
+//     useUTC: false
+//   }
+// });
 
 export const formatDate = (timestamp) => {
   return new Date(timestamp).toLocaleDateString("en-GB");
