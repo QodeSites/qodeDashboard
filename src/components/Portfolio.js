@@ -671,7 +671,7 @@ const PerformanceAndDrawdownChart = () => {
                 <select
                   value={selectedNuvama || ""}
                   onChange={handleSelectChange}
-                  className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto"
+                  className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4"
                 >
                   {data.nuvama_codes.map((code, index) => (
                     <option key={index} value={code}>
