@@ -169,7 +169,7 @@ const PerformanceAndDrawdownChart = () => {
   );
 
 
-console.log("benchmarkData", bse500Data);
+  console.log("benchmarkData", bse500Data);
 
   // Process raw benchmark data for the active strategy.
   const rawBenchmarkData = useMemo(() => {
@@ -459,7 +459,7 @@ console.log("benchmarkData", bse500Data);
       activeTab === strategy
         ? "border-[#d1a47b] text-[#d1a47b]"
         : "border-transparent text-gray-700";
-    
+
     let investedClasses = "";
     if (isAdminUser) {
       investedClasses =
@@ -471,12 +471,12 @@ console.log("benchmarkData", bse500Data);
         ? "bg-green-100 font-bold"
         : "";
     }
-    
+
     const nonInvestedClasses =
       !isAdminUser && !investedStrategies.includes(strategy)
         ? "opacity-50 cursor-pointer"
         : "";
-    
+
     return `${baseClasses} ${activeClasses} ${investedClasses} ${nonInvestedClasses}`;
   };
 
@@ -529,8 +529,8 @@ console.log("benchmarkData", bse500Data);
                       ? ""
                       : ""
                     : investedStrategies.includes("QAW")
-                    ? ""
-                    : ""}
+                      ? ""
+                      : ""}
                 </option>
                 <option value="QGF">
                   QGF{" "}
@@ -540,8 +540,8 @@ console.log("benchmarkData", bse500Data);
                       ? ""
                       : ""
                     : investedStrategies.includes("QGF")
-                    ? ""
-                    : ""}
+                      ? ""
+                      : ""}
                 </option>
                 <option value="QFH">
                   QFH{" "}
@@ -551,8 +551,8 @@ console.log("benchmarkData", bse500Data);
                       ? ""
                       : ""
                     : investedStrategies.includes("QFH")
-                    ? ""
-                    : ""}
+                      ? ""
+                      : ""}
                 </option>
                 <option value="QTF">
                   QTF{" "}
@@ -562,8 +562,8 @@ console.log("benchmarkData", bse500Data);
                       ? ""
                       : ""
                     : investedStrategies.includes("QTF")
-                    ? ""
-                    : ""}
+                      ? ""
+                      : ""}
                 </option>
               </select>
             ) : (
@@ -595,8 +595,8 @@ console.log("benchmarkData", bse500Data);
                       ? ""
                       : ""
                     : investedStrategies.includes("QAW")
-                    ? ""
-                    : ""}
+                      ? ""
+                      : ""}
                 </button>
                 <button
                   onClick={() => {
@@ -616,8 +616,8 @@ console.log("benchmarkData", bse500Data);
                       ? ""
                       : ""
                     : investedStrategies.includes("QGF")
-                    ? ""
-                    : ""}
+                      ? ""
+                      : ""}
                 </button>
                 <button
                   onClick={() => {
@@ -637,8 +637,8 @@ console.log("benchmarkData", bse500Data);
                       ? ""
                       : ""
                     : investedStrategies.includes("QFH")
-                    ? ""
-                    : ""}
+                      ? ""
+                      : ""}
                 </button>
                 <button
                   onClick={() => {
@@ -658,8 +658,8 @@ console.log("benchmarkData", bse500Data);
                       ? ""
                       : ""
                     : investedStrategies.includes("QTF")
-                    ? ""
-                    : ""}
+                      ? ""
+                      : ""}
                 </button>
               </div>
             )}
@@ -703,8 +703,8 @@ console.log("benchmarkData", bse500Data);
               activeTab === "TOTAL"
                 ? data?.portfolioDetails
                 : isInvestedInStrategy
-                ? data?.portfolioDetails
-                : {
+                  ? data?.portfolioDetails
+                  : {
                     name: data?.portfolioDetails?.name || "Portfolio",
                     totalInvested: 0,
                     currentValue: 0,
@@ -745,7 +745,7 @@ console.log("benchmarkData", bse500Data);
               benchmarkData={bse500Data}
               name={isInvestedInStrategy ? selectedNuvama : activeTab}
             />
-  
+
             <h3 className="text-lg leading-6 font-medium text-gray-900">
               Equity Curve
             </h3>
@@ -760,67 +760,73 @@ console.log("benchmarkData", bse500Data);
       )}
 
       {/* Cash In/Out Section */}
-      {filteredCashInOutData.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <Heading className="text-xl font-semibold text-gray-800 mb-4">
-            Cash In/Out
-          </Heading>
-          <div className="overflow-x-auto w-full rounded-lg border border-brown">
-            <table className="min-w-full bg-white">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="px-4 py-2 border-b border-brown text-left text-xs font-medium text-black uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-4 py-2 border-b border-brown text-right text-xs font-medium text-black uppercase tracking-wider">
-                    Cash In/Out
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCashInOutData.map((record, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 border-b border-brown text-xs text-gray-700">
-                      {formatDate(record.date)}
+      {/* Cash In/Out Section */}
+      {(activeTab === "TOTAL" || isInvestedInStrategy) &&
+        filteredCashInOutData.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <Heading className="text-xl font-semibold text-gray-800 mb-4">
+              Cash In/Out
+            </Heading>
+            <div className="overflow-x-auto w-full rounded-lg border border-brown">
+              <table className="min-w-full bg-white">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="px-4 py-2 border-b border-brown text-left text-xs font-medium text-black uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-2 border-b border-brown text-right text-xs font-medium text-black uppercase tracking-wider">
+                      Cash In/Out
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCashInOutData.map((record, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border-b border-brown text-xs text-gray-700">
+                        {formatDate(record.date)}
+                      </td>
+                      <td
+                        className={`px-4 py-2 border-b border-brown text-xs text-right ${record.cash_in_out > 0 ? "text-green-600" : "text-red-600"
+                          }`}
+                      >
+                        {formatCurrency(record.cash_in_out)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-gray-100 font-semibold">
+                    <td className="px-4 py-2 border-t border-brown text-xs text-gray-900">
+                      Total
                     </td>
-                    <td
-                      className={`px-4 py-2 border-b border-brown text-xs text-right ${
-                        record.cash_in_out > 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {formatCurrency(record.cash_in_out)}
+                    <td className="px-4 py-2 border-t border-brown text-xs text-gray-900 text-right">
+                      {formatCurrency(cashFlowTotals.netFlow)}
                     </td>
                   </tr>
-                ))}
-                <tr className="bg-gray-100 font-semibold">
-                  <td className="px-4 py-2 border-t border-brown text-xs text-gray-900">
-                    Total
-                  </td>
-                  <td className="px-4 py-2 border-t border-brown text-xs text-gray-900 text-right">
-                    {formatCurrency(cashFlowTotals.netFlow)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-2 text-xs text-gray-600">
+              <p>
+                Total Cash In:{" "}
+                <span className="text-green-600">
+                  {formatCurrency(cashFlowTotals.totalIn)}
+                </span>
+              </p>
+              <p>
+                Total Cash Out:{" "}
+                <span className="text-red-600">
+                  {formatCurrency(cashFlowTotals.totalOut)}
+                </span>
+              </p>
+              <p>
+                Net Flow:{" "}
+                <span className={cashFlowTotals.netFlow >= 0 ? "text-green-600" : "text-red-600"}>
+                  {formatCurrency(cashFlowTotals.netFlow)}
+                </span>
+              </p>
+            </div>
           </div>
-          <div className="mt-2 text-xs text-gray-600">
-            <p>
-              Total Cash In:{" "}
-              <span className="text-green-600">{formatCurrency(cashFlowTotals.totalIn)}</span>
-            </p>
-            <p>
-              Total Cash Out:{" "}
-              <span className="text-red-600">{formatCurrency(cashFlowTotals.totalOut)}</span>
-            </p>
-            <p>
-              Net Flow:{" "}
-              <span className={cashFlowTotals.netFlow >= 0 ? "text-green-600" : "text-red-600"}>
-                {formatCurrency(cashFlowTotals.netFlow)}
-              </span>
-            </p>
-          </div>
-        </div>
-      )}
+        )}
+
     </div>
   );
 };
