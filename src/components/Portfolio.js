@@ -479,7 +479,18 @@ const PerformanceAndDrawdownChart = () => {
 
     return `${baseClasses} ${activeClasses} ${investedClasses} ${nonInvestedClasses}`;
   };
+  // Add this function above your return statement
+  const getDropdownClass = () => {
+    // Base classes for the dropdown
+    let baseClass = "p-2 rounded border text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4";
 
+    // If the active tab is a strategy (not TOTAL) and user is invested in it
+    if (activeTab !== "TOTAL" && investedStrategies.includes(activeTab)) {
+      return `${baseClass} border-2 border-green-500 bg-green-50`;
+    }
+
+    return `${baseClass} border-brown`;
+  };
   const combinedLoading = isLoading || isBenchmarkLoading || isBse500Loading;
   const combinedError = error || benchmarkError || bse500Error;
 
@@ -520,7 +531,7 @@ const PerformanceAndDrawdownChart = () => {
                     }
                   }
                 }}
-                className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4"
+                className={getDropdownClass()}
               >
                 <option value="TOTAL">Total Portfolio</option>
                 <option value="QAW">
@@ -535,16 +546,16 @@ const PerformanceAndDrawdownChart = () => {
                       : ""}
                 </option>
                 {/* <option value="QGF">
-                  QGF{" "}
-                  {isAdminUser
-                    ? selectedNuvama &&
-                      extractStrategy(selectedNuvama) === "QGF"
-                      ? ""
-                      : ""
-                    : investedStrategies.includes("QGF")
-                      ? ""
-                      : ""}
-                </option> */}
+      QGF{" "}
+      {isAdminUser
+        ? selectedNuvama &&
+          extractStrategy(selectedNuvama) === "QGF"
+          ? ""
+          : ""
+        : investedStrategies.includes("QGF")
+          ? ""
+          : ""}
+    </option> */}
                 <option value="QFH">
                   QFH{" "}
                   {isAdminUser
