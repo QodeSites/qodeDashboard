@@ -23,13 +23,57 @@ const parseLocalDate = (dateString) => {
 
 // Helper to rebase a performance series so that its value at commonStart becomes 100.
 const rebaseSeries = (seriesData, commonStart) => {
-  // Filter out points before the common start date.
+  // Filter out points before the common start date
   const filtered = seriesData.filter((point) => point[0] >= commonStart);
   if (filtered.length === 0) return [];
-  const baselineValue = filtered[0][1];
+
+  // Find the closest point to commonStart
+  let baselineValue;
+  let firstPoint;
+
+  if (filtered[0][0] === commonStart) {
+    // If we have an exact match, use that value
+    baselineValue = filtered[0][1];
+    firstPoint = filtered[0];
+  } else {
+    // Find the points before and after commonStart
+    const beforePoint = seriesData.filter(point => point[0] < commonStart).pop();
+    const afterPoint = filtered[0];
+    
+    if (!beforePoint) {
+      // If no point before commonStart, use the first available point
+      baselineValue = afterPoint[1];
+      firstPoint = afterPoint;
+    } else {
+      // Interpolate the value at commonStart
+      const timeDiff = afterPoint[0] - beforePoint[0];
+      const valueDiff = afterPoint[1] - beforePoint[1];
+      const ratio = (commonStart - beforePoint[0]) / timeDiff;
+      baselineValue = beforePoint[1] + (valueDiff * ratio);
+      firstPoint = [commonStart, baselineValue];
+    }
+  }
+
   if (baselineValue === 0) return filtered;
-  return filtered.map((point) => [point[0], (point[1] / baselineValue) * 100]);
+
+  // Create the normalized series starting exactly at 100
+  const normalizedSeries = [
+    [commonStart, 100] // Force first point to exactly 100 at commonStart
+  ];
+
+  // Scale all subsequent points
+  filtered.forEach((point, idx) => {
+    if (point[0] > commonStart) {
+      normalizedSeries.push([
+        point[0],
+        (point[1] / baselineValue) * 100
+      ]);
+    }
+  });
+
+  return normalizedSeries;
 };
+
 
 // For drawdown series, simply filter out points before commonStart.
 const filterSeries = (seriesData, commonStart) => {
@@ -280,7 +324,7 @@ export const getChartOptions = (
   const minValueOverall = Math.min(...allValues);
   const valueRange = maxValueOverall - minValueOverall;
   const padding = valueRange * 0.1;
-  const tickInterval = valueRange <= 10 ? 1 : Math.ceil(valueRange / 5);
+  const tickInterval = 6;
 
   // Calculate drawdown minimum.
   const allDrawdowns = [
@@ -393,8 +437,9 @@ export const getChartOptions = (
       backgroundColor: colors.background,
       zoomType: "xy",
     },
+    // Legend is disabled on mobile screens.
     legend: {
-      enabled: true,
+      enabled: !isMobile,
       itemStyle: { color: colors.text },
       itemHoverStyle: { color: colors.text },
       align: "left",

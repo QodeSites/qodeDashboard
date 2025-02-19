@@ -464,11 +464,11 @@ const PerformanceAndDrawdownChart = () => {
     if (isAdminUser) {
       investedClasses =
         selectedNuvama && extractStrategy(selectedNuvama) === strategy
-          ? "bg-green-100 font-bold"
+          ? "bg-[#fee9d6] font-bold"
           : "";
     } else {
       investedClasses = investedStrategies.includes(strategy)
-        ? "bg-green-100 font-bold"
+        ? "bg-[#fee9d6] font-bold"
         : "";
     }
 
@@ -490,8 +490,10 @@ const PerformanceAndDrawdownChart = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
           <div>
-            <Heading className="text-2xl font-bold leading-7 text-gray-900 sm:text-2xl sm:leading-9 sm:truncate">
-              {clientName ? `Welcome, ${clientName}` : "Welcome, Guest"}
+            <Heading className="text-xl font-bold leading-7 text-gray-900 sm:text-2xl sm:leading-9 sm:truncate">
+              {clientName
+                ? `Welcome, ${clientName.charAt(0).toUpperCase() + clientName.slice(1).toLowerCase()}`
+                : "Welcome, Guest"}
             </Heading>
             <Text className="text-sm text-gray-600">
               View your portfolio performance and details
@@ -518,7 +520,7 @@ const PerformanceAndDrawdownChart = () => {
                     }
                   }
                 }}
-                className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto"
+                className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4"
               >
                 <option value="TOTAL">Total Portfolio</option>
                 <option value="QAW">
@@ -532,7 +534,7 @@ const PerformanceAndDrawdownChart = () => {
                       ? ""
                       : ""}
                 </option>
-                <option value="QGF">
+                {/* <option value="QGF">
                   QGF{" "}
                   {isAdminUser
                     ? selectedNuvama &&
@@ -542,7 +544,7 @@ const PerformanceAndDrawdownChart = () => {
                     : investedStrategies.includes("QGF")
                       ? ""
                       : ""}
-                </option>
+                </option> */}
                 <option value="QFH">
                   QFH{" "}
                   {isAdminUser
@@ -598,7 +600,7 @@ const PerformanceAndDrawdownChart = () => {
                       ? ""
                       : ""}
                 </button>
-                <button
+                {/* <button
                   onClick={() => {
                     setActiveTab("QGF");
                     handleViewModeChange("individual");
@@ -618,7 +620,7 @@ const PerformanceAndDrawdownChart = () => {
                     : investedStrategies.includes("QGF")
                       ? ""
                       : ""}
-                </button>
+                </button> */}
                 <button
                   onClick={() => {
                     setActiveTab("QFH");
@@ -683,7 +685,7 @@ const PerformanceAndDrawdownChart = () => {
         </div>
 
         {/* Dates */}
-        <div className="flex flex-col sm:flex-row justify-between items-center my-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center my-4">
           {startDate && (
             <Text className="text-sm text-gray-700 mb-2 sm:mb-0">
               Inception Date: {formatDate(startDate)}
@@ -759,7 +761,6 @@ const PerformanceAndDrawdownChart = () => {
         </>
       )}
 
-      {/* Cash In/Out Section */}
       {/* Cash In/Out Section */}
       {(activeTab === "TOTAL" || isInvestedInStrategy) &&
         filteredCashInOutData.length > 0 && (

@@ -132,7 +132,7 @@ const HomePage = () => {
                 </div>
 
 
-                <p className="text-xl font-semibold my-4 px-4">Latest Post</p>
+                <p className="text-xl font-semibold my-4 px-4">Latest Posts</p>
                 {loading ? (
                     <div className="flex justify-center items-center h-40">
                         <Spinner />
