@@ -403,6 +403,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("user_id");
     let user_id = Number(session?.user?.user_id)
+    console.log('master__id', user_id)
     const view_type = searchParams.get("view_type")
     if (view_type === "account") {
       // Fetch the user_master details based on the user id from session

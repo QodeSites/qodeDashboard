@@ -74,7 +74,6 @@ async function fetchCashInOutData(nuvamaCodes) {
          OR nuvama_code LIKE 'QAW%')
     ORDER BY date ASC
   `;
-  console.log("Fetched cash in/out data:", result);
   return result;
 }
 

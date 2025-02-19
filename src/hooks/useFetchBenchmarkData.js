@@ -1,49 +1,60 @@
 import { useState, useEffect } from 'react';
 
 const useFetchBenchmarkData = (indices, startDate, endDate) => {
-    const [benchmarkData, setBenchmarkData] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    
-    // Create a cache key from the parameters
-    const cacheKey = `${indices.join(',')}-${startDate}-${endDate}`;
+  const [benchmarkData, setBenchmarkData] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        // console.log("useEffect triggered with new dates - indices:", indices, "startDate:", startDate, "endDate:", endDate);
+  // Helper function to remove any timestamp and keep only the date portion
+  const cleanDate = (dateStr) => {
+    return dateStr ? dateStr.split(" ")[0] : "";
+  };
 
-        if (!indices || indices.length === 0) return;
-        if (!startDate || !endDate) return;
+  // Clean the start and end dates
+  const formattedStartDate = cleanDate(startDate);
+  const formattedEndDate = cleanDate(endDate);
 
-        const fetchBenchmarkData = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const indicesParam = indices.join(',');
-                const response = await fetch(
-                    `https://research.qodeinvest.com/api/getIndices?indices=${encodeURIComponent(indicesParam)}&startDate=${startDate}&endDate=${endDate}`
-                );
+  // Create a cache key from the parameters (using the cleaned dates)
+  const cacheKey = `${indices.join(',')}-${formattedStartDate}-${formattedEndDate}`;
 
-                if (!response.ok) {
-                    throw new Error(`Error fetching benchmark data: ${response.status} ${response.statusText}`);
-                }
+  useEffect(() => {
+    if (!indices || indices.length === 0) return;
+    if (!startDate || !endDate) return;
 
-                const result = await response.json();
-                setBenchmarkData(result.data);
-            } catch (err) {
-                console.error(err);
-                setError(err.message || 'Failed to fetch benchmark data');
-                setBenchmarkData({}); // Clear the data on error
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        // Always fetch when the cache key changes
-        fetchBenchmarkData();
+    const fetchBenchmarkData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const indicesParam = indices.join(',');
+        const url = `https://research.qodeinvest.com/api/getIndices?indices=${encodeURIComponent(
+          indicesParam
+        )}&startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
+        console.log('url', url);
         
-    }, [cacheKey]); // Use cacheKey in dependency array instead of benchmarkData
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(
+            `Error fetching benchmark data: ${response.status} ${response.statusText}`
+          );
+        }
 
-    return { benchmarkData, isLoading, error };
+        const result = await response.json();
+        setBenchmarkData(result.data);
+        console.log('Fetched benchmark data:', result.data);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Failed to fetch benchmark data');
+        setBenchmarkData({}); // Clear the data on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Fetch data when the cache key changes
+    fetchBenchmarkData();
+  }, [cacheKey]);
+
+  return { benchmarkData, isLoading, error };
 };
 
 export default useFetchBenchmarkData;

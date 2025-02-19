@@ -30,6 +30,14 @@ const HighchartsReact = dynamic(() => import("highcharts-react-official"), {
 // Helper: extract strategy from nuvama code (e.g. "QFH0006" → "QFH")
 const extractStrategy = (nuvamaCode) => nuvamaCode.replace(/\d+/g, "");
 
+// Custom parser to interpret a date string (e.g. "2025-02-18 00:00:00")
+// as a local date (ignoring any potential UTC misinterpretation).
+const parseLocalDate = (dateString) => {
+  const [datePart] = dateString.split(" ");
+  const [year, month, day] = datePart.split("-").map(Number);
+  return new Date(year, month - 1, day).getTime();
+};
+
 const PerformanceAndDrawdownChart = () => {
   // Get session info (adjust if using another auth mechanism)
   const { data: session } = useSession();
@@ -44,11 +52,11 @@ const PerformanceAndDrawdownChart = () => {
     "Client";
 
   if (sessionUserId === 9) {
-    clientName = "Hiren Zaverchand Gala"
+    clientName = "Hiren Zaverchand Gala";
   }
   // activeTab is the strategy being viewed;
   // selectedNuvama is the investor’s own code.
-  const [activeTab, setActiveTab] = useState('TOTAL');
+  const [activeTab, setActiveTab] = useState("TOTAL");
 
   const {
     data,
@@ -59,8 +67,6 @@ const PerformanceAndDrawdownChart = () => {
     viewMode,
     handleViewModeChange,
   } = useFetchStrategyData();
-
-  // console.log("daasgdaeuh", data);
 
   const { timeRange } = useCustomTimeRange();
   const { isMobile } = useMobileWidth();
@@ -128,6 +134,10 @@ const PerformanceAndDrawdownChart = () => {
     [sortedDailyNAV]
   );
 
+  console.log("sortedDailyNAV", sortedDailyNAV);
+  console.log("startDate", startDate);
+  console.log("endDate", endDate);
+
   // Fetch benchmark/model data for the active strategy.
   const {
     benchmarkData,
@@ -138,7 +148,6 @@ const PerformanceAndDrawdownChart = () => {
     startDate && endDate ? startDate : null,
     startDate && endDate ? endDate : null
   );
-
   // *** New: Fetch BSE500 data for comparison ***
   const {
     benchmarkData: bse500Data,
@@ -149,6 +158,9 @@ const PerformanceAndDrawdownChart = () => {
     startDate && endDate ? startDate : null,
     startDate && endDate ? endDate : null
   );
+
+
+console.log("benchmarkData", bse500Data);
 
   // Process raw benchmark data for the active strategy.
   const rawBenchmarkData = useMemo(() => {
@@ -166,7 +178,8 @@ const PerformanceAndDrawdownChart = () => {
     const firstNav = parseFloat(sorted[0].nav);
     let previousNav = firstNav;
     const normalized = sorted.map((item) => {
-      const timestamp = new Date(item.date).getTime();
+      // Use the custom parser to get local timestamps.
+      const timestamp = parseLocalDate(item.date);
       let nav = parseFloat(item.nav);
       if (isNaN(nav)) {
         nav = previousNav;
@@ -187,48 +200,16 @@ const PerformanceAndDrawdownChart = () => {
     };
   }, [bse500Data]);
 
-  // Filter client data based on view mode and time range.
-  const filteredData = useFilteredData(
-    viewMode === "individual" ? data?.dailyNAV || [] : [],
-    timeRange,
-    startDate,
-    endDate
-  );
-
-  // Determine if the investor is invested in the active strategy.
-  const isInvestedInStrategy = useMemo(() => {
-    if (activeTab === "TOTAL") return false;
-    // For admin users, check against the selected nuvama code.
-    if (isAdminUser) {
-      return selectedNuvama ? extractStrategy(selectedNuvama) === activeTab : false;
-    } else {
-      // For non-admin users, check if the active tab is among their invested strategies.
-      return investedStrategies.includes(activeTab);
-    }
-  }, [selectedNuvama, activeTab, isAdminUser, investedStrategies]);
-
-  // Use client data if invested; otherwise, use an empty array.
-  const adjustedFilteredData = useMemo(
-    () => (isInvestedInStrategy ? filteredData : []),
-    [isInvestedInStrategy, filteredData]
-  );
-
-  // Get the latest NAV data.
-  const latestData = useMemo(() => {
-    if (!data?.dailyNAV || data.dailyNAV.length === 0) return null;
-    return data.dailyNAV[data.dailyNAV.length - 1];
-  }, [data]);
-
   // Process the active strategy’s benchmark data into a normalized series.
   const benchmarkSeries = useMemo(() => {
     if (!rawBenchmarkData || rawBenchmarkData.length === 0) {
-      // console.log("benchmarkData is empty or not provided");
       return [];
     }
     const firstNav = parseFloat(rawBenchmarkData[0].nav);
     let previousNav = firstNav;
     const normalized = rawBenchmarkData.map((item) => {
-      const timestamp = new Date(item.date).getTime();
+      // IMPORTANT: Use parseLocalDate here as well so the timestamps match
+      const timestamp = parseLocalDate(item.date);
       let currentNav = parseFloat(item.nav);
       if (isNaN(currentNav)) {
         currentNav = previousNav;
@@ -259,13 +240,43 @@ const PerformanceAndDrawdownChart = () => {
     return arr;
   }, [benchmarkSeries, bse500Series]);
 
+  // Filter client data based on view mode and time range.
+  const filteredData = useFilteredData(
+    viewMode === "individual" ? data?.dailyNAV || [] : [],
+    timeRange,
+    startDate,
+    endDate
+  );
+
+  // Determine if the investor is invested in the active strategy.
+  const isInvestedInStrategy = useMemo(() => {
+    if (activeTab === "TOTAL") return false;
+    if (isAdminUser) {
+      return selectedNuvama ? extractStrategy(selectedNuvama) === activeTab : false;
+    } else {
+      return investedStrategies.includes(activeTab);
+    }
+  }, [selectedNuvama, activeTab, isAdminUser, investedStrategies]);
+
+  // Use client data if invested; otherwise, use an empty array.
+  const adjustedFilteredData = useMemo(
+    () => (isInvestedInStrategy ? filteredData : []),
+    [isInvestedInStrategy, filteredData]
+  );
+
+  // Get the latest NAV data.
+  const latestData = useMemo(() => {
+    if (!data?.dailyNAV || data.dailyNAV.length === 0) return null;
+    return data.dailyNAV[data.dailyNAV.length - 1];
+  }, [data]);
+
   // Create chart options.
-  // If there is no data yet, return {} to avoid errors.
   const chartOptions = useMemo(() => {
     if (typeof window === "undefined" || !activeTab) return {};
     let chartData = [];
     if (isInvestedInStrategy) {
       chartData = adjustedFilteredData;
+      console.log("chartData", chartData);
     } else {
       chartData = rawBenchmarkData;
     }
@@ -391,11 +402,9 @@ const PerformanceAndDrawdownChart = () => {
 
   // Calculate Cash Flow totals.
   const cashFlowTotals = useMemo(() => {
-    // For individual strategy view, show zeros if not invested.
     if (activeTab !== "TOTAL" && !isInvestedInStrategy) {
       return { totalIn: 0, totalOut: 0, netFlow: 0 };
     }
-    // For TOTAL view, or when the investor is invested, aggregate cash flow data.
     const cashData =
       activeTab === "TOTAL"
         ? data.cashInOutData.filter((record) => record.cash_in_out !== 0)
@@ -409,7 +418,6 @@ const PerformanceAndDrawdownChart = () => {
     const netFlow = totalIn - totalOut;
     return { totalIn, totalOut, netFlow };
   }, [data.cashInOutData, filteredCashInOutData, activeTab, isInvestedInStrategy]);
-
 
   // Monthly PnL: if not invested, set all pnl values to 0.
   const monthlyPnLData = useMemo(() => {
@@ -445,19 +453,16 @@ const PerformanceAndDrawdownChart = () => {
     
     let investedClasses = "";
     if (isAdminUser) {
-      // For admin users, apply green styling only if the selected nuvama's strategy matches.
       investedClasses =
         selectedNuvama && extractStrategy(selectedNuvama) === strategy
           ? "bg-green-100 font-bold"
           : "";
     } else {
-      // For non-admin users, apply green styling if the strategy is among invested strategies.
       investedClasses = investedStrategies.includes(strategy)
         ? "bg-green-100 font-bold"
         : "";
     }
     
-    // For non-admin users, if not invested then add reduced opacity.
     const nonInvestedClasses =
       !isAdminUser && !investedStrategies.includes(strategy)
         ? "opacity-50 cursor-pointer"
@@ -465,10 +470,7 @@ const PerformanceAndDrawdownChart = () => {
     
     return `${baseClasses} ${activeClasses} ${investedClasses} ${nonInvestedClasses}`;
   };
-  
 
-
-  // Combined loading and error states.
   const combinedLoading = isLoading || isBenchmarkLoading || isBse500Loading;
   const combinedError = error || benchmarkError || bse500Error;
 
@@ -487,12 +489,11 @@ const PerformanceAndDrawdownChart = () => {
             </Text>
           </div>
         </div>
-  
+
         {/* Tabs / Dropdown: Strategy Tabs + Total Portfolio */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
           <div className="flex flex-col sm:flex-row gap-4 w-full">
             {isMobile ? (
-              // Mobile: Use dropdown for tab selection
               <select
                 value={activeTab || ""}
                 onChange={(e) => {
@@ -557,7 +558,6 @@ const PerformanceAndDrawdownChart = () => {
                 </option>
               </select>
             ) : (
-              // Desktop: Show strategy buttons
               <div className="flex gap-4">
                 <button
                   onClick={() => {
@@ -654,8 +654,7 @@ const PerformanceAndDrawdownChart = () => {
                 </button>
               </div>
             )}
-  
-            {/* Show nuvama code dropdown only for admin users (IDs 9 or 14) */}
+
             {activeTab !== "TOTAL" && isAdminUser && (
               <div className="mt-2 sm:mt-0">
                 <select
@@ -673,7 +672,7 @@ const PerformanceAndDrawdownChart = () => {
             )}
           </div>
         </div>
-  
+
         {/* Dates */}
         <div className="flex flex-col sm:flex-row justify-between items-center my-4">
           {startDate && (
@@ -687,13 +686,13 @@ const PerformanceAndDrawdownChart = () => {
             </Text>
           )}
         </div>
-  
+
         {/* Portfolio Details (Summary) */}
         <div suppressHydrationWarning>
           <PortfolioDetails
             data={
               activeTab === "TOTAL"
-                ? data?.portfolioDetails // aggregated details
+                ? data?.portfolioDetails
                 : isInvestedInStrategy
                 ? data?.portfolioDetails
                 : {
@@ -707,10 +706,9 @@ const PerformanceAndDrawdownChart = () => {
           />
         </div>
       </div>
-  
+
       {/* Main Content based on Active Tab */}
       {activeTab === "TOTAL" ? (
-        // Total Portfolio / Cumulative View
         <>
           {data.portfoliosWithRatios && data.portfoliosWithRatios.length > 0 && (
             <div className="bg-white rounded-lg shadow p-4 mb-6">
@@ -729,7 +727,6 @@ const PerformanceAndDrawdownChart = () => {
           )}
         </>
       ) : (
-        // Individual Strategy View
         <>
           <div className="bg-white rounded-lg shadow p-4 mb-6">
             <TrailingReturns
@@ -752,7 +749,7 @@ const PerformanceAndDrawdownChart = () => {
           </div>
         </>
       )}
-  
+
       {/* Cash In/Out Section */}
       {filteredCashInOutData.length > 0 && (
         <div className="bg-white rounded-lg shadow p-4 mb-6">
@@ -779,9 +776,7 @@ const PerformanceAndDrawdownChart = () => {
                     </td>
                     <td
                       className={`px-4 py-2 border-b border-brown text-xs text-right ${
-                        record.cash_in_out > 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                        record.cash_in_out > 0 ? "text-green-600" : "text-red-600"
                       }`}
                     >
                       {formatCurrency(record.cash_in_out)}
@@ -802,25 +797,15 @@ const PerformanceAndDrawdownChart = () => {
           <div className="mt-2 text-xs text-gray-600">
             <p>
               Total Cash In:{" "}
-              <span className="text-green-600">
-                {formatCurrency(cashFlowTotals.totalIn)}
-              </span>
+              <span className="text-green-600">{formatCurrency(cashFlowTotals.totalIn)}</span>
             </p>
             <p>
               Total Cash Out:{" "}
-              <span className="text-red-600">
-                {formatCurrency(cashFlowTotals.totalOut)}
-              </span>
+              <span className="text-red-600">{formatCurrency(cashFlowTotals.totalOut)}</span>
             </p>
             <p>
               Net Flow:{" "}
-              <span
-                className={
-                  cashFlowTotals.netFlow >= 0
-                    ? "text-green-600"
-                    : "text-red-600"
-                }
-              >
+              <span className={cashFlowTotals.netFlow >= 0 ? "text-green-600" : "text-red-600"}>
                 {formatCurrency(cashFlowTotals.netFlow)}
               </span>
             </p>
@@ -829,7 +814,6 @@ const PerformanceAndDrawdownChart = () => {
       )}
     </div>
   );
-  
 };
 
 export default PerformanceAndDrawdownChart;

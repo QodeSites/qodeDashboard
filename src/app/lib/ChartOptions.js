@@ -1,7 +1,24 @@
 import Highcharts from "highcharts";
 
+// Disable UTC so that Highcharts uses local time
+Highcharts.setOptions({
+  time: {
+    useUTC: false
+  }
+});
+
 export const formatDate = (timestamp) => {
   return new Date(timestamp).toLocaleDateString("en-GB");
+};
+
+// Custom parser to interpret a date string (e.g., "2025-02-18 00:00:00")
+// as a local date.
+const parseLocalDate = (dateString) => {
+  // Use only the date part (ignore time) if present.
+  const [datePart] = dateString.split(" ");
+  const [year, month, day] = datePart.split("-").map(Number);
+  // The Date constructor using (year, monthIndex, day) treats the values as local time.
+  return new Date(year, month - 1, day).getTime();
 };
 
 // Helper to rebase a performance series so that its value at commonStart becomes 100.
@@ -14,7 +31,7 @@ const rebaseSeries = (seriesData, commonStart) => {
   return filtered.map((point) => [point[0], (point[1] / baselineValue) * 100]);
 };
 
-// For drawdown series, we simply filter out points before commonStart.
+// For drawdown series, simply filter out points before commonStart.
 const filterSeries = (seriesData, commonStart) => {
   return seriesData.filter((point) => point[0] >= commonStart);
 };
@@ -36,7 +53,7 @@ export const getChartOptions = (
     console.error("Data is not available for: ", strategy);
     return {};
   }
-  console.log("chart data", chartData);
+  console.log("benchmarkSeries", benchmarkSeries);
 
   // Define two color palettes.
   const investedColors = {
@@ -71,7 +88,8 @@ export const getChartOptions = (
   const prepareChartData = (data) => {
     const initialNav = parseFloat(data[0].nav);
     return data.map((item) => ({
-      x: new Date(item.date).getTime(),
+      // Use the custom local date parser here
+      x: parseLocalDate(item.date),
       strategyValue: (parseFloat(item.nav) / initialNav) * 100,
       drawdown: parseFloat(item.drawdown),
     }));
@@ -104,11 +122,8 @@ export const getChartOptions = (
   }));
 
   // Determine a common end timestamp so that all series align.
-  const portfolioEnd = rebasedPortfolioSeries[rebasedPortfolioSeries.length - 1][0];
-  const benchmarkEnds = rebasedBenchmarkSeries.map(
-    (series) => series.data[series.data.length - 1][0]
-  );
-  const commonEnd = Math.min(portfolioEnd, ...benchmarkEnds);
+  // Use the invested portfolio's end date as the common end date.
+  const commonEnd = rebasedPortfolioSeries[rebasedPortfolioSeries.length - 1][0];
 
   // Filter all series so they end at the commonEnd.
   const finalPortfolioSeries = filterSeriesByEnd(rebasedPortfolioSeries, commonEnd);
@@ -295,7 +310,7 @@ export const getChartOptions = (
     },
     yAxis: [
       {
-        title: isMobile ? "" :  "Performance (%)" ,
+        title: isMobile ? "" : "Performance (%)",
         height: "60%",
         top: "0%",
         min: 60,
