@@ -12,6 +12,24 @@ export default function Account() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Reset password form state
+  const [resetForm, setResetForm] = useState({
+    email: session?.user?.email || "",
+    token: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState(null);
+  const [resetMessage, setResetMessage] = useState(null);
+
+  // Update email in reset form if session changes
+  useEffect(() => {
+    if (session?.user?.email) {
+      setResetForm((prev) => ({ ...prev, email: session.user.email }));
+    }
+  }, [session]);
+
   // Check if managed_account_codes exists and has at least one entry
   const isManagedAccounts =
     session?.user?.managed_account_codes &&
@@ -39,7 +57,57 @@ export default function Account() {
     };
 
     fetchAccountData();
-  }, []);
+  }, [apiUrl]);
+
+  const handleResetChange = (e) => {
+    const { name, value } = e.target;
+    setResetForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    if (resetForm.password !== resetForm.confirmPassword) {
+      setResetError("Passwords do not match");
+      return;
+    }
+    setResetLoading(true);
+    setResetError(null);
+    setResetMessage(null);
+
+    try {
+      const response = await fetch("/api/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: resetForm.email,
+          token: resetForm.token,
+          password: resetForm.password,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setResetError(result.error || "Error resetting password");
+      } else {
+        setResetMessage(result.message);
+        // Optionally clear the token and password fields after a successful reset
+        setResetForm((prev) => ({
+          ...prev,
+          token: "",
+          password: "",
+          confirmPassword: "",
+        }));
+      }
+    } catch (error) {
+      setResetError("An unexpected error occurred");
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -72,7 +140,7 @@ export default function Account() {
             account
           </Heading>
 
-          {/* account profile section */}
+          {/* Account Profile Section */}
           <div className="bg-white overflow-hidden shadow rounded-lg my-6">
             <div className="px-4 py-5 sm:p-6">
               <section className="mb-8">
@@ -82,7 +150,7 @@ export default function Account() {
                 <p>{userMasterDetails?.email || "email not available"}</p>
               </section>
 
-              {/* billing / profile information section */}
+              {/* Billing / Profile Information Section */}
               <section>
                 <div className="pb-5 border-b border-gray-200 space-y-2">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -135,7 +203,7 @@ export default function Account() {
             </div>
           </div>
 
-          {/* Optional: Render account details if available */}
+          {/* Optional: Render Account Details if Available */}
           {accountDetails && accountDetails.length > 0 && (
             <div className="bg-white overflow-hidden shadow rounded-lg my-6">
               <div className="px-4 py-5 sm:p-6">
@@ -190,6 +258,89 @@ export default function Account() {
               </a>
             </div>
           </div>
+
+          {/* Reset Password Section */}
+          <div className="bg-white overflow-hidden shadow rounded-lg my-6">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                Reset Password
+              </h3>
+              <p className="mt-2 text-sm text-gray-600">
+                Enter the reset token and your new password below.
+              </p>
+              <form onSubmit={handleResetSubmit} className="mt-4 space-y-4">
+                {/* Email (readonly) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={resetForm.email}
+                    readOnly
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  />
+                </div>
+                {/* Reset Token */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Reset Token
+                  </label>
+                  <input
+                    type="text"
+                    name="token"
+                    value={resetForm.token}
+                    onChange={handleResetChange}
+                    required
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  />
+                </div>
+                {/* New Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={resetForm.password}
+                    onChange={handleResetChange}
+                    required
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  />
+                </div>
+                {/* Confirm New Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={resetForm.confirmPassword}
+                    onChange={handleResetChange}
+                    required
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  />
+                </div>
+                {resetError && (
+                  <p className="text-red-500 text-sm">{resetError}</p>
+                )}
+                {resetMessage && (
+                  <p className="text-green-500 text-sm">{resetMessage}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  {resetLoading ? "Resetting..." : "Reset Password"}
+                </button>
+              </form>
+            </div>
+          </div>
+          
         </div>
       </div>
     </DefaultLayout>

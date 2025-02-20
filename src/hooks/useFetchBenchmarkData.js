@@ -29,7 +29,7 @@ const useFetchBenchmarkData = (indices, startDate, endDate) => {
         const url = `https://research.qodeinvest.com/api/getIndices?indices=${encodeURIComponent(
           indicesParam
         )}&startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
-        console.log('url', url);
+        //console.log('url', url);
         
         const response = await fetch(url);
         if (!response.ok) {
@@ -40,7 +40,7 @@ const useFetchBenchmarkData = (indices, startDate, endDate) => {
 
         const result = await response.json();
         setBenchmarkData(result.data);
-        console.log('Fetched benchmark data:', result.data);
+        //console.log('Fetched benchmark data:', result.data);
       } catch (err) {
         console.error(err);
         setError(err.message || 'Failed to fetch benchmark data');

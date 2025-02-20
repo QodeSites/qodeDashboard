@@ -29,7 +29,7 @@ const useFetchStrategyData = () => {
 
       try {
         let url = "/api/portfolio-data?view_type=" + mode;
-        console.log("URL: ", url);
+        //console.log("URL: ", url);
 
         // For individual view, add nuvama_code parameter.
         if (mode === "individual" && nuvamaCode) {

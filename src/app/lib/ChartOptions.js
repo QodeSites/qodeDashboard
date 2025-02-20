@@ -97,7 +97,7 @@ export const getChartOptions = (
     console.error("Data is not available for: ", strategy);
     return {};
   }
-  console.log("benchmarkSeries", benchmarkSeries);
+  //console.log("benchmarkSeries", benchmarkSeries);
 
   // Define two color palettes.
   const investedColors = {

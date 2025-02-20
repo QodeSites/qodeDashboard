@@ -143,9 +143,9 @@ const PerformanceAndDrawdownChart = () => {
     [sortedDailyNAV]
   );
 
-  console.log("sortedDailyNAV", sortedDailyNAV);
-  console.log("startDate", startDate);
-  console.log("endDate", endDate);
+  //console.log("sortedDailyNAV", sortedDailyNAV);
+  //console.log("startDate", startDate);
+  //console.log("endDate", endDate);
 
   // Fetch benchmark/model data for the active strategy.
   const {
@@ -169,7 +169,7 @@ const PerformanceAndDrawdownChart = () => {
   );
 
 
-  console.log("benchmarkData", bse500Data);
+  //console.log("benchmarkData", bse500Data);
 
   // Process raw benchmark data for the active strategy.
   const rawBenchmarkData = useMemo(() => {
@@ -285,7 +285,7 @@ const PerformanceAndDrawdownChart = () => {
     let chartData = [];
     if (isInvestedInStrategy) {
       chartData = adjustedFilteredData;
-      console.log("chartData", chartData);
+      //console.log("chartData", chartData);
     } else {
       chartData = rawBenchmarkData;
     }
@@ -429,16 +429,76 @@ const PerformanceAndDrawdownChart = () => {
   }, [data.cashInOutData, filteredCashInOutData, activeTab, isInvestedInStrategy]);
 
   // Monthly PnL: if not invested, set all pnl values to 0.
-  const monthlyPnLData = useMemo(() => {
-    if (isInvestedInStrategy) {
-      return data?.monthlyPnL;
+  console.log("data", benchmarkData);
+// Update the monthlyPnLData calculation
+const monthlyPnLData = useMemo(() => {
+  if (isInvestedInStrategy) {
+    return data?.monthlyPnL;
+  } else if (!rawBenchmarkData || rawBenchmarkData.length === 0) {
+    return [];
+  }
+
+  // Calculate monthly PnL from benchmark data
+  const monthlyPnLFromBenchmark = [];
+  let currentMonth = null;
+  let currentYear = null;
+  let firstNAVOfMonth = null;
+  let lastNAVOfMonth = null;
+
+  // Sort benchmark data by date
+  const sortedBenchmark = [...rawBenchmarkData].sort((a, b) => 
+    new Date(a.date) - new Date(b.date)
+  );
+
+  sortedBenchmark.forEach((item) => {
+    const date = new Date(item.date);
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const nav = parseFloat(item.nav);
+
+    if (currentMonth === null) {
+      // First iteration
+      currentMonth = month;
+      currentYear = year;
+      firstNAVOfMonth = nav;
+      lastNAVOfMonth = nav;
+    } else if (month !== currentMonth || year !== currentYear) {
+      // Month or year changed, calculate PnL for previous month
+      const pnl = ((lastNAVOfMonth - firstNAVOfMonth) / firstNAVOfMonth) * 100;
+      
+      monthlyPnLFromBenchmark.push({
+        year: currentYear,
+        month: new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' }),
+        pnl: pnl,
+        firstNAV: firstNAVOfMonth,
+        lastNAV: lastNAVOfMonth
+      });
+
+      // Reset for new month
+      currentMonth = month;
+      currentYear = year;
+      firstNAVOfMonth = nav;
+      lastNAVOfMonth = nav;
     } else {
-      return (data?.monthlyPnL || []).map((item) => ({
-        ...item,
-        pnl: 0,
-      }));
+      // Same month, update lastNAV
+      lastNAVOfMonth = nav;
     }
-  }, [data, isInvestedInStrategy]);
+  });
+
+  // Don't forget to add the last month
+  if (currentMonth !== null) {
+    const pnl = ((lastNAVOfMonth - firstNAVOfMonth) / firstNAVOfMonth) * 100;
+    monthlyPnLFromBenchmark.push({
+      year: currentYear,
+      month: new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' }),
+      pnl: pnl,
+      firstNAV: firstNAVOfMonth,
+      lastNAV: lastNAVOfMonth
+    });
+  }
+
+  return monthlyPnLFromBenchmark;
+}, [data?.monthlyPnL, isInvestedInStrategy, rawBenchmarkData]);
 
   // Reflow chart on window resize.
   useEffect(() => {

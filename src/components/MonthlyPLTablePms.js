@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
+  console.log('monthlyPnL'  , monthlyPnL);
   const monthFullToLabel = {
     January: "01", February: "02", March: "03", April: "04",
     May: "05", June: "06", July: "07", August: "08",
@@ -45,7 +46,7 @@ const YearlyMonthlyPLTable = ({ monthlyPnL }) => {
 
   const calculateYearlyTotal = (yearData, allData, year) => {
     // Find the latest month with data in current year
-    console.log(yearData);
+    //console.log(yearData);
     
     const currentYearMonths = Object.keys(yearData).sort((a, b) => b - a);
     if (currentYearMonths.length === 0) return null;
