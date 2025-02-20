@@ -97,7 +97,7 @@ export const getChartOptions = (
     console.error("Data is not available for: ", strategy);
     return {};
   }
-  //console.log("benchmarkSeries", benchmarkSeries);
+  console.log("benchmarkSeries", benchmarkSeries);
 
   // Define two color palettes.
   const investedColors = {
@@ -355,11 +355,11 @@ export const getChartOptions = (
     yAxis: [
       {
         title: isMobile ? "" : "Performance (%)",
-        height: isMobile ? "50%" : "60%",
-        top: "10%",
+        height: "60%",
+        top: "0%",
         min: 60,
         tickInterval,
-        tickAmount: 4,
+        tickAmount: 7,
         labels: {
           formatter: function () {
             return Math.round(this.value);
@@ -383,7 +383,7 @@ export const getChartOptions = (
       {
         title: isMobile ? "" : "Drawdown (%)",
         height: "20%",
-        top: isMobile ? "70%" : "70%",
+        top: "70%",
         offset: 0,
         max: 0,
         tickAmount: 3,
