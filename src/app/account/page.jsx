@@ -260,7 +260,7 @@ export default function Account() {
           </div>
 
           {/* Reset Password Section */}
-          <div className="bg-white overflow-hidden shadow rounded-lg my-6">
+          {/* <div className="bg-white overflow-hidden shadow rounded-lg my-6">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
                 Reset Password
@@ -269,7 +269,6 @@ export default function Account() {
                 Enter the reset token and your new password below.
               </p>
               <form onSubmit={handleResetSubmit} className="mt-4 space-y-4">
-                {/* Email (readonly) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Email
@@ -282,7 +281,6 @@ export default function Account() {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
-                {/* Reset Token */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Reset Token
@@ -296,7 +294,6 @@ export default function Account() {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
-                {/* New Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     New Password
@@ -310,7 +307,6 @@ export default function Account() {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
-                {/* Confirm New Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Confirm New Password
@@ -339,7 +335,7 @@ export default function Account() {
                 </button>
               </form>
             </div>
-          </div>
+          </div> */}
           
         </div>
       </div>
