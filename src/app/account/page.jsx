@@ -2,6 +2,7 @@
 
 import Heading from "@/components/common/Heading";
 import DefaultLayout from "@/components/Layouts/Layouts";
+import { is } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 
@@ -232,6 +233,7 @@ export default function Account() {
           )}
 
           {/* Nuvama Wealth Spectrum Link Section */}
+          {isManagedAccounts && (
           <div className="bg-white overflow-hidden shadow rounded-lg my-6">
             <div className="px-4 py-5 sm:p-6">
               {/* Nuvama Wealth Logo */}
@@ -258,7 +260,7 @@ export default function Account() {
               </a>
             </div>
           </div>
-
+          )}
           {/* Reset Password Section */}
           {/* <div className="bg-white overflow-hidden shadow rounded-lg my-6">
             <div className="px-4 py-5 sm:p-6">
