@@ -14,6 +14,7 @@ import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
 import { getChartOptions } from "@/app/lib/ChartOptions";
 import YearlyMonthlyPLTable from "./MonthlyPLTablePms";
 import { useSession } from "next-auth/react";
+import { ChevronDownIcon } from "lucide-react";
 
 // Dynamically import components
 const TrailingReturns = dynamic(() => import("./TrailingReturn"), {
@@ -574,185 +575,172 @@ const monthlyPnLData = useMemo(() => {
 
         {/* Tabs / Dropdown: Strategy Tabs + Total Portfolio */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-          <div className="flex flex-col sm:flex-row gap-4 w-full">
-            {isMobile ? (
-              <select
-                value={activeTab || ""}
-                onChange={(e) => {
-                  const tab = e.target.value;
-                  setActiveTab(tab);
-                  if (tab === "TOTAL") {
-                    handleViewModeChange("cumulative");
-                  } else {
-                    handleViewModeChange("individual");
-                    if (!isAdminUser) {
-                      const code = getNuvamaCodeForStrategy(tab);
-                      setSelectedNuvama(code);
-                    }
-                  }
-                }}
-                className={getDropdownClass()}
-              >
-                <option value="TOTAL">Total Portfolio</option>
-                <option value="QAW">
-                  QAW{" "}
-                  {isAdminUser
-                    ? selectedNuvama &&
-                      extractStrategy(selectedNuvama) === "QAW"
-                      ? ""
-                      : ""
-                    : investedStrategies.includes("QAW")
-                      ? ""
-                      : ""}
-                </option>
-                {/* <option value="QGF">
-      QGF{" "}
-      {isAdminUser
-        ? selectedNuvama &&
-          extractStrategy(selectedNuvama) === "QGF"
-          ? ""
-          : ""
-        : investedStrategies.includes("QGF")
-          ? ""
-          : ""}
-    </option> */}
-                <option value="QFH">
-                  QFH{" "}
-                  {isAdminUser
-                    ? selectedNuvama &&
-                      extractStrategy(selectedNuvama) === "QFH"
-                      ? ""
-                      : ""
-                    : investedStrategies.includes("QFH")
-                      ? ""
-                      : ""}
-                </option>
-                <option value="QTF">
-                  QTF{" "}
-                  {isAdminUser
-                    ? selectedNuvama &&
-                      extractStrategy(selectedNuvama) === "QTF"
-                      ? ""
-                      : ""
-                    : investedStrategies.includes("QTF")
-                      ? ""
-                      : ""}
-                </option>
-              </select>
-            ) : (
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    setActiveTab("TOTAL");
-                    handleViewModeChange("cumulative");
-                  }}
-                  className={strategyButtonClass("TOTAL")}
-                >
-                  Total Portfolio
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("QAW");
-                    handleViewModeChange("individual");
-                    if (!isAdminUser) {
-                      const code = getNuvamaCodeForStrategy("QAW");
-                      setSelectedNuvama(code);
-                    }
-                  }}
-                  className={strategyButtonClass("QAW")}
-                >
-                  QAW{" "}
-                  {isAdminUser
-                    ? selectedNuvama &&
-                      extractStrategy(selectedNuvama) === "QAW"
-                      ? ""
-                      : ""
-                    : investedStrategies.includes("QAW")
-                      ? ""
-                      : ""}
-                </button>
-                {/* <button
-                  onClick={() => {
-                    setActiveTab("QGF");
-                    handleViewModeChange("individual");
-                    if (!isAdminUser) {
-                      const code = getNuvamaCodeForStrategy("QGF");
-                      setSelectedNuvama(code);
-                    }
-                  }}
-                  className={strategyButtonClass("QGF")}
-                >
-                  QGF{" "}
-                  {isAdminUser
-                    ? selectedNuvama &&
-                      extractStrategy(selectedNuvama) === "QGF"
-                      ? ""
-                      : ""
-                    : investedStrategies.includes("QGF")
-                      ? ""
-                      : ""}
-                </button> */}
-                <button
-                  onClick={() => {
-                    setActiveTab("QFH");
-                    handleViewModeChange("individual");
-                    if (!isAdminUser) {
-                      const code = getNuvamaCodeForStrategy("QFH");
-                      setSelectedNuvama(code);
-                    }
-                  }}
-                  className={strategyButtonClass("QFH")}
-                >
-                  QFH{" "}
-                  {isAdminUser
-                    ? selectedNuvama &&
-                      extractStrategy(selectedNuvama) === "QFH"
-                      ? ""
-                      : ""
-                    : investedStrategies.includes("QFH")
-                      ? ""
-                      : ""}
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("QTF");
-                    handleViewModeChange("individual");
-                    if (!isAdminUser) {
-                      const code = getNuvamaCodeForStrategy("QTF");
-                      setSelectedNuvama(code);
-                    }
-                  }}
-                  className={strategyButtonClass("QTF")}
-                >
-                  QTF{" "}
-                  {isAdminUser
-                    ? selectedNuvama &&
-                      extractStrategy(selectedNuvama) === "QTF"
-                      ? ""
-                      : ""
-                    : investedStrategies.includes("QTF")
-                      ? ""
-                      : ""}
+        <div className="flex flex-col sm:flex-row gap-4 w-full">
+    {isMobile ? (
+      <div className="relative">
+        <select
+          value={activeTab || ""}
+          onChange={(e) => {
+            const tab = e.target.value;
+            setActiveTab(tab);
+            if (tab === "TOTAL") {
+              handleViewModeChange("cumulative");
+            } else {
+              handleViewModeChange("individual");
+              if (!isAdminUser) {
+                const code = getNuvamaCodeForStrategy(tab);
+                setSelectedNuvama(code);
+              }
+            }
+          }}
+          // Add appearance-none to hide the native arrow.
+          className={`${getDropdownClass()} appearance-none`}
+        >
+          <option value="TOTAL">Total Portfolio</option>
+          <option value="QAW">
+            QAW{" "}
+            {isAdminUser
+              ? selectedNuvama && extractStrategy(selectedNuvama) === "QAW"
+                ? ""
+                : ""
+              : investedStrategies.includes("QAW")
+              ? ""
+              : ""}
+          </option>
+          {/* Uncomment if needed
+          <option value="QGF">
+            QGF{" "}
+            {isAdminUser
+              ? selectedNuvama && extractStrategy(selectedNuvama) === "QGF"
+                ? ""
+                : ""
+              : investedStrategies.includes("QGF")
+              ? ""
+              : ""}
+          </option>
+          */}
+          <option value="QFH">
+            QFH{" "}
+            {isAdminUser
+              ? selectedNuvama && extractStrategy(selectedNuvama) === "QFH"
+                ? ""
+                : ""
+              : investedStrategies.includes("QFH")
+              ? ""
+              : ""}
+          </option>
+          <option value="QTF">
+            QTF{" "}
+            {isAdminUser
+              ? selectedNuvama && extractStrategy(selectedNuvama) === "QTF"
+                ? ""
+                : ""
+              : investedStrategies.includes("QTF")
+              ? ""
+              : ""}
+          </option>
+        </select>
+        {/* Position the arrow icon */}
+        <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+      </div>
+    ) : (
+      <div className="flex gap-4">
+        <button
+          onClick={() => {
+            setActiveTab("TOTAL");
+            handleViewModeChange("cumulative");
+          }}
+          className={strategyButtonClass("TOTAL")}
+        >
+          Total Portfolio
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("QAW");
+            handleViewModeChange("individual");
+            if (!isAdminUser) {
+              const code = getNuvamaCodeForStrategy("QAW");
+              setSelectedNuvama(code);
+            }
+          }}
+          className={strategyButtonClass("QAW")}
+        >
+          QAW{" "}
+          {isAdminUser
+            ? selectedNuvama && extractStrategy(selectedNuvama) === "QAW"
+              ? ""
+              : ""
+            : investedStrategies.includes("QAW")
+            ? ""
+            : ""}
+        </button>
+        {/* Other buttons... */}
+        <button
+          onClick={() => {
+            setActiveTab("QFH");
+            handleViewModeChange("individual");
+            if (!isAdminUser) {
+              const code = getNuvamaCodeForStrategy("QFH");
+              setSelectedNuvama(code);
+            }
+          }}
+          className={strategyButtonClass("QFH")}
+        >
+          QFH{" "}
+          {isAdminUser
+            ? selectedNuvama && extractStrategy(selectedNuvama) === "QFH"
+              ? ""
+              : ""
+            : investedStrategies.includes("QFH")
+            ? ""
+            : ""}
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("QTF");
+            handleViewModeChange("individual");
+            if (!isAdminUser) {
+              const code = getNuvamaCodeForStrategy("QTF");
+              setSelectedNuvama(code);
+            }
+          }}
+          className={strategyButtonClass("QTF")}
+        >
+          QTF{" "}
+          {isAdminUser
+            ? selectedNuvama && extractStrategy(selectedNuvama) === "QTF"
+              ? ""
+              : ""
+            : investedStrategies.includes("QTF")
+            ? ""
+            : ""}
                 </button>
               </div>
             )}
 
             {activeTab !== "TOTAL" && isAdminUser && (
-              <div className="mt-2 sm:mt-0">
+              <div className="mt-2 sm:mt-0 relative">
                 <select
                   value={selectedNuvama || ""}
                   onChange={handleSelectChange}
                   className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4"
                 >
-                  {data.nuvama_codes.map((code, index) => (
-                    <option key={index} value={code}>
-                      {data.usernames[index]} ({code})
-                    </option>
-                  ))}
+                  {data.nuvama_codes.map((code, index) => {
+                    const username = data.usernames[index];
+                    const clippedUsername =
+                      username.length > 15 ? username.substring(0, 15) + "..." : username;
+                    return (
+                      <option key={index} value={code}>
+                        {clippedUsername} ({code})
+                      </option>
+                    );
+                  })}
                 </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
               </div>
             )}
-          </div>
+
+  </div>
         </div>
 
         {/* Dates */}

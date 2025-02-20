@@ -355,11 +355,11 @@ export const getChartOptions = (
     yAxis: [
       {
         title: isMobile ? "" : "Performance (%)",
-        height: "60%",
-        top: "0%",
+        height: isMobile ? "50%" : "60%",
+        top: "10%",
         min: 60,
         tickInterval,
-        tickAmount: 7,
+        tickAmount: 4,
         labels: {
           formatter: function () {
             return Math.round(this.value);
@@ -383,7 +383,7 @@ export const getChartOptions = (
       {
         title: isMobile ? "" : "Drawdown (%)",
         height: "20%",
-        top: "70%",
+        top: isMobile ? "70%" : "70%",
         offset: 0,
         max: 0,
         tickAmount: 3,
