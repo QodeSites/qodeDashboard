@@ -31,6 +31,10 @@ const PORTFOLIO_MAPPING = {
       current: "Sarla Performance fibers Zerodha Total Portfolio F",
       metrics: "Sarla Performance fibers Zerodha Total Portfolio F"
     },
+    "Scheme QAW": {
+      current: "Sarla Performance fibers Zerodha Total Portfolio QAW",
+      metrics: "Sarla Performance fibers Zerodha Total Portfolio QAW"
+    },
     "_total": {
       current: "Sarla Performance fibers Zerodha Total Portfolio",
       metrics: "Sarla Performance fibers Zerodha Total Portfolio"
@@ -463,6 +467,7 @@ export async function GET(request) {
       }),
     ]);
 
+    console.log('cashInOutData',cashInOutData)
     const results = {};
 
     for (const accountCode of accountCodes) {

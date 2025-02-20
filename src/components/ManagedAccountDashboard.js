@@ -753,6 +753,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   };
 
   const formatCurrency = (amount) => {
+    
     return (
       "₹" +
       amount.toLocaleString("en-IN", {
@@ -834,22 +835,29 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           </>
         )}
 
-        {accountCode === "AC5" && activeScheme === "Scheme C" && (
-          <div className="p-4 bg-red-100 text-red-700 text-center font-medium mb-4">
-            Scheme C is not active anymore
-          </div>
-        )}
+{(accountCode === "AC5" && 
+  (activeScheme === "Scheme C" || 
+   activeScheme === "Scheme D" || 
+   activeScheme === "Scheme E" || 
+   activeScheme === "Scheme F")) && (
+  <div className="p-4 bg-red-100 text-red-700 text-center font-medium mb-4">
+    {activeScheme} is not active anymore
+  </div>
+)}
 
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-xs sm:text-lg font-medium">Amount Invested</h3>
-            <p className="mt-2 text-base">{formatCurrency(investedAmount)}</p>
+            <p className="mt-2 text-base">
+              {investedAmount < 0 ? "₹" + 0 : formatCurrency(investedAmount)}
+            </p>
+
           </div>
           <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-xs sm:text-lg font-medium">Current Portfolio Value</h3>
             <div className="mt-2 flex items-baseline gap-4">
-              <span className="text-base">{formatCurrency(portfolioValue)}</span>
+              <span className="text-base">{portfolioValue < 0 ? "₹" + 0 : formatCurrency(portfolioValue)}</span>
             </div>
           </div>
           <div className="p-4 bg-white rounded-lg shadow">
