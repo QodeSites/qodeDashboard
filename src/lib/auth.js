@@ -13,6 +13,17 @@ function getCurrentISTTime() {
   return istTime;
 }
 
+// Helper function to hash passwords (use this when creating/updating user passwords)
+export async function hashPassword(password) {
+  const saltRounds = 10;
+  return bcrypt.hash(password, saltRounds);
+}
+
+// Helper function to compare password with stored hash
+export async function comparePassword(password, hashedPassword) {
+  return bcrypt.compare(password, hashedPassword);
+}
+
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -42,10 +53,11 @@ export const authOptions = {
             throw new Error("User not found. Please sign up.");
           }
 
-          //   if (credentials.password !== user.password) {
-          //   throw new Error("Invalid email or password.");
-          // }
-
+          // Use bcrypt to compare the provided password with the stored hash
+          const passwordValid = await bcrypt.compare(credentials.password, user.password);
+          if (!passwordValid) {
+            throw new Error("Invalid email or password.");
+          }
 
           if (!user.hasaccess) {
             throw new Error("Access denied. Please contact support.");
@@ -64,7 +76,8 @@ export const authOptions = {
           // First check client_master
           const clients = await prisma.client_master.findMany({
             where: {
-              user_id: user.id, OR: [
+              user_id: user.id, 
+              OR: [
                 { nuvama_code: { startsWith: 'QTF' } },
                 { nuvama_code: { startsWith: 'QGF' } },
                 { nuvama_code: { startsWith: 'QFH' } },
@@ -98,15 +111,14 @@ export const authOptions = {
               managed_client_names: managedClients.map(client => client.client_name),
               managed_account_codes: managedClients.map(client => client.account_code),
               managed_account_names: managedClients.map(client => client.account_name),
-              id: managedClients[0].id.toString(),
-              user_id: managedClients[0].user_id,  // Fix: Use the user_id from managedClients
+              id: managedClients[0]?.id.toString() || user.id.toString(),
+              user_id: managedClients[0]?.user_id || user.id,
               ...(customUsername && { username: customUsername }),
             };
           }
 
           return {
             id: user.id.toString(),
-            user_id: user.user_id,
             email: user.email,
             hasaccess: user.hasaccess,
             last_login: istTime,

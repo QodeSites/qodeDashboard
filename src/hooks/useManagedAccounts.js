@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 
 const useManagedAccounts = () => {
   const [accountsData, setAccountsData] = useState(null);
+  const [holdingsData, setHoldingsData] = useState(null);
   const [aggregatedTotals, setAggregatedTotals] = useState({
     totalInvestedAmount: 0,
     totalPortfolioValue: 0,
@@ -25,7 +26,8 @@ const useManagedAccounts = () => {
         );
         // console.log("Managed Accounts Response:", response.data);
 
-        const { accounts } = response.data.data;
+        // Extract both accounts and holdings from the API response
+        const { accounts, holdings } = response.data.data;
 
         // Transform accounts data into a more usable format
         const transformedAccounts = Object.entries(accounts).map(
@@ -95,6 +97,7 @@ const useManagedAccounts = () => {
 
         setAccountsData(transformedAccounts);
         setAggregatedTotals(totals);
+        setHoldingsData(holdings);
       } catch (err) {
         console.error("Error fetching managed accounts:", err);
         setError(err.response?.data?.error || "An error occurred");
@@ -106,7 +109,7 @@ const useManagedAccounts = () => {
     fetchManagedAccounts();
   }, [session, status]);
 
-  // Helper functions for data access
+  // Helper functions for account data
   const getAccountByCode = (accountCode) =>
     accountsData?.find((account) => account.accountCode === accountCode);
 
@@ -119,21 +122,24 @@ const useManagedAccounts = () => {
   const getAllSchemes = () =>
     accountsData?.flatMap((account) => account.schemes) || [];
 
-  // New helper function to access total portfolio data by account code
   const getTotalPortfolioByAccount = (accountCode) =>
     getAccountByCode(accountCode)?.totalPortfolio;
 
+  // New helper function for holdings:
+  const getHoldingsByScheme = (scheme) => holdingsData?.[scheme] || [];
+
   return {
     accountsData,
+    holdingsData,
     aggregatedTotals,
     loading,
     error,
-    // Helper functions
     getAccountByCode,
     getSchemesByAccount,
     getClientName,
     getAllSchemes,
     getTotalPortfolioByAccount,
+    getHoldingsByScheme,
   };
 };
 

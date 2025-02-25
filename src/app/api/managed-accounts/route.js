@@ -299,12 +299,12 @@ function calculateMonthlyPnL(navData) {
 
   const sortedMonths = Object.keys(dataByMonth).sort();
   // console.log('\nSorted months:', sortedMonths);
-  
+
   const monthlyPnL = {};
 
   sortedMonths.forEach((yearMonth, index) => {
     // console.log(`\n=== Processing ${yearMonth} ===`);
-    
+
     const currentMonthData = dataByMonth[yearMonth];
     const currentMonthEnd = currentMonthData.lastNav;
     // console.log(`Month end NAV: ${currentMonthEnd}`);
@@ -403,24 +403,19 @@ export async function GET(request) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
+    console.log('session', session.user)
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("user_id");
     let user_id = Number(session?.user?.user_id)
     console.log('master__id', user_id)
     const view_type = searchParams.get("view_type")
     if (view_type === "account") {
-      // Fetch the user_master details based on the user id from session
       const userMasterDetails = await fetchUserMasterDetails(user_id);
-      // Fetch any account details associated with the logged in user
-      // const accountDetails = await fetchAccountDetails(userId);
       return NextResponse.json({
         view_type: "account",
         userMasterDetails,
-        // accountDetails
       });
     }
-    console.log('session',session)
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const pageSize = Math.max(1, parseInt(searchParams.get("pageSize") || String(DEFAULT_PAGE_SIZE)));
 
@@ -467,7 +462,6 @@ export async function GET(request) {
       }),
     ]);
 
-    console.log('cashInOutData',cashInOutData)
     const results = {};
 
     for (const accountCode of accountCodes) {
@@ -488,17 +482,17 @@ export async function GET(request) {
         const currentData = masterSheetData.filter(
           (entry) => entry.account_names === portfolioNames.current
         );
-        
+
         // For AC5 Scheme B, override the metrics name to exclude "Zerodha"
         const metricsName =
           accountCode === "AC5" && scheme === "Scheme B"
             ? "Sarla Performance fibers Total Portfolio B"
             : portfolioNames.metrics;
-        
+
         const metricsData = masterSheetData.filter(
           (entry) => entry.account_names === metricsName
         );
-        
+
         const cashForScheme = cashInOutData.filter(
           (entry) => entry.account_code === accountCode && entry.scheme === scheme
         );
@@ -613,10 +607,26 @@ export async function GET(request) {
         }))
       };
     }
+    // Use managed_account_codes from session (or fallback to the accountCodes from managed_accounts_clients)
+    const sessionManagedAccountCodes = session?.user?.managed_account_codes || accountCodes;
+    const holdingsData = await prisma.managed_accounts_holdings.findMany({
+      where: { account_code: { in: sessionManagedAccountCodes } }
+    });
+    const holdingsByScheme = holdingsData.reduce((acc, holding) => {
+      // Use holding.scheme as key; if not defined, use "unspecified"
+      const schemeKey = holding.scheme ? holding.scheme : "unspecified";
+      if (!acc[schemeKey]) {
+        acc[schemeKey] = [];
+      }
+      acc[schemeKey].push(holding);
+      return acc;
+    }, {});
+    // --------------------------------------------------------------
 
     return NextResponse.json({
       data: {
-        accounts: results
+        accounts: results,
+        holdings: holdingsByScheme
       },
       pagination: {
         page,
@@ -624,7 +634,6 @@ export async function GET(request) {
         totalAccounts: accountCodes.length
       }
     }, { status: 200 });
-
   } catch (error) {
     console.error("Portfolio API Error:", error);
     return NextResponse.json({

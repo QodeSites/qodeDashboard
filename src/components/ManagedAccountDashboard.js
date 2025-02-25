@@ -299,6 +299,8 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     error,
     getAccountByCode,
     getTotalPortfolioByAccount,
+    holdingsData,
+    getHoldingsByScheme
   } = useManagedAccounts();
 
 
@@ -315,7 +317,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   }, [loading]);
 
 
-  
+
 
   // Assume you are using the first account from accountCodes
   const accountCode =
@@ -753,7 +755,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   };
 
   const formatCurrency = (amount) => {
-    
+
     return (
       "₹" +
       amount.toLocaleString("en-IN", {
@@ -763,8 +765,8 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     );
   };
 
-  
-  
+
+
 
   const renderContent = () => {
 
@@ -782,6 +784,12 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       { symbol: "GOLDBEES", name: "GOLDBEES", quantity: 15, price: 1600, totalValue: 24000 },
     ];
 
+    const holdingsToDisplay =
+      activeScheme === "Scheme Total"
+        ? holdingsData
+          ? Object.values(holdingsData).flat()
+          : []
+        : getHoldingsByScheme(activeScheme);
     return (
       <>
         {isSarlaAccount && (
@@ -835,15 +843,15 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           </>
         )}
 
-{(accountCode === "AC5" && 
-  (activeScheme === "Scheme C" || 
-   activeScheme === "Scheme D" || 
-   activeScheme === "Scheme E" || 
-   activeScheme === "Scheme F")) && (
-  <div className="p-4 bg-red-100 text-red-700 text-center font-medium mb-4">
-    {activeScheme} is not active anymore
-  </div>
-)}
+        {(accountCode === "AC5" &&
+          (activeScheme === "Scheme C" ||
+            activeScheme === "Scheme D" ||
+            activeScheme === "Scheme E" ||
+            activeScheme === "Scheme F")) && (
+            <div className="p-4 bg-red-100 text-red-700 text-center font-medium mb-4">
+              {activeScheme} is not active anymore
+            </div>
+          )}
 
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
@@ -906,7 +914,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           </div>
         </div>
 
-       
+
 
         {/* Merged Chart: NAV & Drawdown with Stocks Table on the right */}
         <div className="flex sm:flex-row flex-col gap-5">
@@ -933,54 +941,64 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
               </div>
             )}
           </div>
-          <div className="bg-white p-4 w-full sm:w-1/4  rounded-lg shadow mb-6">
-            {/* Stocks Held Table */}
+          <div className="bg-white p-4 w-full sm:w-1/4 rounded-lg shadow mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Stocks Holdings</h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {/* <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Symbol
-                </th> */}
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Qty
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {dummyStocks.map((stock) => (
-                    <tr key={stock.symbol}>
-                      {/* <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                    {stock.symbol}
-                  </td> */}
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {stock.name}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {stock.quantity}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {formatCurrency(stock.price)}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {formatCurrency(stock.totalValue)}
-                      </td>
+              {/* Set a fixed max-height and enable vertical scrolling */}
+              <div className="max-h-[600px] overflow-y-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Qty
+                      </th>
+                      {/* <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total
+                      </th> */}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {holdingsToDisplay && holdingsToDisplay.length > 0 ? (
+                      holdingsToDisplay.map((holding) => {
+                        const quantity = parseFloat(holding.qty) || 0;
+                        const price = parseFloat(holding.buy_price) || 0;
+                        const total = quantity * price;
+                        return (
+                          <tr key={holding.id}>
+                            <td className="px-4 py-2  text-sm text-gray-900">
+                              {holding.stock || "-"}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                              {quantity}
+                            </td>
+                            {/* <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                              {formatCurrency(price)}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                              {formatCurrency(total)}
+                            </td> */}
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                          No holdings available.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+
         </div>
 
         <YearlyMonthlyPLTable monthlyPnL={monthlyPnLFromNormalizedData} />
@@ -1118,7 +1136,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   }
 
   return (
-    <div className="sm:px-2 max-w-7xl mx-auto">
+    <div className="sm:px-2 max-w-8xl mx-auto">
       {endDate && (
         <Text className="sm:text-sm  text-xs font-subheading text-brown text-right">
           Data as of: {formatDate(endDate)}

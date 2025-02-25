@@ -169,3 +169,42 @@ model managed_accounts_cash_in_out {
 
   @@schema("pms_clients_tracker")
 }
+
+model aum_report {
+  accountid       String?
+  ucccode         String?
+  clientname      String?
+  opannumber      String?
+  aif_pms         String?
+  strategyid      String?
+  strategy_scheme String?
+  seriescode      String?
+  seriesname      String?
+  units           String?
+  nav             String?
+  aum_            String?
+  groupid         String?
+  groupname       String?
+  date            String?
+  ownerid         String?
+  msg             String?
+  id              Int     @id @default(autoincrement())
+
+  @@schema("pms_clients_tracker")
+}
+
+model managed_accounts_holdings {
+  entry_date   String? @map("﻿entry_date")
+  o_c          String? @map("o/c")
+  stock        String?
+  qty          String?
+  buy_price    String?
+  sell_price   String?
+  account      String?
+  account_code String?
+  type         String?
+  scheme       String?
+  id           Int     @id @default(autoincrement())
+
+  @@schema("pms_clients_tracker")
+}

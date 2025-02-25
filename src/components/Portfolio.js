@@ -834,6 +834,9 @@ const monthlyPnLData = useMemo(() => {
                     <th className="px-4 py-2 border-b border-brown text-left text-xs font-medium text-black uppercase tracking-wider">
                       Date
                     </th>
+                    <th className="px-4 py-2 border-b border-brown text-left text-xs font-medium text-black uppercase tracking-wider">
+                      Nuvama Code
+                    </th>
                     <th className="px-4 py-2 border-b border-brown text-right text-xs font-medium text-black uppercase tracking-wider">
                       Cash In/Out
                     </th>
@@ -845,6 +848,7 @@ const monthlyPnLData = useMemo(() => {
                       <td className="px-4 py-2 border-b border-brown text-xs text-gray-700">
                         {formatDate(record.date)}
                       </td>
+                      <td className="px-4 py-2 border-b border-brown text-xs text-gray-700">{record.nuvama_code}</td>
                       <td
                         className={`px-4 py-2 border-b border-brown text-xs text-right ${record.cash_in_out > 0 ? "text-green-600" : "text-red-600"
                           }`}
@@ -857,6 +861,7 @@ const monthlyPnLData = useMemo(() => {
                     <td className="px-4 py-2 border-t border-brown text-xs text-gray-900">
                       Total
                     </td>
+                    <td className="px-4 py-2 border-t border-brown text-xs text-gray-900"></td>
                     <td className="px-4 py-2 border-t border-brown text-xs text-gray-900 text-right">
                       {formatCurrency(cashFlowTotals.netFlow)}
                     </td>
