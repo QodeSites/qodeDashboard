@@ -447,7 +447,8 @@ export async function GET(request) {
       );
     }
 
-    const [cashInOutData, masterSheetData] = await Promise.all([
+    // Fetch cash flows, master sheet data (for other metrics) and portfolio master data (for currentPortfolioValue and totalProfit)
+    const [cashInOutData, masterSheetData, portfolioMasterData] = await Promise.all([
       prisma.managed_accounts_cash_in_out.findMany({
         where: { account_code: { in: accountCodes } },
         select: {
@@ -471,20 +472,26 @@ export async function GET(request) {
         },
         orderBy: { date: "asc" },
       }),
+      prisma.managed_portfolio_master.findMany({
+        where: { account_code: { in: accountCodes } },
+        select: {
+          account_code: true,
+          scheme: true,
+          current_portfolio_value: true,
+          total_profit: true,
+        },
+      }),
     ]);
 
     const results = {};
 
     // --- Build a global mapping of scheme invested amounts for all accounts ---
-    // This will be used later for holdings percentage calculations.
     const globalSchemeInvestedAmounts = {};
     for (const accountCode of accountCodes) {
-      // Get schemes for this account (skip _total)
       const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {}).filter(
         (scheme) => scheme !== "_total"
       );
       for (const scheme of schemes) {
-        // Filter cash flows for this account and scheme
         const cashForScheme = cashInOutData.filter(
           (entry) =>
             entry.account_code === accountCode && entry.scheme === scheme
@@ -493,14 +500,12 @@ export async function GET(request) {
           const capitalAmount = entry.capital_in_out || 0;
           return sum + capitalAmount;
         }, 0);
-        // Sum across accounts for the same scheme
         if (!globalSchemeInvestedAmounts[scheme]) {
           globalSchemeInvestedAmounts[scheme] = 0;
         }
         globalSchemeInvestedAmounts[scheme] += investedAmount;
       }
     }
-    // Calculate global total invested amount
     const globalTotalInvestedAmount = Object.values(globalSchemeInvestedAmounts).reduce(
       (sum, amt) => sum + amt,
       0
@@ -523,25 +528,21 @@ export async function GET(request) {
       for (const scheme of schemes) {
         const portfolioNames = getPortfolioNames(accountCode, scheme);
 
+        // Filter master sheet data for current and metrics names
         const currentData = masterSheetData.filter(
           (entry) => entry.account_names === portfolioNames.current
         );
-
-        // For AC5 Scheme B, override the metrics name to exclude "Zerodha"
         const metricsName =
           accountCode === "AC5" && scheme === "Scheme B"
             ? "Sarla Performance fibers Total Portfolio B"
             : portfolioNames.metrics;
-
         const metricsData = masterSheetData.filter(
           (entry) => entry.account_names === metricsName
         );
-
         const cashForScheme = cashInOutData.filter(
           (entry) =>
             entry.account_code === accountCode && entry.scheme === scheme
         );
-
         const investedAmount = cashForScheme.reduce((sum, entry) => {
           const capitalAmount = entry.capital_in_out || 0;
           return sum + capitalAmount;
@@ -555,15 +556,26 @@ export async function GET(request) {
 
         const drawdownMetrics = calculateDrawdownMetrics(navCurve);
 
-        // Use metricsData for totalProfit if it's AC5 Scheme B
-        const totalProfit =
+        // Calculate totalProfit based on existing logic as fallback.
+        const calcTotalProfit =
           accountCode === "AC5" && scheme === "Scheme B"
             ? calculateTotalProfit(metricsData, cashForScheme)
             : calculateTotalProfit(currentData, cashForScheme);
 
-        // Calculate trailing returns:
-        // - For Scheme A, include the 3y period (default periods)
-        // - For all other schemes, calculate without the 3y period.
+        // --- Override currentPortfolioValue and totalProfit using portfolio master data ---
+        const portfolioMaster = portfolioMasterData.find(
+          (row) => row.account_code === accountCode && row.scheme === scheme
+        );
+        const schemeCurrentPortfolioValue = portfolioMaster
+          ? portfolioMaster.current_portfolio_value
+          : currentData.length > 0
+          ? currentData[currentData.length - 1].portfolio_value || 0
+          : 0;
+        const schemeTotalProfit = portfolioMaster
+          ? portfolioMaster.total_profit
+          : calcTotalProfit;
+
+        // Calculate trailing returns (with different period options)
         let trailingReturns;
         if (scheme === "Scheme A") {
           trailingReturns = calculateTrailingReturns(navCurve);
@@ -579,16 +591,13 @@ export async function GET(request) {
         }
 
         results[accountCode].schemes[scheme] = {
-          currentPortfolioValue:
-            currentData.length > 0
-              ? currentData[currentData.length - 1].portfolio_value || 0
-              : 0,
+          currentPortfolioValue: schemeCurrentPortfolioValue,
           investedAmount,
           returns: calculateReturns(navCurve, cashForScheme),
           trailingReturns,
           monthlyPnL: calculateMonthlyPnL(navCurve),
           navCurve,
-          totalProfit,
+          totalProfit: schemeTotalProfit,
           dividends: cashForScheme.reduce(
             (sum, flow) => sum + (flow.dividend || 0),
             0
@@ -615,34 +624,40 @@ export async function GET(request) {
       const totalCashFlows = cashInOutData.filter(
         (entry) => entry.account_code === accountCode
       );
-
       const totalInvestedAmount = Object.values(schemeInvestedAmounts).reduce(
         (sum, amount) => sum + amount,
         0
       );
-
       const totalNavCurve = totalMetricsData.map((e) => ({
         date: e.date,
         nav: e.nav,
       }));
-
       const totalDrawdownMetrics = calculateDrawdownMetrics(totalNavCurve);
-      const totalPortfolioProfit = calculateTotalProfit(
+      const calcTotalPortfolioProfit = calculateTotalProfit(
         totalCurrentData,
         totalCashFlows
       );
+      // --- Override with portfolio master data for "Scheme Total" ---
+      const portfolioMasterTotal = portfolioMasterData.find(
+        (row) => row.account_code === accountCode && row.scheme === "Scheme Total"
+      );
+      const totalPortfolioValue = portfolioMasterTotal
+        ? portfolioMasterTotal.current_portfolio_value
+        : totalCurrentData.length > 0
+        ? totalCurrentData[totalCurrentData.length - 1].portfolio_value || 0
+        : 0;
+      const totalProfitValue = portfolioMasterTotal
+        ? portfolioMasterTotal.total_profit
+        : calcTotalPortfolioProfit;
 
       results[accountCode].totalPortfolio = {
-        currentPortfolioValue:
-          totalCurrentData.length > 0
-            ? totalCurrentData[totalCurrentData.length - 1].portfolio_value || 0
-            : 0,
+        currentPortfolioValue: totalPortfolioValue,
         investedAmount: totalInvestedAmount,
         returns: calculateReturns(totalNavCurve),
         trailingReturns: calculateTrailingReturns(totalNavCurve),
         monthlyPnL: calculateMonthlyPnL(totalNavCurve),
         navCurve: totalNavCurve,
-        totalProfit: totalPortfolioProfit,
+        totalProfit: totalProfitValue,
         dividends: totalCashFlows.reduce(
           (sum, flow) => sum + (flow.dividend || 0),
           0
@@ -660,24 +675,17 @@ export async function GET(request) {
       };
     }
 
-    // --- Process holdings ---
-    // Use managed_account_codes from session (or fallback to the accountCodes)
+    // --- Process holdings --- (unchanged grouping and percentage logic)
     const sessionManagedAccountCodes =
       session?.user?.managed_account_codes || accountCodes;
-
-
     const holdingsData1 = await prisma.managed_accounts_holdings.findMany({
       where: { account_code: { in: sessionManagedAccountCodes } },
     });
-
-    // Group holdings by scheme and type, and also aggregate a "totalPortfolio" per type
     const groupedByScheme = holdingsData1.reduce((acc, holding) => {
       const { scheme, stock, sell_price, qty, type } = holding;
       const numericSellPrice = Number(sell_price);
       const numericQty = Number(qty);
       const allocation = numericSellPrice * numericQty;
-
-      // Group by individual scheme (initialize for both types)
       if (!acc[scheme]) {
         acc[scheme] = { stock: {}, MF: {} };
       }
@@ -695,8 +703,6 @@ export async function GET(request) {
       acc[scheme][type][stock].totalQty += numericQty;
       acc[scheme][type][stock].totalSellPrice += numericSellPrice;
       acc[scheme][type][stock].totalAllocation += allocation;
-
-      // Also group under "totalPortfolio" per type
       if (!acc["totalPortfolio"]) {
         acc["totalPortfolio"] = { stock: {}, MF: {} };
       }
@@ -714,22 +720,16 @@ export async function GET(request) {
       acc["totalPortfolio"][type][stock].totalQty += numericQty;
       acc["totalPortfolio"][type][stock].totalSellPrice += numericSellPrice;
       acc["totalPortfolio"][type][stock].totalAllocation += allocation;
-
       return acc;
     }, {});
-
-    // Now, iterate over each scheme (including "totalPortfolio") and for each type,
-    // compute the denominator and then the percentage for each stock.
     for (const scheme in groupedByScheme) {
       for (const type in groupedByScheme[scheme]) {
         const stocks = groupedByScheme[scheme][type];
-        // Compute denominator as the sum of totalAllocation for all stocks of this type
         const denominator = Object.values(stocks).reduce(
           (sum, { totalAllocation }) => sum + totalAllocation,
           0
         );
         console.log(`Scheme: ${scheme}, Type: ${type}, Denominator: ${denominator}`);
-
         for (const stock in stocks) {
           stocks[stock].percentage = denominator
             ? (stocks[stock].totalAllocation / denominator) * 100
@@ -737,7 +737,6 @@ export async function GET(request) {
         }
       }
     }
-
 
     return NextResponse.json(
       {
@@ -764,4 +763,3 @@ export async function GET(request) {
     );
   }
 }
-

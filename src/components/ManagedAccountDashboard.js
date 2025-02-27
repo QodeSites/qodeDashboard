@@ -381,6 +381,12 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       schemes.reduce((sum, s) => sum + (s.currentPortfolioValue || 0), 0)
       : selectedScheme?.currentPortfolioValue || 0;
 
+  const totalProfit =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.totalProfit || aggregatedTotals.totalProfit
+      : selectedScheme?.totalProfit || 0;
+
+
   const returnsValue =
     activeScheme === "Scheme Total"
       ? totalPortfolio?.returns || 0
@@ -720,16 +726,6 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     (sum, record) => sum + (record.dividend || 0),
     0
   );
-  let totalProfit;
-  if (accountCode === "AC5" && activeScheme === "Scheme A") {
-    // For AC5 Scheme A, override totalProfit as: Amount Invested - Current Portfolio Value + Dividend
-    totalProfit = portfolioValue - investedAmount + totalDividend;
-  } else {
-    totalProfit =
-      activeScheme === "Scheme Total"
-        ? totalPortfolio?.totalProfit
-        : selectedScheme?.totalProfit;
-  }
 
 
   const netFlow = totalAmount + totalDividend;

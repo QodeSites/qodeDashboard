@@ -208,3 +208,13 @@ model managed_accounts_holdings {
 
   @@schema("pms_clients_tracker")
 }
+
+model managed_portfolio_master {
+  account_code            String? @db.VarChar
+  scheme                  String? @db.VarChar
+  current_portfolio_value Int?
+  total_profit            Int?
+  id                      Int     @id @default(autoincrement())
+
+  @@schema("pms_clients_tracker")
+}
