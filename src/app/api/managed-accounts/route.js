@@ -712,22 +712,23 @@ export async function GET(request) {
     }, {});
 
     // Now, iterate over each scheme (including totalPortfolio) to compute percentages.
-    for (const scheme in groupedByScheme) {
-      const stocks = groupedByScheme[scheme];
-      // Use our global invested amounts: for scheme groups use globalSchemeInvestedAmounts,
-      // for "totalPortfolio" use globalTotalInvestedAmount.
-      const denominator =
-        scheme === "totalPortfolio"
-          ? globalTotalInvestedAmount
-          : globalSchemeInvestedAmounts[scheme] || 0;
-       console.log('denominator', denominator)
-      
-      for (const stock in stocks) {
-        stocks[stock].percentage = denominator
-          ? (stocks[stock].totalAllocation / denominator) * 100
-          : 0;
-      }
-    }
+    // Now, iterate over each scheme (including totalPortfolio) to compute percentages.
+for (const scheme in groupedByScheme) {
+  const stocks = groupedByScheme[scheme];
+  // Compute denominator as the sum of totalAllocation for all stocks in this scheme
+  const denominator = Object.values(stocks).reduce(
+    (sum, { totalAllocation }) => sum + totalAllocation,
+    0
+  );
+  console.log('denominator', denominator);
+  
+  for (const stock in stocks) {
+    stocks[stock].percentage = denominator
+      ? (stocks[stock].totalAllocation / denominator) * 100
+      : 0;
+  }
+}
+
 
     return NextResponse.json(
       {
