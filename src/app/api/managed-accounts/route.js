@@ -77,7 +77,7 @@ const PORTFOLIO_MAPPING = {
     },
     "_total": {
       current: "Deepti Parikh Zerodha Total Portfolio",
-      metrics: "Deepti Parikh Zerodha Total Portfolio"
+      metrics: "Deepti Parikh Total Portfolio B"
     }
   }
 };
@@ -214,7 +214,10 @@ function calculateTrailingReturns(
       // Date-based periods: compute the target date.
       const targetDate = new Date(currentDate);
       if (period === "1m") {
-        targetDate.setMonth(targetDate.getMonth() - 2);
+        targetDate.setMonth(targetDate.getMonth() - 1);
+        console.log("targetDate", targetDate);
+        console.log("sortedData", sortedData);
+        console.log('currentDate', currentDate)
       } else if (period === "1y") {
         targetDate.setFullYear(targetDate.getFullYear() - 1);
         // For 1y, always start search from one day earlier than the computed target date.
