@@ -303,7 +303,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     getHoldingsByScheme
   } = useManagedAccounts();
 
-
+  console.log('getHoldingsByScheme', holdingsData)
   const [displayLoading, setDisplayLoading] = useState(true);
 
   useEffect(() => {
@@ -435,7 +435,6 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     ]);
   };
 
-  // ── MERGED CHART OPTIONS (NAV & Drawdown) ──
   // ── MERGED CHART OPTIONS (NAV & Drawdown) ──
   const mergedChartOptions = useMemo(() => {
     // ── Prepare Performance (NAV) Series ──
@@ -769,27 +768,24 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
 
   const renderContent = () => {
-
-    const dummyStocks = [
-      { symbol: "AAPL", name: "Apple Inc.", quantity: 10, price: 150, totalValue: 1500 },
-      { symbol: "GOOG", name: "Alphabet Inc.", quantity: 5, price: 2800, totalValue: 14000 },
-      { symbol: "TSLA", name: "Tesla Inc.", quantity: 8, price: 800, totalValue: 6400 },
-      { symbol: "AMZN", name: "Amazon.com Inc.", quantity: 2, price: 3300, totalValue: 6600 },
-      { symbol: "RELIANCE", name: "Reliance Industries", quantity: 50, price: 2500, totalValue: 125000 },
-      { symbol: "TCS", name: "Tata Consultancy Services", quantity: 20, price: 3500, totalValue: 70000 },
-      { symbol: "INFY", name: "Infosys Ltd.", quantity: 30, price: 1500, totalValue: 45000 },
-      { symbol: "HDFCBANK", name: "HDFC Bank", quantity: 15, price: 1600, totalValue: 24000 },
-      { symbol: "NIFTY MIDCAP 100", name: "NIFTY MIDCAP 100", quantity: 15, price: 1600, totalValue: 24000 },
-      { symbol: "NIFTY SMLCAP 250", name: "NIFTY SMLCAP 250", quantity: 15, price: 1600, totalValue: 24000 },
-      { symbol: "GOLDBEES", name: "GOLDBEES", quantity: 15, price: 1600, totalValue: 24000 },
-    ];
-
     const holdingsToDisplay =
       activeScheme === "Scheme Total"
         ? holdingsData
-          ? Object.values(holdingsData).flat()
+          ? Object.keys(holdingsData).reduce((acc, schemeKey) => {
+            // For each scheme, map its stocks to include the scheme key.
+            const stocksWithScheme = Object.values(holdingsData[schemeKey]).map(
+              (stock) => ({ ...stock, scheme: schemeKey })
+            );
+            return acc.concat(stocksWithScheme);
+          }, [])
           : []
-        : getHoldingsByScheme(activeScheme);
+        : holdingsData && holdingsData[activeScheme]
+          ? Object.values(holdingsData[activeScheme]).map(
+            (stock) => ({ ...stock, scheme: activeScheme })
+          )
+          : [];
+
+
     return (
       <>
         {isSarlaAccount && (
@@ -945,15 +941,18 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
             <h3 className="text-lg font-medium text-gray-900 mb-4">Stocks Holdings</h3>
             <div className="overflow-x-auto">
               {/* Set a fixed max-height and enable vertical scrolling */}
-              <div className="max-h-[600px] overflow-y-auto">
+              <div className="max-h-[900px] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Scheme
+                      </th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Qty
+                        Allocation (%)
                       </th>
                       {/* <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Price
@@ -965,30 +964,27 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {holdingsToDisplay && holdingsToDisplay.length > 0 ? (
-                      holdingsToDisplay.map((holding) => {
-                        const quantity = parseFloat(holding.qty) || 0;
-                        const price = parseFloat(holding.buy_price) || 0;
-                        const total = quantity * price;
-                        return (
-                          <tr key={holding.id}>
-                            <td className="px-4 py-2  text-sm text-gray-900">
-                              {holding.stock || "-"}
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                              {quantity}
-                            </td>
-                            {/* <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                              {formatCurrency(price)}
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                              {formatCurrency(total)}
-                            </td> */}
-                          </tr>
-                        );
-                      })
+                      holdingsToDisplay.map((holding, index) => (
+                        <tr key={`${holding.stock}-${index}`}>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {holding.stock || "-"}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            {holding.scheme || "-"}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {holding.percentage
+                              ? (holding.percentage.toFixed(2) + "%")
+                              : "-"}
+                          </td>
+                        </tr>
+                      ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                        <td
+                          colSpan="3"
+                          className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center"
+                        >
                           No holdings available.
                         </td>
                       </tr>

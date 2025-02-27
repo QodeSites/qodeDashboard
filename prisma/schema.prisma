@@ -194,17 +194,17 @@ model aum_report {
 }
 
 model managed_accounts_holdings {
-  entry_date   String? @map("﻿entry_date")
-  o_c          String? @map("o/c")
+  entry_date   String?  @map("﻿entry_date")
+  o_c          String?  @map("o/c")
   stock        String?
-  qty          String?
-  buy_price    String?
-  sell_price   String?
+  qty          Decimal? @db.Decimal
+  buy_price    Decimal? @db.Decimal
+  sell_price   Decimal? @db.Decimal
   account      String?
   account_code String?
   type         String?
   scheme       String?
-  id           Int     @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
 
   @@schema("pms_clients_tracker")
 }

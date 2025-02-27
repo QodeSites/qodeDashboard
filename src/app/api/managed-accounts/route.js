@@ -609,24 +609,89 @@ export async function GET(request) {
     }
     // Use managed_account_codes from session (or fallback to the accountCodes from managed_accounts_clients)
     const sessionManagedAccountCodes = session?.user?.managed_account_codes || accountCodes;
-    const holdingsData = await prisma.managed_accounts_holdings.findMany({
+    const holdingsData1 = await prisma.managed_accounts_holdings.findMany({
       where: { account_code: { in: sessionManagedAccountCodes } }
     });
-    const holdingsByScheme = holdingsData.reduce((acc, holding) => {
-      // Use holding.scheme as key; if not defined, use "unspecified"
-      const schemeKey = holding.scheme ? holding.scheme : "unspecified";
-      if (!acc[schemeKey]) {
-        acc[schemeKey] = [];
+
+    const groupedByStock = holdingsData1.reduce((acc, holding) => {
+      const { stock, sell_price, qty } = holding;
+
+      // Ensure we're working with numbers
+      const numericSellPrice = Number(sell_price);
+      const numericQty = Number(qty);
+
+      if (!acc[stock]) {
+        acc[stock] = {
+          stock,
+          totalQty: 0,
+          totalSellPrice: 0,
+          totalAllocation: 0
+        };
       }
-      acc[schemeKey].push(holding);
+
+      // Calculate allocation for this holding
+      const holdingAllocation = numericSellPrice * numericQty;
+
+      // Update stock group totals
+      acc[stock].totalQty += numericQty;
+      acc[stock].totalSellPrice += numericSellPrice;
+      acc[stock].totalAllocation += holdingAllocation;
+
       return acc;
     }, {});
-    // --------------------------------------------------------------
+
+    // Group by scheme
+    const groupedByScheme = holdingsData1.reduce((acc, holding) => {
+      // Destructure all needed fields including scheme
+      const { scheme, stock, sell_price, qty } = holding;
+      const numericSellPrice = Number(sell_price);
+      const numericQty = Number(qty);
+      const allocation = numericSellPrice * numericQty;
+
+      // Create the scheme group if it doesn't exist
+      if (!acc[scheme]) {
+        acc[scheme] = {};
+      }
+
+      // Create the stock group under this scheme if it doesn't exist
+      if (!acc[scheme][stock]) {
+        acc[scheme][stock] = {
+          stock,
+          totalQty: 0,
+          totalSellPrice: 0,
+          totalAllocation: 0
+        };
+      }
+
+      // Update the stock group totals
+      acc[scheme][stock].totalQty += numericQty;
+      acc[scheme][stock].totalSellPrice += numericSellPrice;
+      acc[scheme][stock].totalAllocation += allocation;
+
+      return acc;
+    }, {});
+    // Now, iterate over each scheme to compute the percentage for each stock
+    for (const scheme in groupedByScheme) {
+      const stocks = groupedByScheme[scheme];
+      // Calculate the total allocation for this scheme
+      const totalAllocationForScheme = Object.values(stocks)
+        .reduce((sum, stockGroup) => sum + stockGroup.totalAllocation, 0);
+
+      // Add a percentage property for each stock
+      for (const stock in stocks) {
+        stocks[stock].percentage = totalAllocationForScheme
+          ? (stocks[stock].totalAllocation / totalAllocationForScheme) * 100
+          : 0;
+      }
+    }
+
+
+
 
     return NextResponse.json({
       data: {
         accounts: results,
-        holdings: holdingsByScheme
+        holdings: groupedByScheme
       },
       pagination: {
         page,
