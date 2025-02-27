@@ -285,6 +285,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
   // Local UI state
   const [activeScheme, setActiveScheme] = useState("Scheme Total");
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [isOpen, setIsOpen] = useState(false);
   const { isMobile } = useMobileWidth();
 
@@ -765,17 +766,44 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   };
 
 
+  const holdingsToDisplay =
+    activeScheme === "Scheme Total"
+      ? holdingsData && holdingsData["totalPortfolio"]
+        ? Object.values(holdingsData["totalPortfolio"])
+        : []
+      : holdingsData && holdingsData[activeScheme]
+        ? Object.values(holdingsData[activeScheme])
+        : [];
+  // Create sorted holdings based on sort configuration
+  const sortedHoldings = useMemo(() => {
+    let sortableHoldings = [...holdingsToDisplay];
+    if (sortConfig.key) {
+      sortableHoldings.sort((a, b) => {
+        // Handle null values
+        if (a[sortConfig.key] === null || a[sortConfig.key] === undefined) return 1;
+        if (b[sortConfig.key] === null || b[sortConfig.key] === undefined) return -1;
+
+        // For string comparison
+        if (typeof a[sortConfig.key] === 'string') {
+          return sortConfig.direction === 'asc'
+            ? a[sortConfig.key].localeCompare(b[sortConfig.key])
+            : b[sortConfig.key].localeCompare(a[sortConfig.key]);
+        }
+
+        // For number comparison
+        return sortConfig.direction === 'asc'
+          ? a[sortConfig.key] - b[sortConfig.key]
+          : b[sortConfig.key] - a[sortConfig.key];
+      });
+    }
+    return sortableHoldings;
+  }, [holdingsToDisplay, sortConfig]);
+
+
+
 
 
   const renderContent = () => {
-    const holdingsToDisplay =
-      activeScheme === "Scheme Total"
-        ? holdingsData && holdingsData["totalPortfolio"]
-          ? Object.values(holdingsData["totalPortfolio"])
-          : []
-        : holdingsData && holdingsData[activeScheme]
-          ? Object.values(holdingsData[activeScheme])
-          : [];
 
 
 
@@ -937,17 +965,48 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
+                      <th
+                        className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() =>
+                          setSortConfig({
+                            key: 'stock',
+                            direction: sortConfig.key === 'stock' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+                          })
+                        }
+                      >
+                        <div className="flex items-center">
+                          Name
+                          {sortConfig.key === 'stock' && (
+                            <span className="ml-1">
+                              {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
                       </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Allocation (%)
+                      <th
+                        className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() =>
+                          setSortConfig({
+                            key: 'percentage',
+                            direction: sortConfig.key === 'percentage' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+                          })
+                        }
+                      >
+                        <div className="flex justify-end items-center">
+                          Allocation (%)
+                          {sortConfig.key === 'percentage' && (
+                            <span className="ml-1">
+                              {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
                       </th>
                     </tr>
                   </thead>
+
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {holdingsToDisplay && holdingsToDisplay.length > 0 ? (
-                      holdingsToDisplay.map((holding, index) => (
+                    {sortedHoldings.length > 0 ? (
+                      sortedHoldings.map((holding, index) => (
                         <tr key={`${holding.stock}-${index}`}>
                           <td className="px-4 py-2 text-sm text-gray-900">
                             {holding.stock || "-"}
