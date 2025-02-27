@@ -766,17 +766,29 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   };
 
 
+  // Keep holdingsToDisplay as an object
   const holdingsToDisplay =
     activeScheme === "Scheme Total"
       ? holdingsData && holdingsData["totalPortfolio"]
-        ? Object.values(holdingsData["totalPortfolio"])
-        : []
+        ? holdingsData["totalPortfolio"]
+        : {}
       : holdingsData && holdingsData[activeScheme]
-        ? Object.values(holdingsData[activeScheme])
-        : [];
-  // Create sorted holdings based on sort configuration
+        ? holdingsData[activeScheme]
+        : {};
+
+  // Separate into stock and MF arrays
+  const stockHoldings = holdingsToDisplay.stock
+    ? Object.values(holdingsToDisplay.stock)
+    : [];
+  const mfHoldings = holdingsToDisplay.MF
+    ? Object.values(holdingsToDisplay.MF)
+    : [];
+
+  // If you need a combined sorted list (for example, if you're sorting both types together)
   const sortedHoldings = useMemo(() => {
-    let sortableHoldings = [...holdingsToDisplay];
+    // Combine the two arrays if sorting is required on both sets
+    let sortableHoldings = [...stockHoldings, ...mfHoldings];
+
     if (sortConfig.key) {
       sortableHoldings.sort((a, b) => {
         // Handle null values
@@ -797,16 +809,11 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       });
     }
     return sortableHoldings;
-  }, [holdingsToDisplay, sortConfig]);
-
-
+  }, [stockHoldings, mfHoldings, sortConfig]);
 
 
 
   const renderContent = () => {
-
-
-
     return (
       <>
         {isSarlaAccount && (
@@ -1005,20 +1012,42 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                   </thead>
 
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {sortedHoldings.length > 0 ? (
-                      sortedHoldings.map((holding, index) => (
-                        <tr key={`${holding.stock}-${index}`}>
+                    {stockHoldings.length > 0 &&
+                      stockHoldings.map((holding, index) => (
+                        <tr key={`stock-${holding.stock}-${index}`}>
                           <td className="px-4 py-2 text-sm text-gray-900">
                             {holding.stock || "-"}
                           </td>
                           <td className="px-4 py-2 text-right text-sm text-gray-900">
-                            {holding.percentage
-                              ? (holding.percentage.toFixed(2) + "%")
-                              : "-"}
+                            {holding.percentage ? holding.percentage.toFixed(2) + "%" : "-"}
                           </td>
                         </tr>
                       ))
-                    ) : (
+                    }
+
+                    {/* Show a thick line if both stock and MF holdings exist */}
+                    {stockHoldings.length > 0 && mfHoldings.length > 0 && (
+                      <tr>
+                        <td colSpan="2" className="px-4 py-2">
+                          <hr className="border-4 border-gray-800" />
+                        </td>
+                      </tr>
+                    )}
+
+                    {mfHoldings.length > 0 &&
+                      mfHoldings.map((holding, index) => (
+                        <tr key={`mf-${holding.stock}-${index}`}>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {holding.stock || "-"}
+                          </td>
+                          <td className="px-4 py-2 text-right text-sm text-gray-900">
+                            {holding.percentage ? holding.percentage.toFixed(2) + "%" : "-"}
+                          </td>
+                        </tr>
+                      ))
+                    }
+
+                    {stockHoldings.length === 0 && mfHoldings.length === 0 && (
                       <tr>
                         <td
                           colSpan="2"
@@ -1029,6 +1058,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                       </tr>
                     )}
                   </tbody>
+
                 </table>
               </div>
             </div>

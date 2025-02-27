@@ -214,7 +214,7 @@ function calculateTrailingReturns(
       // Date-based periods: compute the target date.
       const targetDate = new Date(currentDate);
       if (period === "1m") {
-        targetDate.setMonth(targetDate.getMonth() - 1);
+        targetDate.setMonth(targetDate.getMonth() - 2);
       } else if (period === "1y") {
         targetDate.setFullYear(targetDate.getFullYear() - 1);
         // For 1y, always start search from one day earlier than the computed target date.
@@ -395,7 +395,6 @@ async function fetchUserMasterDetails(userId) {
   });
   return userDetails;
 }
-
 
 export async function GET(request) {
   try {
@@ -665,69 +664,79 @@ export async function GET(request) {
     // Use managed_account_codes from session (or fallback to the accountCodes)
     const sessionManagedAccountCodes =
       session?.user?.managed_account_codes || accountCodes;
+
+
     const holdingsData1 = await prisma.managed_accounts_holdings.findMany({
       where: { account_code: { in: sessionManagedAccountCodes } },
     });
 
-    // Group holdings by scheme (and also aggregate a "totalPortfolio" group)
+    // Group holdings by scheme and type, and also aggregate a "totalPortfolio" per type
     const groupedByScheme = holdingsData1.reduce((acc, holding) => {
-      const { scheme, stock, sell_price, qty } = holding;
+      const { scheme, stock, sell_price, qty, type } = holding;
       const numericSellPrice = Number(sell_price);
       const numericQty = Number(qty);
       const allocation = numericSellPrice * numericQty;
 
-      // Group by individual scheme
+      // Group by individual scheme (initialize for both types)
       if (!acc[scheme]) {
-        acc[scheme] = {};
+        acc[scheme] = { stock: {}, MF: {} };
       }
-      if (!acc[scheme][stock]) {
-        acc[scheme][stock] = {
+      if (!acc[scheme][type]) {
+        acc[scheme][type] = {};
+      }
+      if (!acc[scheme][type][stock]) {
+        acc[scheme][type][stock] = {
           stock,
           totalQty: 0,
           totalSellPrice: 0,
           totalAllocation: 0,
         };
       }
-      acc[scheme][stock].totalQty += numericQty;
-      acc[scheme][stock].totalSellPrice += numericSellPrice;
-      acc[scheme][stock].totalAllocation += allocation;
+      acc[scheme][type][stock].totalQty += numericQty;
+      acc[scheme][type][stock].totalSellPrice += numericSellPrice;
+      acc[scheme][type][stock].totalAllocation += allocation;
 
-      // Also group under "totalPortfolio"
+      // Also group under "totalPortfolio" per type
       if (!acc["totalPortfolio"]) {
-        acc["totalPortfolio"] = {};
+        acc["totalPortfolio"] = { stock: {}, MF: {} };
       }
-      if (!acc["totalPortfolio"][stock]) {
-        acc["totalPortfolio"][stock] = {
+      if (!acc["totalPortfolio"][type]) {
+        acc["totalPortfolio"][type] = {};
+      }
+      if (!acc["totalPortfolio"][type][stock]) {
+        acc["totalPortfolio"][type][stock] = {
           stock,
           totalQty: 0,
           totalSellPrice: 0,
           totalAllocation: 0,
         };
       }
-      acc["totalPortfolio"][stock].totalQty += numericQty;
-      acc["totalPortfolio"][stock].totalSellPrice += numericSellPrice;
-      acc["totalPortfolio"][stock].totalAllocation += allocation;
+      acc["totalPortfolio"][type][stock].totalQty += numericQty;
+      acc["totalPortfolio"][type][stock].totalSellPrice += numericSellPrice;
+      acc["totalPortfolio"][type][stock].totalAllocation += allocation;
 
       return acc;
     }, {});
 
-    // Now, iterate over each scheme (including totalPortfolio) to compute percentages.
-    // Now, iterate over each scheme (including totalPortfolio) to compute percentages.
-for (const scheme in groupedByScheme) {
-  const stocks = groupedByScheme[scheme];
-  // Compute denominator as the sum of totalAllocation for all stocks in this scheme
-  const denominator = Object.values(stocks).reduce(
-    (sum, { totalAllocation }) => sum + totalAllocation,
-    0
-  );
-  console.log('denominator', denominator);
-  
-  for (const stock in stocks) {
-    stocks[stock].percentage = denominator
-      ? (stocks[stock].totalAllocation / denominator) * 100
-      : 0;
-  }
-}
+    // Now, iterate over each scheme (including "totalPortfolio") and for each type,
+    // compute the denominator and then the percentage for each stock.
+    for (const scheme in groupedByScheme) {
+      for (const type in groupedByScheme[scheme]) {
+        const stocks = groupedByScheme[scheme][type];
+        // Compute denominator as the sum of totalAllocation for all stocks of this type
+        const denominator = Object.values(stocks).reduce(
+          (sum, { totalAllocation }) => sum + totalAllocation,
+          0
+        );
+        console.log(`Scheme: ${scheme}, Type: ${type}, Denominator: ${denominator}`);
+
+        for (const stock in stocks) {
+          stocks[stock].percentage = denominator
+            ? (stocks[stock].totalAllocation / denominator) * 100
+            : 0;
+        }
+      }
+    }
 
 
     return NextResponse.json(
