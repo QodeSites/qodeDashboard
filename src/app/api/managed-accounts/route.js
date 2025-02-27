@@ -167,7 +167,9 @@ function calculateTrailingReturns(
     "1y": 366,
     "2y": 731,
     "3y": 1095,
-  }
+  },
+  accountCode = null,
+  scheme = null
 ) {
   if (!navData || navData.length === 0) return {};
 
@@ -180,7 +182,7 @@ function calculateTrailingReturns(
   const currentDate = new Date(sortedData[0].date);
   const returns = {};
 
-  // Helper to find an entry matching a given date (YYYY-MM-DD), checking up to maxDaysBack days
+  // Helper: find an entry matching a given date (YYYY-MM-DD), checking up to maxDaysBack days
   const getClosestEntryForTargetDate = (targetDate, sortedData, maxDaysBack = 10) => {
     let searchDate = new Date(targetDate);
     for (let i = 0; i < maxDaysBack; i++) {
@@ -199,6 +201,12 @@ function calculateTrailingReturns(
   };
 
   Object.entries(periods).forEach(([period, targetCount]) => {
+    // For period "3y", calculate only if accountCode is "AC5" and scheme is "Scheme A"
+    if (period === "3y" && (accountCode !== "AC5" || scheme !== "Scheme A")) {
+      returns[period] = null;
+      return; // Skip further calculation for "3y"
+    }
+
     if (["5d", "10d", "15d"].includes(period)) {
       // Count-based periods: use the nth element from the sorted array.
       if (sortedData.length > targetCount) {
@@ -215,9 +223,6 @@ function calculateTrailingReturns(
       const targetDate = new Date(currentDate);
       if (period === "1m") {
         targetDate.setMonth(targetDate.getMonth() - 1);
-        console.log("targetDate", targetDate);
-        console.log("sortedData", sortedData);
-        console.log('currentDate', currentDate)
       } else if (period === "1y") {
         targetDate.setFullYear(targetDate.getFullYear() - 1);
         // For 1y, always start search from one day earlier than the computed target date.
@@ -245,8 +250,10 @@ function calculateTrailingReturns(
         } else if (period === "3y") {
           // For 3y, calculate the annualized return using the actual period length.
           const candidateDate = new Date(candidate.date);
-          const actualPeriodInYears = (currentDate - candidateDate) / (365 * 24 * 60 * 60 * 1000);
-          const annualizedReturn = Math.pow(lastNav / candidate.nav, 1 / actualPeriodInYears) - 1;
+          const actualPeriodInYears =
+            (currentDate - candidateDate) / (365 * 24 * 60 * 60 * 1000);
+          const annualizedReturn =
+            Math.pow(lastNav / candidate.nav, 1 / actualPeriodInYears) - 1;
           returns[period] = annualizedReturn * 100;
         } else {
           // For periods like 1m, use simple return.
@@ -260,6 +267,7 @@ function calculateTrailingReturns(
 
   return returns;
 }
+
 
 function calculateMonthlyPnL(navData) {
   // console.log('\n=== Starting PnL Calculation ===');
