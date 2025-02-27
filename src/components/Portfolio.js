@@ -720,24 +720,26 @@ const monthlyPnLData = useMemo(() => {
 
             {activeTab !== "TOTAL" && isAdminUser && (
               <div className="mt-2 sm:mt-0 relative">
-                <select
-                  value={selectedNuvama || ""}
-                  onChange={handleSelectChange}
-                  className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4"
-                >
-                  {data.nuvama_codes.map((code, index) => {
-                    const username = data.usernames[index];
-                    const clippedUsername =
-                      username.length > 15 ? username.substring(0, 15) + "..." : username;
-                    return (
-                      <option key={index} value={code}>
-                        {clippedUsername} ({code})
-                      </option>
-                    );
-                  })}
-                </select>
-                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-              </div>
+              <select
+                value={selectedNuvama || ""}
+                onChange={handleSelectChange}
+                className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4"
+              >
+                {data.usernames
+                  .map((username, index) => ({
+                    username,
+                    code: data.nuvama_codes[index],
+                    index
+                  }))
+                  .sort((a, b) => a.username.localeCompare(b.username))
+                  .map(({ username, code, index }) => (
+                    <option key={index} value={code}>
+                      {username} ({code})
+                    </option>
+                  ))}
+              </select>
+              <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+            </div>
             )}
 
   </div>
