@@ -403,24 +403,33 @@ export async function GET(request) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.log('session', session.user)
+    console.log("session", session.user);
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("user_id");
-    let user_id = Number(session?.user?.user_id)
-    console.log('master__id', user_id)
-    const view_type = searchParams.get("view_type")
+    let user_id = Number(session?.user?.user_id);
+    console.log("master__id", user_id);
+    const view_type = searchParams.get("view_type");
     if (view_type === "account") {
       const userMasterDetails = await fetchUserMasterDetails(user_id);
-      return NextResponse.json({
-        view_type: "account",
-        userMasterDetails,
-      });
+      return NextResponse.json(
+        {
+          view_type: "account",
+          userMasterDetails,
+        },
+        { status: 200 }
+      );
     }
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const pageSize = Math.max(1, parseInt(searchParams.get("pageSize") || String(DEFAULT_PAGE_SIZE)));
+    const pageSize = Math.max(
+      1,
+      parseInt(searchParams.get("pageSize") || String(DEFAULT_PAGE_SIZE))
+    );
 
     if (!userId || isNaN(parseInt(userId))) {
-      return NextResponse.json({ error: "Valid user ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Valid user ID is required" },
+        { status: 400 }
+      );
     }
 
     const managedAccounts = await prisma.managed_account_clients.findMany({
@@ -430,10 +439,13 @@ export async function GET(request) {
 
     const accountCodes = managedAccounts.map((account) => account.account_code);
     if (accountCodes.length === 0) {
-      return NextResponse.json({
-        error: "No accounts found for the user",
-        userId
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: "No accounts found for the user",
+          userId,
+        },
+        { status: 404 }
+      );
     }
 
     const [cashInOutData, masterSheetData] = await Promise.all([
@@ -464,16 +476,49 @@ export async function GET(request) {
 
     const results = {};
 
+    // --- Build a global mapping of scheme invested amounts for all accounts ---
+    // This will be used later for holdings percentage calculations.
+    const globalSchemeInvestedAmounts = {};
+    for (const accountCode of accountCodes) {
+      // Get schemes for this account (skip _total)
+      const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {}).filter(
+        (scheme) => scheme !== "_total"
+      );
+      for (const scheme of schemes) {
+        // Filter cash flows for this account and scheme
+        const cashForScheme = cashInOutData.filter(
+          (entry) =>
+            entry.account_code === accountCode && entry.scheme === scheme
+        );
+        const investedAmount = cashForScheme.reduce((sum, entry) => {
+          const capitalAmount = entry.capital_in_out || 0;
+          return sum + capitalAmount;
+        }, 0);
+        // Sum across accounts for the same scheme
+        if (!globalSchemeInvestedAmounts[scheme]) {
+          globalSchemeInvestedAmounts[scheme] = 0;
+        }
+        globalSchemeInvestedAmounts[scheme] += investedAmount;
+      }
+    }
+    // Calculate global total invested amount
+    const globalTotalInvestedAmount = Object.values(globalSchemeInvestedAmounts).reduce(
+      (sum, amt) => sum + amt,
+      0
+    );
+
+    // --- Process accounts and schemes (for metrics etc.) ---
     for (const accountCode of accountCodes) {
       results[accountCode] = {
         clientName: CLIENT_NAMES[accountCode] || "Unknown Client",
         schemes: {},
-        totalPortfolio: {}
+        totalPortfolio: {},
       };
 
-      const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {})
-        .filter(scheme => scheme !== '_total');
-      const schemeInvestedAmounts = {};
+      const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {}).filter(
+        (scheme) => scheme !== "_total"
+      );
+      const schemeInvestedAmounts = {}; // local for this account
 
       // Process individual schemes
       for (const scheme of schemes) {
@@ -494,14 +539,14 @@ export async function GET(request) {
         );
 
         const cashForScheme = cashInOutData.filter(
-          (entry) => entry.account_code === accountCode && entry.scheme === scheme
+          (entry) =>
+            entry.account_code === accountCode && entry.scheme === scheme
         );
 
         const investedAmount = cashForScheme.reduce((sum, entry) => {
           const capitalAmount = entry.capital_in_out || 0;
           return sum + capitalAmount;
         }, 0);
-
         schemeInvestedAmounts[scheme] = investedAmount;
 
         const navCurve = metricsData.map((e) => ({
@@ -572,138 +617,141 @@ export async function GET(request) {
         (entry) => entry.account_code === accountCode
       );
 
-      const totalInvestedAmount = Object.values(schemeInvestedAmounts)
-        .reduce((sum, amount) => sum + amount, 0);
+      const totalInvestedAmount = Object.values(schemeInvestedAmounts).reduce(
+        (sum, amount) => sum + amount,
+        0
+      );
 
       const totalNavCurve = totalMetricsData.map((e) => ({
         date: e.date,
-        nav: e.nav
+        nav: e.nav,
       }));
 
       const totalDrawdownMetrics = calculateDrawdownMetrics(totalNavCurve);
-      const totalPortfolioProfit = calculateTotalProfit(totalCurrentData, totalCashFlows);
+      const totalPortfolioProfit = calculateTotalProfit(
+        totalCurrentData,
+        totalCashFlows
+      );
 
       results[accountCode].totalPortfolio = {
-        currentPortfolioValue: totalCurrentData.length > 0
-          ? totalCurrentData[totalCurrentData.length - 1].portfolio_value || 0
-          : 0,
+        currentPortfolioValue:
+          totalCurrentData.length > 0
+            ? totalCurrentData[totalCurrentData.length - 1].portfolio_value || 0
+            : 0,
         investedAmount: totalInvestedAmount,
         returns: calculateReturns(totalNavCurve),
-        // For totalPortfolio we always include the 3y period (default)
         trailingReturns: calculateTrailingReturns(totalNavCurve),
         monthlyPnL: calculateMonthlyPnL(totalNavCurve),
         navCurve: totalNavCurve,
         totalProfit: totalPortfolioProfit,
-        dividends: totalCashFlows.reduce((sum, flow) => sum + (flow.dividend || 0), 0),
+        dividends: totalCashFlows.reduce(
+          (sum, flow) => sum + (flow.dividend || 0),
+          0
+        ),
         currentDrawdown: totalDrawdownMetrics.currentDD,
         maxDrawdown: totalDrawdownMetrics.mdd,
         drawdownCurve: totalDrawdownMetrics.ddCurve,
         schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
-        cashFlows: totalCashFlows.map(flow => ({
+        cashFlows: totalCashFlows.map((flow) => ({
           date: flow.date,
           scheme: flow.scheme,
           amount: flow.capital_in_out,
-          dividend: flow.dividend
-        }))
+          dividend: flow.dividend,
+        })),
       };
     }
-    // Use managed_account_codes from session (or fallback to the accountCodes from managed_accounts_clients)
-    const sessionManagedAccountCodes = session?.user?.managed_account_codes || accountCodes;
+
+    // --- Process holdings ---
+    // Use managed_account_codes from session (or fallback to the accountCodes)
+    const sessionManagedAccountCodes =
+      session?.user?.managed_account_codes || accountCodes;
     const holdingsData1 = await prisma.managed_accounts_holdings.findMany({
-      where: { account_code: { in: sessionManagedAccountCodes } }
+      where: { account_code: { in: sessionManagedAccountCodes } },
     });
 
-    const groupedByStock = holdingsData1.reduce((acc, holding) => {
-      const { stock, sell_price, qty } = holding;
-
-      // Ensure we're working with numbers
-      const numericSellPrice = Number(sell_price);
-      const numericQty = Number(qty);
-
-      if (!acc[stock]) {
-        acc[stock] = {
-          stock,
-          totalQty: 0,
-          totalSellPrice: 0,
-          totalAllocation: 0
-        };
-      }
-
-      // Calculate allocation for this holding
-      const holdingAllocation = numericSellPrice * numericQty;
-
-      // Update stock group totals
-      acc[stock].totalQty += numericQty;
-      acc[stock].totalSellPrice += numericSellPrice;
-      acc[stock].totalAllocation += holdingAllocation;
-
-      return acc;
-    }, {});
-
-    // Group by scheme
+    // Group holdings by scheme (and also aggregate a "totalPortfolio" group)
     const groupedByScheme = holdingsData1.reduce((acc, holding) => {
-      // Destructure all needed fields including scheme
       const { scheme, stock, sell_price, qty } = holding;
       const numericSellPrice = Number(sell_price);
       const numericQty = Number(qty);
       const allocation = numericSellPrice * numericQty;
 
-      // Create the scheme group if it doesn't exist
+      // Group by individual scheme
       if (!acc[scheme]) {
         acc[scheme] = {};
       }
-
-      // Create the stock group under this scheme if it doesn't exist
       if (!acc[scheme][stock]) {
         acc[scheme][stock] = {
           stock,
           totalQty: 0,
           totalSellPrice: 0,
-          totalAllocation: 0
+          totalAllocation: 0,
         };
       }
-
-      // Update the stock group totals
       acc[scheme][stock].totalQty += numericQty;
       acc[scheme][stock].totalSellPrice += numericSellPrice;
       acc[scheme][stock].totalAllocation += allocation;
 
+      // Also group under "totalPortfolio"
+      if (!acc["totalPortfolio"]) {
+        acc["totalPortfolio"] = {};
+      }
+      if (!acc["totalPortfolio"][stock]) {
+        acc["totalPortfolio"][stock] = {
+          stock,
+          totalQty: 0,
+          totalSellPrice: 0,
+          totalAllocation: 0,
+        };
+      }
+      acc["totalPortfolio"][stock].totalQty += numericQty;
+      acc["totalPortfolio"][stock].totalSellPrice += numericSellPrice;
+      acc["totalPortfolio"][stock].totalAllocation += allocation;
+
       return acc;
     }, {});
-    // Now, iterate over each scheme to compute the percentage for each stock
+
+    // Now, iterate over each scheme (including totalPortfolio) to compute percentages.
     for (const scheme in groupedByScheme) {
       const stocks = groupedByScheme[scheme];
-      // Calculate the total allocation for this scheme
-      const totalAllocationForScheme = Object.values(stocks)
-        .reduce((sum, stockGroup) => sum + stockGroup.totalAllocation, 0);
-
-      // Add a percentage property for each stock
+      // Use our global invested amounts: for scheme groups use globalSchemeInvestedAmounts,
+      // for "totalPortfolio" use globalTotalInvestedAmount.
+      const denominator =
+        scheme === "totalPortfolio"
+          ? globalTotalInvestedAmount
+          : globalSchemeInvestedAmounts[scheme] || 0;
+       console.log('denominator', denominator)
+      
       for (const stock in stocks) {
-        stocks[stock].percentage = totalAllocationForScheme
-          ? (stocks[stock].totalAllocation / totalAllocationForScheme) * 100
+        stocks[stock].percentage = denominator
+          ? (stocks[stock].totalAllocation / denominator) * 100
           : 0;
       }
     }
 
-
-
-
-    return NextResponse.json({
-      data: {
-        accounts: results,
-        holdings: groupedByScheme
+    return NextResponse.json(
+      {
+        data: {
+          accounts: results,
+          holdings: groupedByScheme,
+        },
+        pagination: {
+          page,
+          pageSize,
+          totalAccounts: accountCodes.length,
+        },
       },
-      pagination: {
-        page,
-        pageSize,
-        totalAccounts: accountCodes.length
-      }
-    }, { status: 200 });
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Portfolio API Error:", error);
-    return NextResponse.json({
-      error: "Internal server error",
-      message: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
+

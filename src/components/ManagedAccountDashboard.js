@@ -770,20 +770,13 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   const renderContent = () => {
     const holdingsToDisplay =
       activeScheme === "Scheme Total"
-        ? holdingsData
-          ? Object.keys(holdingsData).reduce((acc, schemeKey) => {
-            // For each scheme, map its stocks to include the scheme key.
-            const stocksWithScheme = Object.values(holdingsData[schemeKey]).map(
-              (stock) => ({ ...stock, scheme: schemeKey })
-            );
-            return acc.concat(stocksWithScheme);
-          }, [])
+        ? holdingsData && holdingsData["totalPortfolio"]
+          ? Object.values(holdingsData["totalPortfolio"])
           : []
         : holdingsData && holdingsData[activeScheme]
-          ? Object.values(holdingsData[activeScheme]).map(
-            (stock) => ({ ...stock, scheme: activeScheme })
-          )
+          ? Object.values(holdingsData[activeScheme])
           : [];
+
 
 
     return (
@@ -940,7 +933,6 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
           <div className="bg-white p-4 w-full sm:w-1/4 rounded-lg shadow mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Stocks Holdings</h3>
             <div className="overflow-x-auto">
-              {/* Set a fixed max-height and enable vertical scrolling */}
               <div className="max-h-[900px] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -948,18 +940,9 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Scheme
-                      </th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Allocation (%)
                       </th>
-                      {/* <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Price
-                      </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Total
-                      </th> */}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -969,10 +952,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                           <td className="px-4 py-2 text-sm text-gray-900">
                             {holding.stock || "-"}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                            {holding.scheme || "-"}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                          <td className="px-4 py-2 text-right text-sm text-gray-900">
                             {holding.percentage
                               ? (holding.percentage.toFixed(2) + "%")
                               : "-"}
@@ -982,7 +962,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
                     ) : (
                       <tr>
                         <td
-                          colSpan="3"
+                          colSpan="2"
                           className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center"
                         >
                           No holdings available.
@@ -994,6 +974,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
               </div>
             </div>
           </div>
+
 
         </div>
 
