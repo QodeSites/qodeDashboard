@@ -212,9 +212,10 @@ model managed_accounts_holdings {
 model managed_portfolio_master {
   account_code            String? @db.VarChar
   scheme                  String? @db.VarChar
-  current_portfolio_value Int?
-  total_profit            Int?
+  current_portfolio_value Float?
+  total_profit            Float?
   id                      Int     @id @default(autoincrement())
+  returns                 Float?
 
   @@schema("pms_clients_tracker")
 }

@@ -375,6 +375,11 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       ? totalPortfolio?.investedAmount || aggregatedTotals.totalInvestedAmount
       : selectedScheme?.investedAmount || 0;
 
+  const portfolioReturns = 
+      activeScheme === "Scheme Total"
+        ? totalPortfolio?.returns || 0
+        : selectedScheme?.returns || 0;
+
   const portfolioValue =
     activeScheme === "Scheme Total"
       ? totalPortfolio?.currentPortfolioValue ||
@@ -912,7 +917,7 @@ return arr;
                 className={`text-base ${returnsValue >= 0 ? "text-green-500" : "text-red-500"
                   }`}
               >
-                {returnsValue.toFixed(2)}%
+                {portfolioReturns ? portfolioReturns.toFixed(2) : returnsValue.toFixed(2)}%
               </span>
               {/* <div
                 className={`flex items-end text-sm ${isPositive ? "text-green-600" : "text-red-600"

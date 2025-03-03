@@ -431,42 +431,64 @@ const PerformanceAndDrawdownChart = () => {
 
   // Monthly PnL: if not invested, set all pnl values to 0.
   console.log("data", benchmarkData);
-// Update the monthlyPnLData calculation
-const monthlyPnLData = useMemo(() => {
-  if (isInvestedInStrategy) {
-    return data?.monthlyPnL;
-  } else if (!rawBenchmarkData || rawBenchmarkData.length === 0) {
-    return [];
-  }
+  // Update the monthlyPnLData calculation
+  const monthlyPnLData = useMemo(() => {
+    if (isInvestedInStrategy) {
+      return data?.monthlyPnL;
+    } else if (!rawBenchmarkData || rawBenchmarkData.length === 0) {
+      return [];
+    }
 
-  // Calculate monthly PnL from benchmark data
-  const monthlyPnLFromBenchmark = [];
-  let currentMonth = null;
-  let currentYear = null;
-  let firstNAVOfMonth = null;
-  let lastNAVOfMonth = null;
+    // Calculate monthly PnL from benchmark data
+    const monthlyPnLFromBenchmark = [];
+    let currentMonth = null;
+    let currentYear = null;
+    let firstNAVOfMonth = null;
+    let lastNAVOfMonth = null;
 
-  // Sort benchmark data by date
-  const sortedBenchmark = [...rawBenchmarkData].sort((a, b) => 
-    new Date(a.date) - new Date(b.date)
-  );
+    // Sort benchmark data by date
+    const sortedBenchmark = [...rawBenchmarkData].sort((a, b) =>
+      new Date(a.date) - new Date(b.date)
+    );
 
-  sortedBenchmark.forEach((item) => {
-    const date = new Date(item.date);
-    const month = date.getMonth();
-    const year = date.getFullYear();
-    const nav = parseFloat(item.nav);
+    sortedBenchmark.forEach((item) => {
+      const date = new Date(item.date);
+      const month = date.getMonth();
+      const year = date.getFullYear();
+      const nav = parseFloat(item.nav);
 
-    if (currentMonth === null) {
-      // First iteration
-      currentMonth = month;
-      currentYear = year;
-      firstNAVOfMonth = nav;
-      lastNAVOfMonth = nav;
-    } else if (month !== currentMonth || year !== currentYear) {
-      // Month or year changed, calculate PnL for previous month
+      if (currentMonth === null) {
+        // First iteration
+        currentMonth = month;
+        currentYear = year;
+        firstNAVOfMonth = nav;
+        lastNAVOfMonth = nav;
+      } else if (month !== currentMonth || year !== currentYear) {
+        // Month or year changed, calculate PnL for previous month
+        const pnl = ((lastNAVOfMonth - firstNAVOfMonth) / firstNAVOfMonth) * 100;
+
+        monthlyPnLFromBenchmark.push({
+          year: currentYear,
+          month: new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' }),
+          pnl: pnl,
+          firstNAV: firstNAVOfMonth,
+          lastNAV: lastNAVOfMonth
+        });
+
+        // Reset for new month
+        currentMonth = month;
+        currentYear = year;
+        firstNAVOfMonth = nav;
+        lastNAVOfMonth = nav;
+      } else {
+        // Same month, update lastNAV
+        lastNAVOfMonth = nav;
+      }
+    });
+
+    // Don't forget to add the last month
+    if (currentMonth !== null) {
       const pnl = ((lastNAVOfMonth - firstNAVOfMonth) / firstNAVOfMonth) * 100;
-      
       monthlyPnLFromBenchmark.push({
         year: currentYear,
         month: new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' }),
@@ -474,32 +496,10 @@ const monthlyPnLData = useMemo(() => {
         firstNAV: firstNAVOfMonth,
         lastNAV: lastNAVOfMonth
       });
-
-      // Reset for new month
-      currentMonth = month;
-      currentYear = year;
-      firstNAVOfMonth = nav;
-      lastNAVOfMonth = nav;
-    } else {
-      // Same month, update lastNAV
-      lastNAVOfMonth = nav;
     }
-  });
 
-  // Don't forget to add the last month
-  if (currentMonth !== null) {
-    const pnl = ((lastNAVOfMonth - firstNAVOfMonth) / firstNAVOfMonth) * 100;
-    monthlyPnLFromBenchmark.push({
-      year: currentYear,
-      month: new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' }),
-      pnl: pnl,
-      firstNAV: firstNAVOfMonth,
-      lastNAV: lastNAVOfMonth
-    });
-  }
-
-  return monthlyPnLFromBenchmark;
-}, [data?.monthlyPnL, isInvestedInStrategy, rawBenchmarkData]);
+    return monthlyPnLFromBenchmark;
+  }, [data?.monthlyPnL, isInvestedInStrategy, rawBenchmarkData]);
 
   // Reflow chart on window resize.
   useEffect(() => {
@@ -575,39 +575,39 @@ const monthlyPnLData = useMemo(() => {
 
         {/* Tabs / Dropdown: Strategy Tabs + Total Portfolio */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-        <div className="flex flex-col sm:flex-row gap-4 w-full">
-    {isMobile ? (
-      <div className="relative">
-        <select
-          value={activeTab || ""}
-          onChange={(e) => {
-            const tab = e.target.value;
-            setActiveTab(tab);
-            if (tab === "TOTAL") {
-              handleViewModeChange("cumulative");
-            } else {
-              handleViewModeChange("individual");
-              if (!isAdminUser) {
-                const code = getNuvamaCodeForStrategy(tab);
-                setSelectedNuvama(code);
-              }
-            }
-          }}
-          // Add appearance-none to hide the native arrow.
-          className={`${getDropdownClass()} appearance-none`}
-        >
-          <option value="TOTAL">Total Portfolio</option>
-          <option value="QAW">
-            QAW{" "}
-            {isAdminUser
-              ? selectedNuvama && extractStrategy(selectedNuvama) === "QAW"
-                ? ""
-                : ""
-              : investedStrategies.includes("QAW")
-              ? ""
-              : ""}
-          </option>
-          {/* Uncomment if needed
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
+            {isMobile ? (
+              <div className="relative">
+                <select
+                  value={activeTab || ""}
+                  onChange={(e) => {
+                    const tab = e.target.value;
+                    setActiveTab(tab);
+                    if (tab === "TOTAL") {
+                      handleViewModeChange("cumulative");
+                    } else {
+                      handleViewModeChange("individual");
+                      if (!isAdminUser) {
+                        const code = getNuvamaCodeForStrategy(tab);
+                        setSelectedNuvama(code);
+                      }
+                    }
+                  }}
+                  // Add appearance-none to hide the native arrow.
+                  className={`${getDropdownClass()} appearance-none`}
+                >
+                  <option value="TOTAL">Total Portfolio</option>
+                  <option value="QAW">
+                    QAW{" "}
+                    {isAdminUser
+                      ? selectedNuvama && extractStrategy(selectedNuvama) === "QAW"
+                        ? ""
+                        : ""
+                      : investedStrategies.includes("QAW")
+                        ? ""
+                        : ""}
+                  </option>
+                  {/* Uncomment if needed
           <option value="QGF">
             QGF{" "}
             {isAdminUser
@@ -619,130 +619,130 @@ const monthlyPnLData = useMemo(() => {
               : ""}
           </option>
           */}
-          <option value="QFH">
-            QFH{" "}
-            {isAdminUser
-              ? selectedNuvama && extractStrategy(selectedNuvama) === "QFH"
-                ? ""
-                : ""
-              : investedStrategies.includes("QFH")
-              ? ""
-              : ""}
-          </option>
-          <option value="QTF">
-            QTF{" "}
-            {isAdminUser
-              ? selectedNuvama && extractStrategy(selectedNuvama) === "QTF"
-                ? ""
-                : ""
-              : investedStrategies.includes("QTF")
-              ? ""
-              : ""}
-          </option>
-        </select>
-        {/* Position the arrow icon */}
-        <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-      </div>
-    ) : (
-      <div className="flex gap-4">
-        <button
-          onClick={() => {
-            setActiveTab("TOTAL");
-            handleViewModeChange("cumulative");
-          }}
-          className={strategyButtonClass("TOTAL")}
-        >
-          Total Portfolio
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab("QAW");
-            handleViewModeChange("individual");
-            if (!isAdminUser) {
-              const code = getNuvamaCodeForStrategy("QAW");
-              setSelectedNuvama(code);
-            }
-          }}
-          className={strategyButtonClass("QAW")}
-        >
-          QAW{" "}
-          {isAdminUser
-            ? selectedNuvama && extractStrategy(selectedNuvama) === "QAW"
-              ? ""
-              : ""
-            : investedStrategies.includes("QAW")
-            ? ""
-            : ""}
-        </button>
-        {/* Other buttons... */}
-        <button
-          onClick={() => {
-            setActiveTab("QFH");
-            handleViewModeChange("individual");
-            if (!isAdminUser) {
-              const code = getNuvamaCodeForStrategy("QFH");
-              setSelectedNuvama(code);
-            }
-          }}
-          className={strategyButtonClass("QFH")}
-        >
-          QFH{" "}
-          {isAdminUser
-            ? selectedNuvama && extractStrategy(selectedNuvama) === "QFH"
-              ? ""
-              : ""
-            : investedStrategies.includes("QFH")
-            ? ""
-            : ""}
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab("QTF");
-            handleViewModeChange("individual");
-            if (!isAdminUser) {
-              const code = getNuvamaCodeForStrategy("QTF");
-              setSelectedNuvama(code);
-            }
-          }}
-          className={strategyButtonClass("QTF")}
-        >
-          QTF{" "}
-          {isAdminUser
-            ? selectedNuvama && extractStrategy(selectedNuvama) === "QTF"
-              ? ""
-              : ""
-            : investedStrategies.includes("QTF")
-            ? ""
-            : ""}
+                  <option value="QFH">
+                    QFH{" "}
+                    {isAdminUser
+                      ? selectedNuvama && extractStrategy(selectedNuvama) === "QFH"
+                        ? ""
+                        : ""
+                      : investedStrategies.includes("QFH")
+                        ? ""
+                        : ""}
+                  </option>
+                  <option value="QTF">
+                    QTF{" "}
+                    {isAdminUser
+                      ? selectedNuvama && extractStrategy(selectedNuvama) === "QTF"
+                        ? ""
+                        : ""
+                      : investedStrategies.includes("QTF")
+                        ? ""
+                        : ""}
+                  </option>
+                </select>
+                {/* Position the arrow icon */}
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+              </div>
+            ) : (
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setActiveTab("TOTAL");
+                    handleViewModeChange("cumulative");
+                  }}
+                  className={strategyButtonClass("TOTAL")}
+                >
+                  Total Portfolio
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("QAW");
+                    handleViewModeChange("individual");
+                    if (!isAdminUser) {
+                      const code = getNuvamaCodeForStrategy("QAW");
+                      setSelectedNuvama(code);
+                    }
+                  }}
+                  className={strategyButtonClass("QAW")}
+                >
+                  QAW{" "}
+                  {isAdminUser
+                    ? selectedNuvama && extractStrategy(selectedNuvama) === "QAW"
+                      ? ""
+                      : ""
+                    : investedStrategies.includes("QAW")
+                      ? ""
+                      : ""}
+                </button>
+                {/* Other buttons... */}
+                <button
+                  onClick={() => {
+                    setActiveTab("QFH");
+                    handleViewModeChange("individual");
+                    if (!isAdminUser) {
+                      const code = getNuvamaCodeForStrategy("QFH");
+                      setSelectedNuvama(code);
+                    }
+                  }}
+                  className={strategyButtonClass("QFH")}
+                >
+                  QFH{" "}
+                  {isAdminUser
+                    ? selectedNuvama && extractStrategy(selectedNuvama) === "QFH"
+                      ? ""
+                      : ""
+                    : investedStrategies.includes("QFH")
+                      ? ""
+                      : ""}
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("QTF");
+                    handleViewModeChange("individual");
+                    if (!isAdminUser) {
+                      const code = getNuvamaCodeForStrategy("QTF");
+                      setSelectedNuvama(code);
+                    }
+                  }}
+                  className={strategyButtonClass("QTF")}
+                >
+                  QTF{" "}
+                  {isAdminUser
+                    ? selectedNuvama && extractStrategy(selectedNuvama) === "QTF"
+                      ? ""
+                      : ""
+                    : investedStrategies.includes("QTF")
+                      ? ""
+                      : ""}
                 </button>
               </div>
             )}
 
             {activeTab !== "TOTAL" && isAdminUser && (
               <div className="mt-2 sm:mt-0 relative">
-              <select
-                value={selectedNuvama || ""}
-                onChange={handleSelectChange}
-                className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4"
-              >
-                {data.usernames
-                  .map((username, index) => ({
-                    username,
-                    code: data.nuvama_codes[index],
-                    index
-                  }))
-                  .sort((a, b) => a.username.localeCompare(b.username))
-                  .map(({ username, code, index }) => (
-                    <option key={index} value={code}>
-                      {username} ({code})
-                    </option>
-                  ))}
-              </select>
-              <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-            </div>
+                <select
+                  value={selectedNuvama || ""}
+                  onChange={handleSelectChange}
+                  className="p-2 rounded border border-brown text-gray-700 text-xs transition-colors duration-300 w-full sm:w-auto min-h-[40px] appearance-none bg-white px-4"
+                >
+                  {data.usernames
+                    .map((username, index) => ({
+                      username,
+                      code: data.nuvama_codes[index],
+                      index
+                    }))
+                    .sort((a, b) => a.username.localeCompare(b.username))
+                    .map(({ username, code, index }) => (
+                      <option key={index} value={code}>
+                        {username} ({code})
+                      </option>
+                    ))}
+                </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+              </div>
             )}
 
-  </div>
+          </div>
         </div>
 
         {/* Dates */}

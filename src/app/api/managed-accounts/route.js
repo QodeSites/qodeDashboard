@@ -458,7 +458,7 @@ export async function GET(request) {
       );
     }
 
-    // Fetch cash flows, master sheet data (for other metrics) and portfolio master data (for currentPortfolioValue and totalProfit)
+    // Fetch cash flows, master sheet data (for other metrics) and portfolio master data (for currentPortfolioValue, totalProfit, and returns)
     const [cashInOutData, masterSheetData, portfolioMasterData] = await Promise.all([
       prisma.managed_accounts_cash_in_out.findMany({
         where: { account_code: { in: accountCodes } },
@@ -490,6 +490,7 @@ export async function GET(request) {
           scheme: true,
           current_portfolio_value: true,
           total_profit: true,
+          returns: true,
         },
       }),
     ]);
@@ -517,10 +518,6 @@ export async function GET(request) {
         globalSchemeInvestedAmounts[scheme] += investedAmount;
       }
     }
-    const globalTotalInvestedAmount = Object.values(globalSchemeInvestedAmounts).reduce(
-      (sum, amt) => sum + amt,
-      0
-    );
 
     // --- Process accounts and schemes (for metrics etc.) ---
     for (const accountCode of accountCodes) {
@@ -573,7 +570,7 @@ export async function GET(request) {
             ? calculateTotalProfit(metricsData, cashForScheme)
             : calculateTotalProfit(currentData, cashForScheme);
 
-        // --- Override currentPortfolioValue and totalProfit using portfolio master data ---
+        // --- Override currentPortfolioValue, totalProfit and returns using portfolio master data ---
         const portfolioMaster = portfolioMasterData.find(
           (row) => row.account_code === accountCode && row.scheme === scheme
         );
@@ -585,6 +582,9 @@ export async function GET(request) {
         const schemeTotalProfit = portfolioMaster
           ? portfolioMaster.total_profit
           : calcTotalProfit;
+        const schemeReturns = portfolioMaster
+          ? portfolioMaster.returns
+          : calculateReturns(navCurve, cashForScheme);
 
         // Calculate trailing returns (with different period options)
         let trailingReturns;
@@ -604,7 +604,7 @@ export async function GET(request) {
         results[accountCode].schemes[scheme] = {
           currentPortfolioValue: schemeCurrentPortfolioValue,
           investedAmount,
-          returns: calculateReturns(navCurve, cashForScheme),
+          returns: schemeReturns * 100,
           trailingReturns,
           monthlyPnL: calculateMonthlyPnL(navCurve),
           navCurve,
@@ -774,3 +774,4 @@ export async function GET(request) {
     );
   }
 }
+
