@@ -661,29 +661,32 @@ export async function GET(request) {
         ? portfolioMasterTotal.total_profit
         : calcTotalPortfolioProfit;
 
-      results[accountCode].totalPortfolio = {
-        currentPortfolioValue: totalPortfolioValue,
-        investedAmount: totalInvestedAmount,
-        returns: calculateReturns(totalNavCurve),
-        trailingReturns: calculateTrailingReturns(totalNavCurve),
-        monthlyPnL: calculateMonthlyPnL(totalNavCurve),
-        navCurve: totalNavCurve,
-        totalProfit: totalProfitValue,
-        dividends: totalCashFlows.reduce(
-          (sum, flow) => sum + (flow.dividend || 0),
-          0
-        ),
-        currentDrawdown: totalDrawdownMetrics.currentDD,
-        maxDrawdown: totalDrawdownMetrics.mdd,
-        drawdownCurve: totalDrawdownMetrics.ddCurve,
-        schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
-        cashFlows: totalCashFlows.map((flow) => ({
-          date: flow.date,
-          scheme: flow.scheme,
-          amount: flow.capital_in_out,
-          dividend: flow.dividend,
-        })),
-      };
+        results[accountCode].totalPortfolio = {
+          currentPortfolioValue: totalPortfolioValue,
+          investedAmount: totalInvestedAmount,
+          returns: portfolioMasterTotal 
+            ? portfolioMasterTotal.returns * 100 
+            : calculateReturns(totalNavCurve, totalCashFlows),
+          trailingReturns: calculateTrailingReturns(totalNavCurve),
+          monthlyPnL: calculateMonthlyPnL(totalNavCurve),
+          navCurve: totalNavCurve,
+          totalProfit: totalProfitValue,
+          dividends: totalCashFlows.reduce(
+            (sum, flow) => sum + (flow.dividend || 0),
+            0
+          ),
+          currentDrawdown: totalDrawdownMetrics.currentDD,
+          maxDrawdown: totalDrawdownMetrics.mdd,
+          drawdownCurve: totalDrawdownMetrics.ddCurve,
+          schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
+          cashFlows: totalCashFlows.map((flow) => ({
+            date: flow.date,
+            scheme: flow.scheme,
+            amount: flow.capital_in_out,
+            dividend: flow.dividend,
+          })),
+        };
+        
     }
 
     // --- Process holdings --- (unchanged grouping and percentage logic)
