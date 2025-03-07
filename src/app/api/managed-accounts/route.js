@@ -223,9 +223,11 @@ function calculateTrailingReturns(
       const targetDate = new Date(currentDate);
       if (period === "1m") {
         targetDate.setMonth(targetDate.getMonth() - 1);
+        targetDate.setDate(targetDate.getDate() - 1);
+        console.log("targetDate", targetDate);
+        console.log("currentDate", currentDate);
       } else if (period === "1y") {
         targetDate.setFullYear(targetDate.getFullYear() - 1);
-        // For 1y, always start search from one day earlier than the computed target date.
         targetDate.setDate(targetDate.getDate() - 1);
       } else if (period === "2y") {
         targetDate.setFullYear(targetDate.getFullYear() - 2);
