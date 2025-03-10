@@ -2,18 +2,17 @@
 
 import Heading from "@/components/common/Heading";
 import DefaultLayout from "@/components/Layouts/Layouts";
-import { is } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 
 export default function Account() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   const [accountData, setAccountData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Reset password form state
+  // Reset password form state (for token-based reset; kept here for reference)
   const [resetForm, setResetForm] = useState({
     email: session?.user?.email || "",
     token: "",
@@ -24,89 +23,107 @@ export default function Account() {
   const [resetError, setResetError] = useState(null);
   const [resetMessage, setResetMessage] = useState(null);
 
-  // Update email in reset form if session changes
+  // Change password form state for authenticated users
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [changeForm, setChangeForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
+  const [changeLoading, setChangeLoading] = useState(false);
+  const [changeError, setChangeError] = useState(null);
+  const [changeMessage, setChangeMessage] = useState(null);
+
+  // State to control modal visibility
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Determine if managed accounts exist and choose the API endpoint accordingly
+  const isManagedAccounts =
+    session?.user?.managed_account_codes &&
+    session.user.managed_account_codes.length > 0;
+  const apiUrl = isManagedAccounts
+    ? "/api/managed-accounts?view_type=account"
+    : "/api/portfolio-data?view_type=account";
+
+  // Fetch account data once the session is available
+  useEffect(() => {
+    if (session) {
+      const fetchAccountData = async () => {
+        try {
+          const res = await fetch(apiUrl);
+          if (!res.ok) {
+            throw new Error("Failed to fetch account details");
+          }
+          const data = await res.json();
+          setAccountData(data);
+        } catch (err) {
+          setError(err.message || "Something went wrong");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchAccountData();
+    }
+  }, [apiUrl, session]);
+
+  // Update reset form email when session changes
   useEffect(() => {
     if (session?.user?.email) {
       setResetForm((prev) => ({ ...prev, email: session.user.email }));
     }
   }, [session]);
 
-  // Check if managed_account_codes exists and has at least one entry
-  const isManagedAccounts =
-    session?.user?.managed_account_codes &&
-    session.user.managed_account_codes.length > 0;
-
-  let apiUrl = isManagedAccounts
-    ? "/api/managed-accounts?view_type=account"
-    : "/api/portfolio-data?view_type=account";
-
-  useEffect(() => {
-    // Fetch account details from your API
-    const fetchAccountData = async () => {
-      try {
-        const res = await fetch(apiUrl);
-        if (!res.ok) {
-          throw new Error("Failed to fetch account details");
-        }
-        const data = await res.json();
-        setAccountData(data);
-      } catch (err) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAccountData();
-  }, [apiUrl]);
-
-  const handleResetChange = (e) => {
+  const handleChangePasswordChange = (e) => {
     const { name, value } = e.target;
-    setResetForm((prev) => ({
+    setChangeForm((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleResetSubmit = async (e) => {
+  const handleChangePasswordSubmit = async (e) => {
     e.preventDefault();
-    if (resetForm.password !== resetForm.confirmPassword) {
-      setResetError("Passwords do not match");
+    setChangeError(null);
+    setChangeMessage(null);
+    if (changeForm.newPassword !== changeForm.confirmNewPassword) {
+      setChangeError("New password and confirm password do not match.");
       return;
     }
-    setResetLoading(true);
-    setResetError(null);
-    setResetMessage(null);
-
+    setChangeLoading(true);
     try {
-      const response = await fetch("/api/reset-password", {
+      const res = await fetch("/api/auth/change-password", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: resetForm.email,
-          token: resetForm.token,
-          password: resetForm.password,
+          email: session.user.email,
+          currentPassword: changeForm.currentPassword,
+          newPassword: changeForm.newPassword,
         }),
       });
-      const result = await response.json();
-      if (!response.ok) {
-        setResetError(result.error || "Error resetting password");
+      const result = await res.json();
+      if (!res.ok) {
+        setChangeError(result.error || "Error changing password.");
       } else {
-        setResetMessage(result.message);
-        // Optionally clear the token and password fields after a successful reset
-        setResetForm((prev) => ({
-          ...prev,
-          token: "",
-          password: "",
-          confirmPassword: "",
-        }));
+        setChangeMessage(result.message || "Password changed successfully.");
+        setChangeForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmNewPassword: "",
+        });
+        setShowChangePassword(false);
+
+        // Trigger modal popup and send email confirmation
+        setShowSuccessModal(true);
+        await fetch("/api/notify-password-change", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: session.user.email }),
+        });
       }
     } catch (error) {
-      setResetError("An unexpected error occurred");
+      setChangeError("An unexpected error occurred.");
     } finally {
-      setResetLoading(false);
+      setChangeLoading(false);
     }
   };
 
@@ -234,111 +251,125 @@ export default function Account() {
 
           {/* Nuvama Wealth Spectrum Link Section */}
           {!isManagedAccounts && (
+            <div className="bg-white overflow-hidden shadow rounded-lg my-6">
+              <div className="px-4 py-5 sm:p-6">
+                {/* Nuvama Wealth Logo */}
+                <div className="flex justify-left">
+                  <img
+                    src="/nuvama_logo_transparent.png"
+                    alt="Nuvama Wealth Logo"
+                    className="h-12 w-auto mb-4"
+                  />
+                </div>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Nuvama Wealth Spectrum
+                </h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  For additional details use the link below to login to Nuvama
+                </p>
+                <a
+                  href="https://eclientreporting.nuvamaassetservices.com/wealthspectrum/app/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-[#d1a47b] hover:bg-[#d1a47b]"
+                >
+                  Login to Nuvama
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* Change Password Section */}
           <div className="bg-white overflow-hidden shadow rounded-lg my-6">
             <div className="px-4 py-5 sm:p-6">
-              {/* Nuvama Wealth Logo */}
-              <div className="flex justify-left">
-                <img
-                  src="/nuvama_logo_transparent.png"
-                  alt="Nuvama Wealth Logo"
-                  className="h-12 w-auto mb-4"
-                />
-              </div>
               <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Nuvama Wealth Spectrum
+                Change Password
               </h3>
-              <p className="mt-2 text-sm text-gray-600">
-                For additional details use the link below to login to Nuvama
-              </p>
-              <a
-                href="https://eclientreporting.nuvamaassetservices.com/wealthspectrum/app/login"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-[#d1a47b] hover:bg-[#d1a47b]"
+              <button
+                onClick={() => setShowChangePassword(!showChangePassword)}
+                className="mt-2 text-blue-500 hover:underline"
               >
-                Login to Nuvama
-              </a>
+                {showChangePassword ? "Cancel" : "Change Password"}
+              </button>
+              {showChangePassword && (
+                <form
+                  onSubmit={handleChangePasswordSubmit}
+                  className="mt-4 space-y-4"
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      value={changeForm.currentPassword}
+                      onChange={handleChangePasswordChange}
+                      required
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      value={changeForm.newPassword}
+                      onChange={handleChangePasswordChange}
+                      required
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      name="confirmNewPassword"
+                      value={changeForm.confirmNewPassword}
+                      onChange={handleChangePasswordChange}
+                      required
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    />
+                  </div>
+                  {changeError && (
+                    <p className="text-red-500 text-sm">{changeError}</p>
+                  )}
+                  {changeMessage && (
+                    <p className="text-green-500 text-sm">{changeMessage}</p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={changeLoading}
+                    className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    {changeLoading ? "Updating..." : "Update Password"}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
-          )}
-          {/* Reset Password Section */}
-          {/* <div className="bg-white overflow-hidden shadow rounded-lg my-6">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Reset Password
-              </h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Enter the reset token and your new password below.
-              </p>
-              <form onSubmit={handleResetSubmit} className="mt-4 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={resetForm.email}
-                    readOnly
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Reset Token
-                  </label>
-                  <input
-                    type="text"
-                    name="token"
-                    value={resetForm.token}
-                    onChange={handleResetChange}
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={resetForm.password}
-                    onChange={handleResetChange}
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Confirm New Password
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={resetForm.confirmPassword}
-                    onChange={handleResetChange}
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                {resetError && (
-                  <p className="text-red-500 text-sm">{resetError}</p>
-                )}
-                {resetMessage && (
-                  <p className="text-green-500 text-sm">{resetMessage}</p>
-                )}
+
+          {/* Modal Popup for Success */}
+          {showSuccessModal && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white rounded p-6 max-w-sm mx-auto">
+                <h3 className="text-xl font-bold mb-4">Success!</h3>
+                <p className="mb-4">
+                  Your password has been reset successfully. A confirmation email has been sent.
+                </p>
                 <button
-                  type="submit"
-                  disabled={resetLoading}
+                  onClick={() => setShowSuccessModal(false)}
                   className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-blue-600 hover:bg-blue-700"
                 >
-                  {resetLoading ? "Resetting..." : "Reset Password"}
+                  Close
                 </button>
-              </form>
+              </div>
             </div>
-          </div> */}
-          
+          )}
         </div>
       </div>
     </DefaultLayout>
