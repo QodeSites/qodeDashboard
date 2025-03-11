@@ -20,6 +20,8 @@ export async function POST(request) {
       where: { email: normalizedEmail },
     });
 
+    let fullName = user?full_name:"";
+
     // Always respond with the same message to prevent user enumeration
     if (!user) {
       return NextResponse.json({
@@ -56,6 +58,7 @@ export async function POST(request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        fullName: fullName,
         userEmail: normalizedEmail,
         token: token,
       }),
