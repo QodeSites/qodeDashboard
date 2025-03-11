@@ -1,5 +1,5 @@
 "use client";
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Text from "@/components/common/Text";
@@ -13,7 +13,7 @@ function ResetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
-  const [validationErrors, setValidationErrors] = useState({});
+  const [passwordErrors, setPasswordErrors] = useState([]);
 
   // Retrieve token and email from query parameters
   const token = searchParams.get("token");
@@ -21,71 +21,50 @@ function ResetPasswordForm() {
 
   // Password validation function
   const validatePassword = (password) => {
-    const errors = {};
+    const errors = [];
     
     if (password.length < 8) {
-      errors.length = false;
-    } else {
-      errors.length = true;
+      errors.push("Password must be at least 8 characters long");
     }
     
     if (!/[A-Z]/.test(password)) {
-      errors.uppercase = false;
-    } else {
-      errors.uppercase = true;
+      errors.push("Password must contain at least one uppercase letter");
     }
     
     if (!/[a-z]/.test(password)) {
-      errors.lowercase = false;
-    } else {
-      errors.lowercase = true;
+      errors.push("Password must contain at least one lowercase letter");
     }
     
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      errors.special = false;
-    } else {
-      errors.special = true;
+    if (!/[0-9]/.test(password)) {
+      errors.push("Password must contain at least one number");
     }
     
-    if (!/\d/.test(password)) {
-      errors.number = false;
-    } else {
-      errors.number = true;
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      errors.push("Password must contain at least one special character");
     }
     
     return errors;
   };
 
-  // Check password match
-  const checkPasswordMatch = () => {
-    if (confirmPassword && password !== confirmPassword) {
-      return false;
+  // Handle password change with validation
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    
+    if (newPassword) {
+      setPasswordErrors(validatePassword(newPassword));
+    } else {
+      setPasswordErrors([]);
     }
-    return true;
-  };
-
-  // Update validation on password change
-  useEffect(() => {
-    if (password) {
-      setValidationErrors(validatePassword(password));
-    }
-  }, [password]);
-
-  // Check if all password requirements are met
-  const isPasswordValid = () => {
-    if (!password) return false;
-    return Object.values(validationErrors).every(value => value === true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Final validation before submission
-    if (!isPasswordValid()) {
-      setMessage({
-        type: "error",
-        text: "Password does not meet all requirements"
-      });
+    // Validate password before submission
+    const errors = validatePassword(password);
+    if (errors.length > 0) {
+      setPasswordErrors(errors);
       return;
     }
 
@@ -168,38 +147,48 @@ function ResetPasswordForm() {
               id="password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               className={`w-full text-sm px-4 py-2 border ${
-                password && !isPasswordValid() ? "border-red-300" : "border-gray-300"
+                passwordErrors.length > 0 ? "border-red-300" : "border-gray-300"
               } rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors bg-white text-brown`}
             />
           </div>
-          
-          {/* Password Requirements Display */}
-          {password && (
-            <div className="mt-2 space-y-1 text-xs">
-              <p className={`flex items-center ${validationErrors.length ? "text-green-500" : "text-gray-500"}`}>
-                <span className="mr-1">{validationErrors.length ? "✓" : "○"}</span> 
+          {/* Password strength requirements */}
+          <div className="mt-2 space-y-1">
+            <p className="text-xs text-gray-500">Password must contain:</p>
+            <ul className="space-y-1 text-xs">
+              <li className={`flex items-center ${password.length >= 8 ? "text-green-600" : "text-gray-500"}`}>
+                <span className={`mr-2 ${password.length >= 8 ? "text-green-600" : "text-gray-400"}`}>
+                  {password.length >= 8 ? "✓" : "○"}
+                </span>
                 At least 8 characters
-              </p>
-              <p className={`flex items-center ${validationErrors.uppercase ? "text-green-500" : "text-gray-500"}`}>
-                <span className="mr-1">{validationErrors.uppercase ? "✓" : "○"}</span> 
-                At least one uppercase letter
-              </p>
-              <p className={`flex items-center ${validationErrors.lowercase ? "text-green-500" : "text-gray-500"}`}>
-                <span className="mr-1">{validationErrors.lowercase ? "✓" : "○"}</span> 
-                At least one lowercase letter
-              </p>
-              <p className={`flex items-center ${validationErrors.special ? "text-green-500" : "text-gray-500"}`}>
-                <span className="mr-1">{validationErrors.special ? "✓" : "○"}</span> 
-                At least one special character
-              </p>
-              <p className={`flex items-center ${validationErrors.number ? "text-green-500" : "text-gray-500"}`}>
-                <span className="mr-1">{validationErrors.number ? "✓" : "○"}</span> 
-                At least one number
-              </p>
-            </div>
-          )}
+              </li>
+              <li className={`flex items-center ${/[A-Z]/.test(password) ? "text-green-600" : "text-gray-500"}`}>
+                <span className={`mr-2 ${/[A-Z]/.test(password) ? "text-green-600" : "text-gray-400"}`}>
+                  {/[A-Z]/.test(password) ? "✓" : "○"}
+                </span>
+                One uppercase letter
+              </li>
+              <li className={`flex items-center ${/[a-z]/.test(password) ? "text-green-600" : "text-gray-500"}`}>
+                <span className={`mr-2 ${/[a-z]/.test(password) ? "text-green-600" : "text-gray-400"}`}>
+                  {/[a-z]/.test(password) ? "✓" : "○"}
+                </span>
+                One lowercase letter
+              </li>
+              <li className={`flex items-center ${/[0-9]/.test(password) ? "text-green-600" : "text-gray-500"}`}>
+                <span className={`mr-2 ${/[0-9]/.test(password) ? "text-green-600" : "text-gray-400"}`}>
+                  {/[0-9]/.test(password) ? "✓" : "○"}
+                </span>
+                One number
+              </li>
+              <li className={`flex items-center ${/[^A-Za-z0-9]/.test(password) ? "text-green-600" : "text-gray-500"}`}>
+                <span className={`mr-2 ${/[^A-Za-z0-9]/.test(password) ? "text-green-600" : "text-gray-400"}`}>
+                  {/[^A-Za-z0-9]/.test(password) ? "✓" : "○"}
+                </span>
+                One special character
+              </li>
+            </ul>
+          </div>
         </div>
         <div>
           <label
@@ -216,20 +205,20 @@ function ResetPasswordForm() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className={`w-full text-sm px-4 py-2 border ${
-                confirmPassword && !checkPasswordMatch() ? "border-red-300" : "border-gray-300"
+                confirmPassword && password !== confirmPassword ? "border-red-300" : "border-gray-300"
               } rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors bg-white text-brown`}
             />
           </div>
-          {confirmPassword && !checkPasswordMatch() && (
+          {confirmPassword && password !== confirmPassword && (
             <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
           )}
         </div>
         <div className="text-center">
           <Button
             type="submit"
-            disabled={isLoading || !isPasswordValid() || !checkPasswordMatch() || !confirmPassword}
+            disabled={isLoading || passwordErrors.length > 0 || password !== confirmPassword}
             className={`w-full text-white ${
-              isLoading || !isPasswordValid() || !checkPasswordMatch() || !confirmPassword
+              isLoading || passwordErrors.length > 0 || password !== confirmPassword
                 ? "bg-gray-400"
                 : "bg-[#d1a47b] hover:bg-[#c39569]"
             } transition-colors duration-200 py-2 my-2 rounded-md`}
@@ -254,29 +243,4 @@ function ResetPasswordForm() {
   );
 }
 
-export default function ResetPasswordPage() {
-  return (
-    <div className="bg-gray-50 mx-auto h-screen flex flex-col justify-between overflow-hidden">
-      <main className="flex-1 flex flex-col items-center justify-center px-4">
-        <Link
-          href="/"
-          className="text-[#d1a47b] text-center playfair-display-font mb-4 font-bold text-5xl"
-        >
-          Qode
-        </Link>
-        <Text className="text-center text-2xl font-extralight text-brown my-6">
-          Reset Your Password
-        </Text>
-        <Suspense fallback={<div>Loading...</div>}>
-          <ResetPasswordForm />
-        </Suspense>
-      </main>
-      <footer className="py-4 text-center text-sm text-gray-500">
-        <Link href="/auth/signin" className="text-[#d1a47b] underline">
-          Back to Sign In
-        </Link>
-        <div>&copy; {new Date().getFullYear()} Qode. All rights reserved.</div>
-      </footer>
-    </div>
-  );
-}
+export default ResetPasswordForm;
