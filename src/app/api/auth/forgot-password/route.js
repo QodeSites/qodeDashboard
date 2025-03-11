@@ -20,7 +20,7 @@ export async function POST(request) {
       where: { email: normalizedEmail },
     });
 
-    let fullName = user?full_name:"";
+    let fullName = user ? user.full_name : "";
 
     // Always respond with the same message to prevent user enumeration
     if (!user) {
