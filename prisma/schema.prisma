@@ -98,17 +98,6 @@ model scheme {
   @@schema("pms_clients_tracker")
 }
 
-model strategy {
-  id            Int       @id @default(autoincrement())
-  scheme_id     Int
-  strategy_name String    @db.VarChar(100)
-  system_tag    String    @db.VarChar(100)
-  created_at    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at    DateTime? @default(now()) @db.Timestamp(6)
-
-  @@schema("pms_clients_tracker")
-}
-
 model trailing_returns {
   id               Int     @id @default(autoincrement())
   name             String? @db.VarChar
@@ -194,7 +183,6 @@ model aum_report {
 }
 
 model managed_accounts_holdings {
-  entry_date   String?  @map("﻿entry_date")
   o_c          String?  @map("o/c")
   stock        String?
   qty          Decimal? @db.Decimal
@@ -205,6 +193,7 @@ model managed_accounts_holdings {
   type         String?
   scheme       String?
   id           Int      @id @default(autoincrement())
+  entry_date   String?
 
   @@schema("pms_clients_tracker")
 }
@@ -216,6 +205,17 @@ model managed_portfolio_master {
   total_profit            Float?
   id                      Int     @id @default(autoincrement())
   returns                 Float?
+
+  @@schema("pms_clients_tracker")
+}
+
+model strategy {
+  id            Int       @id @default(autoincrement())
+  scheme_id     Int
+  strategy_name String    @db.VarChar(100)
+  system_tag    String    @db.VarChar(100)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
 
   @@schema("pms_clients_tracker")
 }
