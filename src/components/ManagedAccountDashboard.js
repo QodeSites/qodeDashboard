@@ -42,12 +42,22 @@ const calculateTrailingReturns = (data) => {
     const targetTime = lastDate - days * 24 * 60 * 60 * 1000;
     const referencePoint = getReferencePoint(data, targetTime);
     const refNav = parseFloat(referencePoint.nav);
-    // Calculate trailing return as percentage change
-    const trailingReturn = ((lastNav / refNav) - 1) * 100;
-    trailing[key] = trailingReturn;
+    
+    let result;
+    if (days >= 365) {
+      // Calculate CAGR for periods of 1 year or more
+      const years = days / 365;
+      result = (Math.pow(lastNav / refNav, 1 / years) - 1) * 100;
+    } else {
+      // Calculate absolute return for periods less than 1 year
+      result = ((lastNav / refNav) - 1) * 100;
+    }
+    trailing[key] = result;
   });
+  
   return trailing;
 };
+
 
 const calculateBenchmarkDD = (data) => {
   let maxBenchmark = -Infinity;
@@ -375,10 +385,10 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       ? totalPortfolio?.investedAmount || aggregatedTotals.totalInvestedAmount
       : selectedScheme?.investedAmount || 0;
 
-  const portfolioReturns = 
-      activeScheme === "Scheme Total"
-        ? totalPortfolio?.returns || 0
-        : selectedScheme?.returns || 0;
+  const portfolioReturns =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.returns || 0
+      : selectedScheme?.returns || 0;
 
   const portfolioValue =
     activeScheme === "Scheme Total"
@@ -768,65 +778,65 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
 
   // Keep holdingsToDisplay as an object
- // Keep holdingsToDisplay as an object so we can access the 'stock' and 'MF' keys
-const holdingsToDisplay =
-activeScheme === "Scheme Total"
-  ? holdingsData && holdingsData["totalPortfolio"]
-    ? holdingsData["totalPortfolio"]
-    : {}
-  : holdingsData && holdingsData[activeScheme]
-    ? holdingsData[activeScheme]
-    : {};
+  // Keep holdingsToDisplay as an object so we can access the 'stock' and 'MF' keys
+  const holdingsToDisplay =
+    activeScheme === "Scheme Total"
+      ? holdingsData && holdingsData["totalPortfolio"]
+        ? holdingsData["totalPortfolio"]
+        : {}
+      : holdingsData && holdingsData[activeScheme]
+        ? holdingsData[activeScheme]
+        : {};
 
-// Separate into stock and MF arrays
-const stockHoldings = holdingsToDisplay.stock
-? Object.values(holdingsToDisplay.stock)
-: [];
-const mfHoldings = holdingsToDisplay.MF
-? Object.values(holdingsToDisplay.MF)
-: [];
+  // Separate into stock and MF arrays
+  const stockHoldings = holdingsToDisplay.stock
+    ? Object.values(holdingsToDisplay.stock)
+    : [];
+  const mfHoldings = holdingsToDisplay.MF
+    ? Object.values(holdingsToDisplay.MF)
+    : [];
 
-// Create sorted arrays for stock and MF holdings separately
-const sortedStockHoldings = useMemo(() => {
-const arr = [...stockHoldings];
-if (sortConfig.key) {
-  arr.sort((a, b) => {
-    // Handle null/undefined values
-    if (a[sortConfig.key] == null) return 1;
-    if (b[sortConfig.key] == null) return -1;
-    // String comparison
-    if (typeof a[sortConfig.key] === 'string') {
-      return sortConfig.direction === 'asc'
-        ? a[sortConfig.key].localeCompare(b[sortConfig.key])
-        : b[sortConfig.key].localeCompare(a[sortConfig.key]);
+  // Create sorted arrays for stock and MF holdings separately
+  const sortedStockHoldings = useMemo(() => {
+    const arr = [...stockHoldings];
+    if (sortConfig.key) {
+      arr.sort((a, b) => {
+        // Handle null/undefined values
+        if (a[sortConfig.key] == null) return 1;
+        if (b[sortConfig.key] == null) return -1;
+        // String comparison
+        if (typeof a[sortConfig.key] === 'string') {
+          return sortConfig.direction === 'asc'
+            ? a[sortConfig.key].localeCompare(b[sortConfig.key])
+            : b[sortConfig.key].localeCompare(a[sortConfig.key]);
+        }
+        // Number comparison
+        return sortConfig.direction === 'asc'
+          ? a[sortConfig.key] - b[sortConfig.key]
+          : b[sortConfig.key] - a[sortConfig.key];
+      });
     }
-    // Number comparison
-    return sortConfig.direction === 'asc'
-      ? a[sortConfig.key] - b[sortConfig.key]
-      : b[sortConfig.key] - a[sortConfig.key];
-  });
-}
-return arr;
-}, [stockHoldings, sortConfig]);
+    return arr;
+  }, [stockHoldings, sortConfig]);
 
-const sortedMFHoldings = useMemo(() => {
-const arr = [...mfHoldings];
-if (sortConfig.key) {
-  arr.sort((a, b) => {
-    if (a[sortConfig.key] == null) return 1;
-    if (b[sortConfig.key] == null) return -1;
-    if (typeof a[sortConfig.key] === 'string') {
-      return sortConfig.direction === 'asc'
-        ? a[sortConfig.key].localeCompare(b[sortConfig.key])
-        : b[sortConfig.key].localeCompare(a[sortConfig.key]);
+  const sortedMFHoldings = useMemo(() => {
+    const arr = [...mfHoldings];
+    if (sortConfig.key) {
+      arr.sort((a, b) => {
+        if (a[sortConfig.key] == null) return 1;
+        if (b[sortConfig.key] == null) return -1;
+        if (typeof a[sortConfig.key] === 'string') {
+          return sortConfig.direction === 'asc'
+            ? a[sortConfig.key].localeCompare(b[sortConfig.key])
+            : b[sortConfig.key].localeCompare(a[sortConfig.key]);
+        }
+        return sortConfig.direction === 'asc'
+          ? a[sortConfig.key] - b[sortConfig.key]
+          : b[sortConfig.key] - a[sortConfig.key];
+      });
     }
-    return sortConfig.direction === 'asc'
-      ? a[sortConfig.key] - b[sortConfig.key]
-      : b[sortConfig.key] - a[sortConfig.key];
-  });
-}
-return arr;
-}, [mfHoldings, sortConfig]);
+    return arr;
+  }, [mfHoldings, sortConfig]);
 
 
 
@@ -1030,52 +1040,52 @@ return arr;
                   </thead>
 
                   <tbody className="bg-white divide-y divide-gray-200">
-  {sortedStockHoldings.length > 0 &&
-    sortedStockHoldings.map((holding, index) => (
-      <tr key={`stock-${holding.stock}-${index}`}>
-        <td className="px-4 py-2 text-sm text-gray-900">
-          {holding.stock || "-"}
-        </td>
-        <td className="px-4 py-2 text-right text-sm text-gray-900">
-          {holding.percentage ? holding.percentage.toFixed(2) + "%" : "-"}
-        </td>
-      </tr>
-    ))
-  }
+                    {sortedStockHoldings.length > 0 &&
+                      sortedStockHoldings.map((holding, index) => (
+                        <tr key={`stock-${holding.stock}-${index}`}>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {holding.stock || "-"}
+                          </td>
+                          <td className="px-4 py-2 text-right text-sm text-gray-900">
+                            {holding.percentage ? holding.percentage.toFixed(2) + "%" : "-"}
+                          </td>
+                        </tr>
+                      ))
+                    }
 
-  {/* Display a thick line if both stock and MF holdings exist */}
-  {sortedStockHoldings.length > 0 && sortedMFHoldings.length > 0 && (
-    <tr>
-      <td colSpan="2" className="px-4 py-2">
-        <hr className="border-4 border-gray-800" />
-      </td>
-    </tr>
-  )}
+                    {/* Display a thick line if both stock and MF holdings exist */}
+                    {sortedStockHoldings.length > 0 && sortedMFHoldings.length > 0 && (
+                      <tr>
+                        <td colSpan="2" className="px-4 py-2">
+                          <hr className="border-4 border-gray-800" />
+                        </td>
+                      </tr>
+                    )}
 
-  {sortedMFHoldings.length > 0 &&
-    sortedMFHoldings.map((holding, index) => (
-      <tr key={`mf-${holding.stock}-${index}`}>
-        <td className="px-4 py-2 text-sm text-gray-900">
-          {holding.stock || "-"}
-        </td>
-        <td className="px-4 py-2 text-right text-sm text-gray-900">
-          {holding.percentage ? holding.percentage.toFixed(2) + "%" : "-"}
-        </td>
-      </tr>
-    ))
-  }
+                    {sortedMFHoldings.length > 0 &&
+                      sortedMFHoldings.map((holding, index) => (
+                        <tr key={`mf-${holding.stock}-${index}`}>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {holding.stock || "-"}
+                          </td>
+                          <td className="px-4 py-2 text-right text-sm text-gray-900">
+                            {holding.percentage ? holding.percentage.toFixed(2) + "%" : "-"}
+                          </td>
+                        </tr>
+                      ))
+                    }
 
-  {sortedStockHoldings.length === 0 && sortedMFHoldings.length === 0 && (
-    <tr>
-      <td
-        colSpan="2"
-        className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center"
-      >
-        No holdings available.
-      </td>
-    </tr>
-  )}
-</tbody>
+                    {sortedStockHoldings.length === 0 && sortedMFHoldings.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan="2"
+                          className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center"
+                        >
+                          No holdings available.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
 
 
                 </table>
