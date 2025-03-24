@@ -374,8 +374,7 @@ function calculateMonthlyPnL(navData) {
     byMonth: monthlyPnL
   };
 }
-
-function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValues = []) {
+function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValues = [], scheme) {
   if (!navData || navData.length === 0) {
     console.warn("No NAV data provided.");
     return {};
@@ -388,62 +387,17 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
     return 'Q4';
   };
   
-  // Sort portfolio values by date for finding the closest value
-  const sortedPortfolioValues = [...portfolioValues].sort((a, b) => 
-    new Date(a.date) - new Date(b.date)
-  );
-  
-  // IMPORTANT: Instead of finding daily PL values based on NAV dates,
-  // we should use all available daily PL values directly
-  const groupDailyPLByQuarter = () => {
-    // Initialize the result object
-    const result = {};
-    
-    // Process each portfolio value
-    sortedPortfolioValues.forEach(entry => {
-      // Skip entries without daily_pl
-      if (entry.daily_pl === undefined || entry.daily_pl === null) return;
-      
-      const date = new Date(entry.date);
-      const year = date.getFullYear();
-      const quarter = getQuarter(date.getMonth());
-      const yearQuarter = `${year}-${quarter}`;
-      
-      // Create the quarter entry if it doesn't exist
-      if (!result[yearQuarter]) {
-        result[yearQuarter] = {
-          values: [],
-          totalPL: 0,
-          startDate: entry.date,
-          endDate: entry.date
-        };
-      }
-      
-      // Add the daily PL value to this quarter
-      result[yearQuarter].values.push({
-        date: entry.date,
-        value: entry.daily_pl
-      });
-      
-      // Update the total
-      result[yearQuarter].totalPL += entry.daily_pl;
-      
-      // Update first and last dates
-      if (new Date(entry.date) < new Date(result[yearQuarter].startDate)) {
-        result[yearQuarter].startDate = entry.date;
-      }
-      if (new Date(entry.date) > new Date(result[yearQuarter].endDate)) {
-        result[yearQuarter].endDate = entry.date;
-      }
-    });
-    
-    return result;
+  const getFirstMonthOfQuarter = (quarterName) => {
+    switch(quarterName) {
+      case 'Q1': return 0;
+      case 'Q2': return 3;
+      case 'Q3': return 6;
+      case 'Q4': return 9;
+      default: return 0;
+    }
   };
   
-  // Group daily PL values by quarter directly
-  const dailyPLByQuarter = groupDailyPLByQuarter();
-  
-  // Process NAV data by quarter (for reference only)
+  // --- NAV-Based Data ---
   const dataByQuarter = navData.reduce((acc, entry) => {
     const date = new Date(entry.date);
     const year = date.getFullYear();
@@ -464,11 +418,9 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
       nav: entry.nav,
     });
     
-    // Update last values
     acc[yearQuarter].lastNav = entry.nav;
     acc[yearQuarter].lastDate = entry.date;
     
-    // Keep track of first date if this is earlier
     if (new Date(entry.date) < new Date(acc[yearQuarter].firstDate)) {
       acc[yearQuarter].firstDate = entry.date;
     }
@@ -476,140 +428,212 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
     return acc;
   }, {});
   
-  // For testing with the provided values
-  const testDailyPLValues = [
-    216928.5, -474036, 455852.3, 75234.2, -132245, -362055, -590743, -519496, 55174.62, 73735.64,
-    350149.5, 84096.22, -92851.9, -117008, 135938.9, -536875, -258283, 122033.2, 175507.3, 185176.3,
-    -208332, 44418.96, -5628.91, -87397.7, -340040, -523971, 10934.07, 42603.1, -376962, -108280,
-    -295423, 120614.1, -164835, 69666.83, 759628.3, 97159.17, 239894.6, 104087.9, 369682.5, 335806.2,
-    141318.9, 90828.48, -282975, -304469, 266612.1, 351263.2, 241822.9, 259200.2, -148467, 467373.2,
-    15583.45, 123845.1, -360785, 134341.3, -525141, -183199, 635442.8, 186983.6, 124296.2, 54548.41, -41587.7
-  ];
+  // Filter portfolio values based on scheme
+  const filteredPortfolioValues = scheme === "Sarla Performance fibers Total Portfolio B"
+    ? portfolioValues.filter(item =>
+        item.account_names === "Sarla Performance fibers Total Portfolio B" &&
+        item.daily_pl !== undefined &&
+        item.daily_pl !== null
+      )
+    : portfolioValues;
   
-  // Calculate correct sum of the test values
-  const testSum = testDailyPLValues.reduce((sum, value) => sum + value, 0);
-  console.log("Test Sum of Provided Values:", testSum);
+  // Sort portfolio values by date
+  const sortedPortfolioValues = [...filteredPortfolioValues].sort((a, b) => 
+    new Date(a.date) - new Date(b.date)
+  );
   
-  // Get all quarters from both NAV and daily PL data
-  const allQuarters = new Set([
-    ...Object.keys(dataByQuarter),
-    ...Object.keys(dailyPLByQuarter)
-  ]);
-  const sortedQuarters = [...allQuarters].sort();
+  // Group daily PL values by quarter directly
+  const groupDailyPLByQuarter = () => {
+    const result = {};
+    
+    sortedPortfolioValues.forEach(entry => {
+      if (entry.daily_pl === undefined || entry.daily_pl === null) return;
+      
+      const date = new Date(entry.date);
+      const year = date.getFullYear();
+      const quarter = getQuarter(date.getMonth());
+      const yearQuarter = `${year}-${quarter}`;
+      
+      if (!result[yearQuarter]) {
+        result[yearQuarter] = {
+          values: [],
+          totalPL: 0,
+          startDate: entry.date,
+          endDate: entry.date
+        };
+      }
+      
+      result[yearQuarter].values.push({
+        date: entry.date,
+        value: entry.daily_pl
+      });
+      
+      result[yearQuarter].totalPL += entry.daily_pl;
+      
+      if (new Date(entry.date) < new Date(result[yearQuarter].startDate)) {
+        result[yearQuarter].startDate = entry.date;
+      }
+      if (new Date(entry.date) > new Date(result[yearQuarter].endDate)) {
+        result[yearQuarter].endDate = entry.date;
+      }
+    });
+    
+    return result;
+  };
+  
+  const dailyPLByQuarter = groupDailyPLByQuarter();
+  
+  // Helper function to find value from first month of quarter
+  const findValueFromFirstMonth = (yearQuarter) => {
+    const [year, quarter] = yearQuarter.split('-');
+    const firstMonthOfQuarter = getFirstMonthOfQuarter(quarter);
+    
+    const entriesInFirstMonth = sortedPortfolioValues.filter(entry => {
+      const entryDate = new Date(entry.date);
+      return entryDate.getFullYear() === parseInt(year) && 
+             entryDate.getMonth() === firstMonthOfQuarter;
+    });
+    
+    if (entriesInFirstMonth.length > 0) {
+      const earliestEntry = entriesInFirstMonth[0];
+      return {
+        date: new Date(earliestEntry.date).toISOString().slice(0, 10),
+        value: earliestEntry.portfolio_value || 0,
+        dailyPL: earliestEntry.daily_pl || 0
+      };
+    }
+    
+    const quarterStartDate = new Date(parseInt(year), firstMonthOfQuarter, 1);
+    const laterEntries = sortedPortfolioValues.filter(entry => 
+      new Date(entry.date) >= quarterStartDate
+    );
+    
+    if (laterEntries.length > 0) {
+      const closestEntry = laterEntries[0];
+      return {
+        date: new Date(closestEntry.date).toISOString().slice(0, 10),
+        value: closestEntry.portfolio_value || 0,
+        dailyPL: closestEntry.daily_pl || 0
+      };
+    }
+    
+    return {
+      date: quarterStartDate.toISOString().slice(0, 10),
+      value: 0,
+      dailyPL: 0
+    };
+  };
+  
+  // Helper function to find closest value for date
+  const findClosestValueForDate = (targetDate, useLatestFromMonth = true) => {
+    const targetDateObj = new Date(targetDate);
+    
+    if (useLatestFromMonth) {
+      const targetYear = targetDateObj.getFullYear();
+      const targetMonth = targetDateObj.getMonth();
+      
+      const sameMonthEntries = sortedPortfolioValues.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return entryDate.getFullYear() === targetYear && 
+               entryDate.getMonth() === targetMonth &&
+               entryDate <= targetDateObj;
+      });
+      
+      if (sameMonthEntries.length > 0) {
+        const latestEntry = sameMonthEntries[sameMonthEntries.length - 1];
+        return {
+          date: new Date(latestEntry.date).toISOString().slice(0, 10),
+          value: latestEntry.portfolio_value || 0,
+          dailyPL: latestEntry.daily_pl || 0
+        };
+      }
+    }
+    
+    const earlierEntries = sortedPortfolioValues.filter(entry => 
+      new Date(entry.date) <= targetDateObj
+    );
+    
+    if (earlierEntries.length > 0) {
+      const closestEntry = earlierEntries[earlierEntries.length - 1];
+      return {
+        date: new Date(closestEntry.date).toISOString().slice(0, 10),
+        value: closestEntry.portfolio_value || 0,
+        dailyPL: closestEntry.daily_pl || 0
+      };
+    }
+    
+    return {
+      date: targetDate,
+      value: 0,
+      dailyPL: 0
+    };
+  };
+  
+  const sortedQuarters = Object.keys(dataByQuarter).sort();
+  const quarterlyPnL = {};
   
   console.log("🧮 Calculating Quarterly PnL...");
   console.log("🗓 Sorted Quarters:", sortedQuarters);
   
-  // Create the final result
-  const quarterlyPnL = {};
-  let totalPLAllQuarters = 0;
-  
-  sortedQuarters.forEach(yearQuarter => {
-    const navData = dataByQuarter[yearQuarter] || {
-      startDate: "N/A",
-      lastDate: "N/A",
-      points: [],
-      firstDate: "N/A",
-      lastNav: 0
-    };
+  sortedQuarters.forEach((yearQuarter, index) => {
+    const currentData = dataByQuarter[yearQuarter];
+    const currentQuarterEnd = currentData.lastNav;
+    let startNav, startDate;
     
-    const plData = dailyPLByQuarter[yearQuarter] || {
-      values: [],
-      totalPL: 0,
-      startDate: "N/A",
-      endDate: "N/A"
-    };
-    
-    // Get first and last daily PL values with their dates
-    const startDailyPL = plData.values.length > 0 ? plData.values[0].value : 0;
-    const startDailyPLDate = plData.values.length > 0 ? plData.values[0].date : 'N/A';
-    
-    const endDailyPL = plData.values.length > 0 ? plData.values[plData.values.length - 1].value : 0;
-    const endDailyPLDate = plData.values.length > 0 ? plData.values[plData.values.length - 1].date : 'N/A';
-    
-    // Count the total number of daily PL values for this quarter
-    const dailyPLCount = plData.values.length;
-    
-    // Debug Logs for Each Quarter
-    console.log(`📊 Quarter: ${yearQuarter}`);
-    console.log(`   ➤ Start NAV: ${navData.points[0]?.nav || "N/A"}`);
-    console.log(`   ➤ End NAV: ${navData.lastNav || "N/A"}`);
-    console.log(`   ➤ Start Daily PL: ${startDailyPL} [${startDailyPLDate}]`);
-    console.log(`   ➤ End Daily PL: ${endDailyPL} [${endDailyPLDate}]`);
-    console.log(`   ➤ Daily PL Sum: ${plData.totalPL}`);
-    console.log(`   ➤ Daily PL Count: ${dailyPLCount}`);
-    
-    // Check for any values close to zero in the daily PL values (might indicate a rounding issue)
-    const verySmallValues = plData.values.filter(v => Math.abs(v.value) < 0.0001 && v.value !== 0);
-    if (verySmallValues.length > 0) {
-      console.log(`   ⚠️ Found ${verySmallValues.length} very small values that might affect the sum`);
+    if (index === 0) {
+      startNav = currentData.points[0].nav;
+      startDate = currentData.points[0].date;
+    } else {
+      const previousQuarter = sortedQuarters[index - 1];
+      startNav = dataByQuarter[previousQuarter].lastNav;
+      startDate = dataByQuarter[previousQuarter].lastDate;
     }
     
-    // Add this quarter's total to the running sum
-    totalPLAllQuarters += plData.totalPL;
+    const navPnLPercent = ((currentQuarterEnd - startNav) / startNav) * 100;
     
-    // Store the results
+    const startDateInfo = findValueFromFirstMonth(yearQuarter);
+    const endDateInfo = findClosestValueForDate(currentData.lastDate, true);
+    
+    const startVal = startDateInfo.value;
+    const endVal = endDateInfo.value;
+    
+    // Use grouped daily PL data instead of recalculating
+    const plData = dailyPLByQuarter[yearQuarter] || { totalPL: 0, values: [] };
+    const totalDailyPnL = plData.totalPL;
+    
+    console.log(`📊 Quarter: ${yearQuarter}`);
+    console.log(`   ➤ Start NAV: ${startNav}`);
+    console.log(`   ➤ End NAV: ${currentQuarterEnd}`);
+    console.log(`   ➤ NAV % PnL: ${navPnLPercent.toFixed(2)}%`);
+    console.log(`   ➤ Start Value: ${startVal} (from ${startDateInfo.date})`);
+    console.log(`   ➤ End Value: ${endVal} (from ${endDateInfo.date})`);
+    console.log(`   ➤ Daily PL Sum: ${totalDailyPnL}`);
+    console.log(`   ➤ NAV Points Count: ${currentData.points.length}`);
+    
     quarterlyPnL[yearQuarter] = {
-      startDate: navData.firstDate,
-      endDate: navData.lastDate,
-      startNav: navData.points[0]?.nav || 0,
-      endNav: navData.lastNav || 0,
-      dailyPnLValues: plData.values,
-      startDailyPL,
-      startDailyPLDate,
-      endDailyPL,
-      endDailyPLDate,
-      cashPnL: plData.totalPL,
-      dailyPLCount
+      startDate,
+      endDate: currentData.lastDate,
+      startNav,
+      endNav: currentQuarterEnd,
+      navPnLPercent,
+      navPoints: currentData.points,
+      startValue: startVal,
+      endValue: endVal,
+      valueStartDate: startDateInfo.date,
+      valueEndDate: endDateInfo.date,
+      cashPnL: totalDailyPnL,
+      dailyPnLValues: plData.values // Added from new logic
     };
   });
   
-  // Print the total daily PL across all quarters
-  console.log("\n📊 Total Daily PL across all quarters:", totalPLAllQuarters);
-  
-  // Print a direct sum of all portfolio values for comparison
+  // Calculate total PL across all quarters
+  const totalPLAllQuarters = Object.values(dailyPLByQuarter)
+    .reduce((sum, quarter) => sum + quarter.totalPL, 0);
   const directSum = sortedPortfolioValues.reduce((sum, item) => 
     sum + (item.daily_pl || 0), 0);
+  
+  console.log("\n📊 Total Daily PL across all quarters:", totalPLAllQuarters);
   console.log("📊 Direct sum of all daily_pl values:", directSum);
-  
-  // Print a summary of start and end daily PL values for all quarters
-  console.log("\n📈 Summary of Daily PL Start and End Values:");
-  Object.keys(quarterlyPnL).forEach(quarter => {
-    console.log(`${quarter}:`);
-    console.log(`   Start Daily PL: ${quarterlyPnL[quarter].startDailyPL} [${quarterlyPnL[quarter].startDailyPLDate}]`);
-    console.log(`   End Daily PL: ${quarterlyPnL[quarter].endDailyPL} [${quarterlyPnL[quarter].endDailyPLDate}]`);
-    console.log(`   Total Daily PL: ${quarterlyPnL[quarter].cashPnL}`);
-    console.log(`   Daily PL Count: ${quarterlyPnL[quarter].dailyPLCount}`);
-  });
-  
-  // Special test function to check if the provided array sums to expected value
-  function testProvidedValues() {
-    const values = testDailyPLValues;
-    const sum = values.reduce((acc, val) => acc + val, 0);
-    console.log("\n📌 TEST RESULTS:");
-    console.log(`Total values in test array: ${values.length}`);
-    console.log(`Sum of test array: ${sum}`);
-    
-    // Check if sum matches expected value
-    const expectedSum = 176694;
-    console.log(`Expected sum: ${expectedSum}`);
-    console.log(`Difference: ${sum - expectedSum}`);
-    
-    // Print each value and its running sum for verification
-    let runningSum = 0;
-    console.log("\nRunning sum calculation:");
-    values.forEach((val, index) => {
-      runningSum += val;
-      if (index < 5 || index > values.length - 6) {
-        console.log(`Value ${index+1}: ${val}, Running Sum: ${runningSum}`);
-      } else if (index === 5) {
-        console.log("...");
-      }
-    });
-  }
-  
-  // Run the test function
-  testProvidedValues();
   
   return {
     byQuarter: quarterlyPnL,
@@ -618,27 +642,6 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
   };
 }
 
-// For testing specifically with the provided values
-function testArraySum() {
-  const testValues = [
-    216928.5, -474036, 455852.3, 75234.2, -132245, -362055, -590743, -519496, 55174.62, 73735.64,
-    350149.5, 84096.22, -92851.9, -117008, 135938.9, -536875, -258283, 122033.2, 175507.3, 185176.3,
-    -208332, 44418.96, -5628.91, -87397.7, -340040, -523971, 10934.07, 42603.1, -376962, -108280,
-    -295423, 120614.1, -164835, 69666.83, 759628.3, 97159.17, 239894.6, 104087.9, 369682.5, 335806.2,
-    141318.9, 90828.48, -282975, -304469, 266612.1, 351263.2, 241822.9, 259200.2, -148467, 467373.2,
-    15583.45, 123845.1, -360785, 134341.3, -525141, -183199, 635442.8, 186983.6, 124296.2, 54548.41, -41587.7
-  ];
-  
-  // Calculate sum with standard reduce
-  const sum = testValues.reduce((acc, val) => acc + val, 0);
-  console.log("Sum of test array:", sum);
-  
-  return sum;
-}
-
-// Call the standalone test function
-console.log("Running standalone test:");
-testArraySum();
 
 function calculateSchemeAllocation(investedAmounts) {
   const total = Object.values(investedAmounts).reduce((sum, amount) => sum + amount, 0);
@@ -724,7 +727,7 @@ export async function GET(request) {
       );
     }
 
-    // Fetch cash flows, master sheet data (for other metrics) and portfolio master data (for currentPortfolioValue, totalProfit, and returns)
+    // Fetch cash flows, master sheet data, and portfolio master data
     const [cashInOutData, masterSheetData, portfolioMasterData] = await Promise.all([
       prisma.managed_accounts_cash_in_out.findMany({
         where: { account_code: { in: accountCodes } },
@@ -762,9 +765,9 @@ export async function GET(request) {
     ]);
 
     const results = {};
-
-    // --- Build a global mapping of scheme invested amounts for all accounts ---
     const globalSchemeInvestedAmounts = {};
+
+    // Build global scheme invested amounts
     for (const accountCode of accountCodes) {
       const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {}).filter(
         (scheme) => scheme !== "_total"
@@ -785,7 +788,7 @@ export async function GET(request) {
       }
     }
 
-    // --- Process accounts and schemes (for metrics etc.) ---
+    // Process accounts and schemes
     for (const accountCode of accountCodes) {
       results[accountCode] = {
         clientName: CLIENT_NAMES[accountCode] || "Unknown Client",
@@ -796,13 +799,12 @@ export async function GET(request) {
       const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {}).filter(
         (scheme) => scheme !== "_total"
       );
-      const schemeInvestedAmounts = {}; // local for this account
+      const schemeInvestedAmounts = {};
 
       // Process individual schemes
       for (const scheme of schemes) {
         const portfolioNames = getPortfolioNames(accountCode, scheme);
 
-        // Filter master sheet data for current and metrics names
         const currentData = masterSheetData.filter(
           (entry) => entry.account_names === portfolioNames.current
         );
@@ -829,14 +831,11 @@ export async function GET(request) {
         }));
 
         const drawdownMetrics = calculateDrawdownMetrics(navCurve);
-
-        // Calculate totalProfit based on existing logic as fallback.
         const calcTotalProfit =
           accountCode === "AC5" && scheme === "Scheme B"
             ? calculateTotalProfit(metricsData, cashForScheme)
             : calculateTotalProfit(currentData, cashForScheme);
 
-        // --- Override currentPortfolioValue, totalProfit and returns using portfolio master data ---
         const portfolioMaster = portfolioMasterData.find(
           (row) => row.account_code === accountCode && row.scheme === scheme
         );
@@ -852,7 +851,6 @@ export async function GET(request) {
           ? portfolioMaster.returns
           : calculateReturns(navCurve, cashForScheme);
 
-        // Calculate trailing returns (with different period options)
         let trailingReturns;
         if (scheme === "Scheme A") {
           trailingReturns = calculateTrailingReturns(navCurve);
@@ -867,13 +865,32 @@ export async function GET(request) {
           });
         }
 
+        // Calculate quarterly PnL with specific handling for AC5 Scheme B
+        let quarterlyPnL;
+        if (accountCode === "AC5" && scheme === "Scheme B") {
+          // Use Sarla Performance fibers Total Portfolio B data specifically
+          quarterlyPnL = calculateQuarterlyPnLWithDailyPL(
+            navCurve, // NAV curve from metricsData (Sarla Performance fibers Total Portfolio B)
+            cashForScheme,
+            metricsData, // Contains daily_pl for Sarla Performance fibers Total Portfolio B
+            "Sarla Performance fibers Total Portfolio B" // Pass scheme name
+          );
+        } else {
+          // Use original data for other schemes
+          quarterlyPnL = calculateQuarterlyPnLWithDailyPL(
+            navCurve,
+            cashForScheme,
+            currentData
+          );
+        }
+
         results[accountCode].schemes[scheme] = {
           currentPortfolioValue: schemeCurrentPortfolioValue,
           investedAmount,
           returns: schemeReturns * 100,
           trailingReturns,
           monthlyPnL: calculateMonthlyPnL(navCurve),
-          quarterlyPnL: calculateQuarterlyPnLWithDailyPL(navCurve, cashForScheme, currentData),
+          quarterlyPnL,
           navCurve,
           totalProfit: schemeTotalProfit,
           dividends: cashForScheme.reduce(
@@ -915,7 +932,7 @@ export async function GET(request) {
         totalCurrentData,
         totalCashFlows
       );
-      // --- Override with portfolio master data for "Scheme Total" ---
+
       const portfolioMasterTotal = portfolioMasterData.find(
         (row) => row.account_code === accountCode && row.scheme === "Scheme Total"
       );
@@ -928,36 +945,35 @@ export async function GET(request) {
         ? portfolioMasterTotal.total_profit
         : calcTotalPortfolioProfit;
 
-        results[accountCode].totalPortfolio = {
-          currentPortfolioValue: totalPortfolioValue,
-          investedAmount: totalInvestedAmount,
-          returns: portfolioMasterTotal 
-            ? portfolioMasterTotal.returns * 100 
-            : calculateReturns(totalNavCurve, totalCashFlows),
-          trailingReturns: calculateTrailingReturns(totalNavCurve),
-          quarterlyPnL: calculateQuarterlyPnLWithDailyPL(totalNavCurve, totalCashFlows, totalCurrentData),
-          monthlyPnL: calculateMonthlyPnL(totalNavCurve),
-          navCurve: totalNavCurve,
-          totalProfit: totalProfitValue,
-          dividends: totalCashFlows.reduce(
-            (sum, flow) => sum + (flow.dividend || 0),
-            0
-          ),
-          currentDrawdown: totalDrawdownMetrics.currentDD,
-          maxDrawdown: totalDrawdownMetrics.mdd,
-          drawdownCurve: totalDrawdownMetrics.ddCurve,
-          schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
-          cashFlows: totalCashFlows.map((flow) => ({
-            date: flow.date,
-            scheme: flow.scheme,
-            amount: flow.capital_in_out,
-            dividend: flow.dividend,
-          })),
-        };
-        
+      results[accountCode].totalPortfolio = {
+        currentPortfolioValue: totalPortfolioValue,
+        investedAmount: totalInvestedAmount,
+        returns: portfolioMasterTotal 
+          ? portfolioMasterTotal.returns * 100 
+          : calculateReturns(totalNavCurve, totalCashFlows),
+        trailingReturns: calculateTrailingReturns(totalNavCurve),
+        quarterlyPnL: calculateQuarterlyPnLWithDailyPL(totalNavCurve, totalCashFlows, totalCurrentData),
+        monthlyPnL: calculateMonthlyPnL(totalNavCurve),
+        navCurve: totalNavCurve,
+        totalProfit: totalProfitValue,
+        dividends: totalCashFlows.reduce(
+          (sum, flow) => sum + (flow.dividend || 0),
+          0
+        ),
+        currentDrawdown: totalDrawdownMetrics.currentDD,
+        maxDrawdown: totalDrawdownMetrics.mdd,
+        drawdownCurve: totalDrawdownMetrics.ddCurve,
+        schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
+        cashFlows: totalCashFlows.map((flow) => ({
+          date: flow.date,
+          scheme: flow.scheme,
+          amount: flow.capital_in_out,
+          dividend: flow.dividend,
+        })),
+      };
     }
 
-    // --- Process holdings --- (unchanged grouping and percentage logic)
+    // Process holdings (unchanged)
     const sessionManagedAccountCodes =
       session?.user?.managed_account_codes || accountCodes;
     const holdingsData1 = await prisma.managed_accounts_holdings.findMany({
