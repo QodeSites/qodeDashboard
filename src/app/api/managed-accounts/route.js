@@ -374,9 +374,9 @@ function calculateMonthlyPnL(navData) {
     byMonth: monthlyPnL
   };
 }
-
-function calculateQuarterlyPnLWithCash(navData, cashFlows = [], portfolioValues = []) {
+function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValues = []) {
   if (!navData || navData.length === 0) {
+    console.warn("No NAV data provided.");
     return {};
   }
 
@@ -413,30 +413,32 @@ function calculateQuarterlyPnLWithCash(navData, cashFlows = [], portfolioValues 
     return acc;
   }, {});
 
-  // --- Portfolio Value (Cash-Based) Data ---
-  const valueByDate = Object.fromEntries(
-    portfolioValues.map((p) => [new Date(p.date).toISOString().slice(0, 10), p.portfolio_value])
+  // Create mapping of date => daily PnL
+  const dailyPLByDate = Object.fromEntries(
+    portfolioValues.map((p) => [
+      new Date(p.date).toISOString().slice(0, 10),
+      p.daily_pl || 0,
+    ])
   );
 
-  const groupedCashFlows = cashFlows.reduce((acc, flow) => {
-    const date = new Date(flow.date);
-    const year = date.getFullYear();
-    const quarter = getQuarter(date.getMonth());
-    const yearQuarter = `${year}-${quarter}`;
-    if (!acc[yearQuarter]) acc[yearQuarter] = 0;
-    acc[yearQuarter] += flow.capital_in_out || 0;
-    return acc;
-  }, {});
+  const valueByDate = Object.fromEntries(
+    portfolioValues.map((p) => [
+      new Date(p.date).toISOString().slice(0, 10),
+      p.portfolio_value,
+    ])
+  );
 
   const sortedQuarters = Object.keys(dataByQuarter).sort();
   const quarterlyPnL = {};
+
+  console.log("🧮 Calculating Quarterly PnL...");
+  console.log("🗓 Sorted Quarters:", sortedQuarters);
 
   sortedQuarters.forEach((yearQuarter, index) => {
     const currentData = dataByQuarter[yearQuarter];
     const currentQuarterEnd = currentData.lastNav;
 
-    let startNav, startDate, startValue = 0, endValue = 0;
-
+    let startNav, startDate;
     if (index === 0) {
       startNav = currentData.points[0].nav;
       startDate = currentData.points[0].date;
@@ -446,28 +448,40 @@ function calculateQuarterlyPnLWithCash(navData, cashFlows = [], portfolioValues 
       startDate = dataByQuarter[previousQuarter].lastDate;
     }
 
-    // NAV % PnL
-    const pnl = ((currentQuarterEnd - startNav) / startNav) * 100;
+    const navPnLPercent = ((currentQuarterEnd - startNav) / startNav) * 100;
 
-    // Portfolio Value Based
-    const startVal = valueByDate[new Date(startDate).toISOString().slice(0, 10)] || 0;
-    const endVal = valueByDate[new Date(currentData.lastDate).toISOString().slice(0, 10)] || 0;
+    const startDateStr = new Date(startDate).toISOString().slice(0, 10);
+    const endDateStr = new Date(currentData.lastDate).toISOString().slice(0, 10);
 
-    const netCashFlow = groupedCashFlows[yearQuarter] || 0;
+    const startVal = valueByDate[startDateStr] || 0;
+    const endVal = valueByDate[endDateStr] || 0;
 
-    const cashPnL = (endVal - startVal) - netCashFlow;
+    const totalDailyPnL = currentData.points.reduce((sum, point) => {
+      const dateStr = new Date(point.date).toISOString().slice(0, 10);
+      const dailyPnL = dailyPLByDate[dateStr] || 0;
+      return sum + dailyPnL;
+    }, 0);
+
+    // Debug Logs for Each Quarter
+    console.log(`📊 Quarter: ${yearQuarter}`);
+    console.log(`   ➤ Start NAV: ${startNav}`);
+    console.log(`   ➤ End NAV: ${currentQuarterEnd}`);
+    console.log(`   ➤ NAV % PnL: ${navPnLPercent.toFixed(2)}%`);
+    console.log(`   ➤ Start Value: ${startVal}`);
+    console.log(`   ➤ End Value: ${endVal}`);
+    console.log(`   ➤ Daily PL Sum: ${totalDailyPnL}`);
+    console.log(`   ➤ NAV Points Count: ${currentData.points.length}`);
 
     quarterlyPnL[yearQuarter] = {
       startDate,
       endDate: currentData.lastDate,
       startNav,
       endNav: currentQuarterEnd,
-      navPnLPercent: pnl,
+      navPnLPercent,
       navPoints: currentData.points,
       startValue: startVal,
       endValue: endVal,
-      netCashFlow,
-      cashPnL,
+      cashPnL: totalDailyPnL, // PnL from daily PL instead of cash flow
     };
   });
 
@@ -475,6 +489,7 @@ function calculateQuarterlyPnLWithCash(navData, cashFlows = [], portfolioValues 
     byQuarter: quarterlyPnL,
   };
 }
+
 
 
 function calculateSchemeAllocation(investedAmounts) {
@@ -710,7 +725,7 @@ export async function GET(request) {
           returns: schemeReturns * 100,
           trailingReturns,
           monthlyPnL: calculateMonthlyPnL(navCurve),
-          quarterlyPnL: calculateQuarterlyPnLWithCash(navCurve, cashForScheme, currentData),
+          quarterlyPnL: calculateQuarterlyPnLWithDailyPL(navCurve, cashForScheme, currentData),
           navCurve,
           totalProfit: schemeTotalProfit,
           dividends: cashForScheme.reduce(
@@ -772,7 +787,7 @@ export async function GET(request) {
             ? portfolioMasterTotal.returns * 100 
             : calculateReturns(totalNavCurve, totalCashFlows),
           trailingReturns: calculateTrailingReturns(totalNavCurve),
-          quarterlyPnL: calculateQuarterlyPnLWithCash(totalNavCurve, totalCashFlows, totalCurrentData),
+          quarterlyPnL: calculateQuarterlyPnLWithDailyPL(totalNavCurve, totalCashFlows, totalCurrentData),
           monthlyPnL: calculateMonthlyPnL(totalNavCurve),
           navCurve: totalNavCurve,
           totalProfit: totalProfitValue,
