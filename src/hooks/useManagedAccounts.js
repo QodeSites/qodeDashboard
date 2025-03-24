@@ -130,6 +130,8 @@ const useManagedAccounts = () => {
   // New helper function for holdings:
   const getHoldingsByScheme = (scheme) => holdingsData?.[scheme] || [];
 
+  console.log('quarterlyPnL:', holdingsData?.[0]?.quarterlyPnL);
+
   return {
     accountsData,
     holdingsData,

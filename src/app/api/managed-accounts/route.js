@@ -270,7 +270,6 @@ function calculateTrailingReturns(
   return returns;
 }
 
-
 function calculateMonthlyPnL(navData) {
   // console.log('\n=== Starting PnL Calculation ===');
   // console.log('Input data:', JSON.stringify(navData, null, 2));
@@ -376,12 +375,11 @@ function calculateMonthlyPnL(navData) {
   };
 }
 
-function calculateQuarterlyPnL(navData) {
+function calculateQuarterlyPnLWithCash(navData, cashFlows = [], portfolioValues = []) {
   if (!navData || navData.length === 0) {
     return {};
   }
 
-  // Helper to get the quarter for a given month
   const getQuarter = (month) => {
     if (month < 3) return 'Q1';
     if (month < 6) return 'Q2';
@@ -389,7 +387,7 @@ function calculateQuarterlyPnL(navData) {
     return 'Q4';
   };
 
-  // Group by year-quarter and track last NAV for each quarter
+  // --- NAV-Based Data ---
   const dataByQuarter = navData.reduce((acc, entry) => {
     const date = new Date(entry.date);
     const year = date.getFullYear();
@@ -409,10 +407,24 @@ function calculateQuarterlyPnL(navData) {
       nav: entry.nav,
     });
 
-    // Always update last NAV and date as we want the latest available
     acc[yearQuarter].lastNav = entry.nav;
     acc[yearQuarter].lastDate = entry.date;
 
+    return acc;
+  }, {});
+
+  // --- Portfolio Value (Cash-Based) Data ---
+  const valueByDate = Object.fromEntries(
+    portfolioValues.map((p) => [new Date(p.date).toISOString().slice(0, 10), p.portfolio_value])
+  );
+
+  const groupedCashFlows = cashFlows.reduce((acc, flow) => {
+    const date = new Date(flow.date);
+    const year = date.getFullYear();
+    const quarter = getQuarter(date.getMonth());
+    const yearQuarter = `${year}-${quarter}`;
+    if (!acc[yearQuarter]) acc[yearQuarter] = 0;
+    acc[yearQuarter] += flow.capital_in_out || 0;
     return acc;
   }, {});
 
@@ -423,11 +435,9 @@ function calculateQuarterlyPnL(navData) {
     const currentData = dataByQuarter[yearQuarter];
     const currentQuarterEnd = currentData.lastNav;
 
-    let startNav;
-    let startDate;
+    let startNav, startDate, startValue = 0, endValue = 0;
 
     if (index === 0) {
-      // First quarter - use its first NAV
       startNav = currentData.points[0].nav;
       startDate = currentData.points[0].date;
     } else {
@@ -436,30 +446,32 @@ function calculateQuarterlyPnL(navData) {
       startDate = dataByQuarter[previousQuarter].lastDate;
     }
 
+    // NAV % PnL
     const pnl = ((currentQuarterEnd - startNav) / startNav) * 100;
+
+    // Portfolio Value Based
+    const startVal = valueByDate[new Date(startDate).toISOString().slice(0, 10)] || 0;
+    const endVal = valueByDate[new Date(currentData.lastDate).toISOString().slice(0, 10)] || 0;
+
+    const netCashFlow = groupedCashFlows[yearQuarter] || 0;
+
+    const cashPnL = (endVal - startVal) - netCashFlow;
 
     quarterlyPnL[yearQuarter] = {
       startDate,
       endDate: currentData.lastDate,
       startNav,
       endNav: currentQuarterEnd,
-      pnl,
+      navPnLPercent: pnl,
       navPoints: currentData.points,
+      startValue: startVal,
+      endValue: endVal,
+      netCashFlow,
+      cashPnL,
     };
   });
 
-  // Group by year
-  const pnlByYear = {};
-  Object.entries(quarterlyPnL).forEach(([yearQuarter, data]) => {
-    const year = yearQuarter.split('-')[0];
-    if (!pnlByYear[year]) {
-      pnlByYear[year] = {};
-    }
-    pnlByYear[year][yearQuarter] = data;
-  });
-
   return {
-    byYear: pnlByYear,
     byQuarter: quarterlyPnL,
   };
 }
@@ -698,7 +710,7 @@ export async function GET(request) {
           returns: schemeReturns * 100,
           trailingReturns,
           monthlyPnL: calculateMonthlyPnL(navCurve),
-          quarterlyPnL: calculateQuarterlyPnL(navCurve),
+          quarterlyPnL: calculateQuarterlyPnLWithCash(navCurve, cashForScheme, currentData),
           navCurve,
           totalProfit: schemeTotalProfit,
           dividends: cashForScheme.reduce(
@@ -760,7 +772,7 @@ export async function GET(request) {
             ? portfolioMasterTotal.returns * 100 
             : calculateReturns(totalNavCurve, totalCashFlows),
           trailingReturns: calculateTrailingReturns(totalNavCurve),
-          quarterlyPnL: calculateQuarterlyPnL(totalNavCurve),
+          quarterlyPnL: calculateQuarterlyPnLWithCash(totalNavCurve, totalCashFlows, totalCurrentData),
           monthlyPnL: calculateMonthlyPnL(totalNavCurve),
           navCurve: totalNavCurve,
           totalProfit: totalProfitValue,

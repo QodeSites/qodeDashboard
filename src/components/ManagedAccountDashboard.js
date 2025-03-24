@@ -730,10 +730,10 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   const quarterlyPnLFromNormalizedData =
     activeScheme === "Scheme Total"
       ? totalPortfolio?.quarterlyPnL
-        ? totalPortfolio.quarterlyPnL.byYear || {}
+        ? totalPortfolio.quarterlyPnL || {}
         : {}
       : selectedScheme?.quarterlyPnL
-        ? selectedScheme.quarterlyPnL.byYear || {}
+        ? selectedScheme.quarterlyPnL || {}
         : {};
 
   console.log('monthlyPnLFromNormalizedData', quarterlyPnLFromNormalizedData)
