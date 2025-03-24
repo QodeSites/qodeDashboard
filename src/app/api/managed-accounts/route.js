@@ -374,123 +374,271 @@ function calculateMonthlyPnL(navData) {
     byMonth: monthlyPnL
   };
 }
+
 function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValues = []) {
   if (!navData || navData.length === 0) {
     console.warn("No NAV data provided.");
     return {};
   }
-
+  
   const getQuarter = (month) => {
     if (month < 3) return 'Q1';
     if (month < 6) return 'Q2';
     if (month < 9) return 'Q3';
     return 'Q4';
   };
-
-  // --- NAV-Based Data ---
+  
+  // Sort portfolio values by date for finding the closest value
+  const sortedPortfolioValues = [...portfolioValues].sort((a, b) => 
+    new Date(a.date) - new Date(b.date)
+  );
+  
+  // IMPORTANT: Instead of finding daily PL values based on NAV dates,
+  // we should use all available daily PL values directly
+  const groupDailyPLByQuarter = () => {
+    // Initialize the result object
+    const result = {};
+    
+    // Process each portfolio value
+    sortedPortfolioValues.forEach(entry => {
+      // Skip entries without daily_pl
+      if (entry.daily_pl === undefined || entry.daily_pl === null) return;
+      
+      const date = new Date(entry.date);
+      const year = date.getFullYear();
+      const quarter = getQuarter(date.getMonth());
+      const yearQuarter = `${year}-${quarter}`;
+      
+      // Create the quarter entry if it doesn't exist
+      if (!result[yearQuarter]) {
+        result[yearQuarter] = {
+          values: [],
+          totalPL: 0,
+          startDate: entry.date,
+          endDate: entry.date
+        };
+      }
+      
+      // Add the daily PL value to this quarter
+      result[yearQuarter].values.push({
+        date: entry.date,
+        value: entry.daily_pl
+      });
+      
+      // Update the total
+      result[yearQuarter].totalPL += entry.daily_pl;
+      
+      // Update first and last dates
+      if (new Date(entry.date) < new Date(result[yearQuarter].startDate)) {
+        result[yearQuarter].startDate = entry.date;
+      }
+      if (new Date(entry.date) > new Date(result[yearQuarter].endDate)) {
+        result[yearQuarter].endDate = entry.date;
+      }
+    });
+    
+    return result;
+  };
+  
+  // Group daily PL values by quarter directly
+  const dailyPLByQuarter = groupDailyPLByQuarter();
+  
+  // Process NAV data by quarter (for reference only)
   const dataByQuarter = navData.reduce((acc, entry) => {
     const date = new Date(entry.date);
     const year = date.getFullYear();
     const quarter = getQuarter(date.getMonth());
     const yearQuarter = `${year}-${quarter}`;
-
+    
     if (!acc[yearQuarter]) {
       acc[yearQuarter] = {
         points: [],
         lastNav: null,
         lastDate: null,
+        firstDate: entry.date,
       };
     }
-
+    
     acc[yearQuarter].points.push({
       date: entry.date,
       nav: entry.nav,
     });
-
+    
+    // Update last values
     acc[yearQuarter].lastNav = entry.nav;
     acc[yearQuarter].lastDate = entry.date;
-
+    
+    // Keep track of first date if this is earlier
+    if (new Date(entry.date) < new Date(acc[yearQuarter].firstDate)) {
+      acc[yearQuarter].firstDate = entry.date;
+    }
+    
     return acc;
   }, {});
-
-  // Create mapping of date => daily PnL
-  const dailyPLByDate = Object.fromEntries(
-    portfolioValues.map((p) => [
-      new Date(p.date).toISOString().slice(0, 10),
-      p.daily_pl || 0,
-    ])
-  );
-
-  const valueByDate = Object.fromEntries(
-    portfolioValues.map((p) => [
-      new Date(p.date).toISOString().slice(0, 10),
-      p.portfolio_value,
-    ])
-  );
-
-  const sortedQuarters = Object.keys(dataByQuarter).sort();
-  const quarterlyPnL = {};
-
+  
+  // For testing with the provided values
+  const testDailyPLValues = [
+    216928.5, -474036, 455852.3, 75234.2, -132245, -362055, -590743, -519496, 55174.62, 73735.64,
+    350149.5, 84096.22, -92851.9, -117008, 135938.9, -536875, -258283, 122033.2, 175507.3, 185176.3,
+    -208332, 44418.96, -5628.91, -87397.7, -340040, -523971, 10934.07, 42603.1, -376962, -108280,
+    -295423, 120614.1, -164835, 69666.83, 759628.3, 97159.17, 239894.6, 104087.9, 369682.5, 335806.2,
+    141318.9, 90828.48, -282975, -304469, 266612.1, 351263.2, 241822.9, 259200.2, -148467, 467373.2,
+    15583.45, 123845.1, -360785, 134341.3, -525141, -183199, 635442.8, 186983.6, 124296.2, 54548.41, -41587.7
+  ];
+  
+  // Calculate correct sum of the test values
+  const testSum = testDailyPLValues.reduce((sum, value) => sum + value, 0);
+  console.log("Test Sum of Provided Values:", testSum);
+  
+  // Get all quarters from both NAV and daily PL data
+  const allQuarters = new Set([
+    ...Object.keys(dataByQuarter),
+    ...Object.keys(dailyPLByQuarter)
+  ]);
+  const sortedQuarters = [...allQuarters].sort();
+  
   console.log("🧮 Calculating Quarterly PnL...");
   console.log("🗓 Sorted Quarters:", sortedQuarters);
-
-  sortedQuarters.forEach((yearQuarter, index) => {
-    const currentData = dataByQuarter[yearQuarter];
-    const currentQuarterEnd = currentData.lastNav;
-
-    let startNav, startDate;
-    if (index === 0) {
-      startNav = currentData.points[0].nav;
-      startDate = currentData.points[0].date;
-    } else {
-      const previousQuarter = sortedQuarters[index - 1];
-      startNav = dataByQuarter[previousQuarter].lastNav;
-      startDate = dataByQuarter[previousQuarter].lastDate;
-    }
-
-    const navPnLPercent = ((currentQuarterEnd - startNav) / startNav) * 100;
-
-    const startDateStr = new Date(startDate).toISOString().slice(0, 10);
-    const endDateStr = new Date(currentData.lastDate).toISOString().slice(0, 10);
-
-    const startVal = valueByDate[startDateStr] || 0;
-    const endVal = valueByDate[endDateStr] || 0;
-
-    const totalDailyPnL = currentData.points.reduce((sum, point) => {
-      const dateStr = new Date(point.date).toISOString().slice(0, 10);
-      const dailyPnL = dailyPLByDate[dateStr] || 0;
-      return sum + dailyPnL;
-    }, 0);
-
+  
+  // Create the final result
+  const quarterlyPnL = {};
+  let totalPLAllQuarters = 0;
+  
+  sortedQuarters.forEach(yearQuarter => {
+    const navData = dataByQuarter[yearQuarter] || {
+      startDate: "N/A",
+      lastDate: "N/A",
+      points: [],
+      firstDate: "N/A",
+      lastNav: 0
+    };
+    
+    const plData = dailyPLByQuarter[yearQuarter] || {
+      values: [],
+      totalPL: 0,
+      startDate: "N/A",
+      endDate: "N/A"
+    };
+    
+    // Get first and last daily PL values with their dates
+    const startDailyPL = plData.values.length > 0 ? plData.values[0].value : 0;
+    const startDailyPLDate = plData.values.length > 0 ? plData.values[0].date : 'N/A';
+    
+    const endDailyPL = plData.values.length > 0 ? plData.values[plData.values.length - 1].value : 0;
+    const endDailyPLDate = plData.values.length > 0 ? plData.values[plData.values.length - 1].date : 'N/A';
+    
+    // Count the total number of daily PL values for this quarter
+    const dailyPLCount = plData.values.length;
+    
     // Debug Logs for Each Quarter
     console.log(`📊 Quarter: ${yearQuarter}`);
-    console.log(`   ➤ Start NAV: ${startNav}`);
-    console.log(`   ➤ End NAV: ${currentQuarterEnd}`);
-    console.log(`   ➤ NAV % PnL: ${navPnLPercent.toFixed(2)}%`);
-    console.log(`   ➤ Start Value: ${startVal}`);
-    console.log(`   ➤ End Value: ${endVal}`);
-    console.log(`   ➤ Daily PL Sum: ${totalDailyPnL}`);
-    console.log(`   ➤ NAV Points Count: ${currentData.points.length}`);
-
+    console.log(`   ➤ Start NAV: ${navData.points[0]?.nav || "N/A"}`);
+    console.log(`   ➤ End NAV: ${navData.lastNav || "N/A"}`);
+    console.log(`   ➤ Start Daily PL: ${startDailyPL} [${startDailyPLDate}]`);
+    console.log(`   ➤ End Daily PL: ${endDailyPL} [${endDailyPLDate}]`);
+    console.log(`   ➤ Daily PL Sum: ${plData.totalPL}`);
+    console.log(`   ➤ Daily PL Count: ${dailyPLCount}`);
+    
+    // Check for any values close to zero in the daily PL values (might indicate a rounding issue)
+    const verySmallValues = plData.values.filter(v => Math.abs(v.value) < 0.0001 && v.value !== 0);
+    if (verySmallValues.length > 0) {
+      console.log(`   ⚠️ Found ${verySmallValues.length} very small values that might affect the sum`);
+    }
+    
+    // Add this quarter's total to the running sum
+    totalPLAllQuarters += plData.totalPL;
+    
+    // Store the results
     quarterlyPnL[yearQuarter] = {
-      startDate,
-      endDate: currentData.lastDate,
-      startNav,
-      endNav: currentQuarterEnd,
-      navPnLPercent,
-      navPoints: currentData.points,
-      startValue: startVal,
-      endValue: endVal,
-      cashPnL: totalDailyPnL, // PnL from daily PL instead of cash flow
+      startDate: navData.firstDate,
+      endDate: navData.lastDate,
+      startNav: navData.points[0]?.nav || 0,
+      endNav: navData.lastNav || 0,
+      dailyPnLValues: plData.values,
+      startDailyPL,
+      startDailyPLDate,
+      endDailyPL,
+      endDailyPLDate,
+      cashPnL: plData.totalPL,
+      dailyPLCount
     };
   });
-
+  
+  // Print the total daily PL across all quarters
+  console.log("\n📊 Total Daily PL across all quarters:", totalPLAllQuarters);
+  
+  // Print a direct sum of all portfolio values for comparison
+  const directSum = sortedPortfolioValues.reduce((sum, item) => 
+    sum + (item.daily_pl || 0), 0);
+  console.log("📊 Direct sum of all daily_pl values:", directSum);
+  
+  // Print a summary of start and end daily PL values for all quarters
+  console.log("\n📈 Summary of Daily PL Start and End Values:");
+  Object.keys(quarterlyPnL).forEach(quarter => {
+    console.log(`${quarter}:`);
+    console.log(`   Start Daily PL: ${quarterlyPnL[quarter].startDailyPL} [${quarterlyPnL[quarter].startDailyPLDate}]`);
+    console.log(`   End Daily PL: ${quarterlyPnL[quarter].endDailyPL} [${quarterlyPnL[quarter].endDailyPLDate}]`);
+    console.log(`   Total Daily PL: ${quarterlyPnL[quarter].cashPnL}`);
+    console.log(`   Daily PL Count: ${quarterlyPnL[quarter].dailyPLCount}`);
+  });
+  
+  // Special test function to check if the provided array sums to expected value
+  function testProvidedValues() {
+    const values = testDailyPLValues;
+    const sum = values.reduce((acc, val) => acc + val, 0);
+    console.log("\n📌 TEST RESULTS:");
+    console.log(`Total values in test array: ${values.length}`);
+    console.log(`Sum of test array: ${sum}`);
+    
+    // Check if sum matches expected value
+    const expectedSum = 176694;
+    console.log(`Expected sum: ${expectedSum}`);
+    console.log(`Difference: ${sum - expectedSum}`);
+    
+    // Print each value and its running sum for verification
+    let runningSum = 0;
+    console.log("\nRunning sum calculation:");
+    values.forEach((val, index) => {
+      runningSum += val;
+      if (index < 5 || index > values.length - 6) {
+        console.log(`Value ${index+1}: ${val}, Running Sum: ${runningSum}`);
+      } else if (index === 5) {
+        console.log("...");
+      }
+    });
+  }
+  
+  // Run the test function
+  testProvidedValues();
+  
   return {
     byQuarter: quarterlyPnL,
+    totalPL: totalPLAllQuarters,
+    directSum
   };
 }
 
+// For testing specifically with the provided values
+function testArraySum() {
+  const testValues = [
+    216928.5, -474036, 455852.3, 75234.2, -132245, -362055, -590743, -519496, 55174.62, 73735.64,
+    350149.5, 84096.22, -92851.9, -117008, 135938.9, -536875, -258283, 122033.2, 175507.3, 185176.3,
+    -208332, 44418.96, -5628.91, -87397.7, -340040, -523971, 10934.07, 42603.1, -376962, -108280,
+    -295423, 120614.1, -164835, 69666.83, 759628.3, 97159.17, 239894.6, 104087.9, 369682.5, 335806.2,
+    141318.9, 90828.48, -282975, -304469, 266612.1, 351263.2, 241822.9, 259200.2, -148467, 467373.2,
+    15583.45, 123845.1, -360785, 134341.3, -525141, -183199, 635442.8, 186983.6, 124296.2, 54548.41, -41587.7
+  ];
+  
+  // Calculate sum with standard reduce
+  const sum = testValues.reduce((acc, val) => acc + val, 0);
+  console.log("Sum of test array:", sum);
+  
+  return sum;
+}
 
+// Call the standalone test function
+console.log("Running standalone test:");
+testArraySum();
 
 function calculateSchemeAllocation(investedAmounts) {
   const total = Object.values(investedAmounts).reduce((sum, amount) => sum + amount, 0);
