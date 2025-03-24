@@ -43,6 +43,7 @@ const useManagedAccounts = () => {
                 returns: schemeData.returns,
                 trailingReturns: schemeData.trailingReturns,
                 monthlyPnL: schemeData.monthlyPnL,
+                quarterlyPnL: schemeData.quarterlyPnL,
                 navCurve: schemeData.navCurve,
                 drawdown: schemeData.drawdown,
                 drawdownCurve: schemeData.drawdownCurve, // Include drawdown curve here
@@ -62,6 +63,7 @@ const useManagedAccounts = () => {
                 returns: totalPortfolio.returns,
                 trailingReturns: totalPortfolio.trailingReturns,
                 monthlyPnL: totalPortfolio.monthlyPnL,
+                quarterlyPnL: totalPortfolio.quarterlyPnL,
                 navCurve: totalPortfolio.navCurve,
                 drawdown: totalPortfolio.drawdown,
                 drawdownCurve: totalPortfolio.drawdownCurve, // Include drawdown curve here as well

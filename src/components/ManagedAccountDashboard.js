@@ -9,6 +9,7 @@ import YearlyMonthlyPLTable from "./MonthlyPLTableManagedAccounts";
 import useMobileWidth from "@/hooks/useMobileWidth";
 import useManagedAccounts from "@/hooks/useManagedAccounts";
 import useFetchBenchmarkData from "@/hooks/useFetchBenchmarkData";
+import YearlyQuarterlyPLTable from "./YearlyQuarterlyPLTable";
 
 const getReferencePoint = (data, targetTime) => {
   for (let i = data.length - 1; i >= 0; i--) {
@@ -42,7 +43,7 @@ const calculateTrailingReturns = (data) => {
     const targetTime = lastDate - days * 24 * 60 * 60 * 1000;
     const referencePoint = getReferencePoint(data, targetTime);
     const refNav = parseFloat(referencePoint.nav);
-    
+
     let result;
     if (days >= 365) {
       // Calculate CAGR for periods of 1 year or more
@@ -54,7 +55,7 @@ const calculateTrailingReturns = (data) => {
     }
     trailing[key] = result;
   });
-  
+
   return trailing;
 };
 
@@ -726,6 +727,16 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         ? selectedScheme.monthlyPnL.byMonth || {}
         : {};
 
+  const quarterlyPnLFromNormalizedData =
+    activeScheme === "Scheme Total"
+      ? totalPortfolio?.quarterlyPnL
+        ? totalPortfolio.quarterlyPnL.byYear || {}
+        : {}
+      : selectedScheme?.quarterlyPnL
+        ? selectedScheme.quarterlyPnL.byYear || {}
+        : {};
+
+  console.log('monthlyPnLFromNormalizedData', quarterlyPnLFromNormalizedData)
   // Cash flow data
   const filteredCashInOutData =
     activeScheme === "Scheme Total"
@@ -1097,6 +1108,8 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         </div>
 
         <YearlyMonthlyPLTable monthlyPnL={monthlyPnLFromNormalizedData} />
+
+        <YearlyQuarterlyPLTable quarterlyPnL={quarterlyPnLFromNormalizedData} />
 
         <div className="my-6 border bg-white rounded-lg">
           <button
