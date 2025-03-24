@@ -376,6 +376,95 @@ function calculateMonthlyPnL(navData) {
   };
 }
 
+function calculateQuarterlyPnL(navData) {
+  if (!navData || navData.length === 0) {
+    return {};
+  }
+
+  // Helper to get the quarter for a given month
+  const getQuarter = (month) => {
+    if (month < 3) return 'Q1';
+    if (month < 6) return 'Q2';
+    if (month < 9) return 'Q3';
+    return 'Q4';
+  };
+
+  // Group by year-quarter and track last NAV for each quarter
+  const dataByQuarter = navData.reduce((acc, entry) => {
+    const date = new Date(entry.date);
+    const year = date.getFullYear();
+    const quarter = getQuarter(date.getMonth());
+    const yearQuarter = `${year}-${quarter}`;
+
+    if (!acc[yearQuarter]) {
+      acc[yearQuarter] = {
+        points: [],
+        lastNav: null,
+        lastDate: null,
+      };
+    }
+
+    acc[yearQuarter].points.push({
+      date: entry.date,
+      nav: entry.nav,
+    });
+
+    // Always update last NAV and date as we want the latest available
+    acc[yearQuarter].lastNav = entry.nav;
+    acc[yearQuarter].lastDate = entry.date;
+
+    return acc;
+  }, {});
+
+  const sortedQuarters = Object.keys(dataByQuarter).sort();
+  const quarterlyPnL = {};
+
+  sortedQuarters.forEach((yearQuarter, index) => {
+    const currentData = dataByQuarter[yearQuarter];
+    const currentQuarterEnd = currentData.lastNav;
+
+    let startNav;
+    let startDate;
+
+    if (index === 0) {
+      // First quarter - use its first NAV
+      startNav = currentData.points[0].nav;
+      startDate = currentData.points[0].date;
+    } else {
+      const previousQuarter = sortedQuarters[index - 1];
+      startNav = dataByQuarter[previousQuarter].lastNav;
+      startDate = dataByQuarter[previousQuarter].lastDate;
+    }
+
+    const pnl = ((currentQuarterEnd - startNav) / startNav) * 100;
+
+    quarterlyPnL[yearQuarter] = {
+      startDate,
+      endDate: currentData.lastDate,
+      startNav,
+      endNav: currentQuarterEnd,
+      pnl,
+      navPoints: currentData.points,
+    };
+  });
+
+  // Group by year
+  const pnlByYear = {};
+  Object.entries(quarterlyPnL).forEach(([yearQuarter, data]) => {
+    const year = yearQuarter.split('-')[0];
+    if (!pnlByYear[year]) {
+      pnlByYear[year] = {};
+    }
+    pnlByYear[year][yearQuarter] = data;
+  });
+
+  return {
+    byYear: pnlByYear,
+    byQuarter: quarterlyPnL,
+  };
+}
+
+
 function calculateSchemeAllocation(investedAmounts) {
   const total = Object.values(investedAmounts).reduce((sum, amount) => sum + amount, 0);
   const allocation = {};
@@ -609,6 +698,7 @@ export async function GET(request) {
           returns: schemeReturns * 100,
           trailingReturns,
           monthlyPnL: calculateMonthlyPnL(navCurve),
+          quarterlyPnL: calculateQuarterlyPnL(navCurve),
           navCurve,
           totalProfit: schemeTotalProfit,
           dividends: cashForScheme.reduce(
@@ -670,6 +760,7 @@ export async function GET(request) {
             ? portfolioMasterTotal.returns * 100 
             : calculateReturns(totalNavCurve, totalCashFlows),
           trailingReturns: calculateTrailingReturns(totalNavCurve),
+          quarterlyPnL: calculateQuarterlyPnL(totalNavCurve),
           monthlyPnL: calculateMonthlyPnL(totalNavCurve),
           navCurve: totalNavCurve,
           totalProfit: totalProfitValue,
