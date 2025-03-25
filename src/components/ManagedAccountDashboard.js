@@ -316,17 +316,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
   } = useManagedAccounts();
 
   console.log('getHoldingsByScheme', holdingsData)
-  const [displayLoading, setDisplayLoading] = useState(true);
 
-  useEffect(() => {
-    // When the hook's loading becomes false, delay hiding the loading screen
-    if (!loading) {
-      const timer = setTimeout(() => {
-        setDisplayLoading(false);
-      }, 4000); // Adjust the delay here (in milliseconds) as needed (2000ms = 2 seconds)
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
 
 
 
@@ -1226,7 +1216,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
 
   };
 
-  if (loading || displayLoading) {
+  if (loading) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen gap-4">
         <div className="w-8 h-8 border-4 border-[#d1a47b] border-t-transparent rounded-full animate-spin"></div>
