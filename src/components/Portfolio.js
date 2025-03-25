@@ -674,6 +674,26 @@ const PerformanceAndDrawdownChart = () => {
                       ? ""
                       : ""}
                 </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("QGF");
+                    handleViewModeChange("individual");
+                    if (!isAdminUser) {
+                      const code = getNuvamaCodeForStrategy("QGF");
+                      setSelectedNuvama(code);
+                    }
+                  }}
+                  className={strategyButtonClass("QGF")}
+                >
+                  QGF{" "}
+                  {isAdminUser
+                    ? selectedNuvama && extractStrategy(selectedNuvama) === "QGF"
+                      ? ""
+                      : ""
+                    : investedStrategies.includes("QGF")
+                      ? ""
+                      : ""}
+                </button>
                 {/* Other buttons... */}
                 <button
                   onClick={() => {
