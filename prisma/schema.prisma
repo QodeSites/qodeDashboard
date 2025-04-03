@@ -219,3 +219,32 @@ model strategy {
 
   @@schema("pms_clients_tracker")
 }
+
+model deepti_master_sheet {
+  id                   Int       @id @default(autoincrement())
+  date                 DateTime? @db.Date
+  portfolio_value      Decimal?  @db.Decimal
+  capital_in_out       Decimal?  @db.Decimal
+  nav                  Decimal?  @db.Decimal
+  prev_nav             Decimal?  @db.Decimal
+  pnl                  Decimal?  @db.Decimal
+  daily_p_l            Decimal?  @db.Decimal
+  exposure_value       Decimal?  @db.Decimal
+  prev_portfolio_value Decimal?  @db.Decimal
+  prev_exposure_value  Decimal?  @db.Decimal
+  prev_pnl             Decimal?  @db.Decimal
+  drawdown             Decimal?  @db.Decimal
+
+  @@schema("pms_clients_tracker")
+}
+
+model pms_holdings_percentage {
+  id            Int      @id @default(autoincrement())
+  symbolname    String   @db.VarChar(100)
+  clientcode    String   @db.VarChar(100)
+  percentassets Decimal? @db.Decimal(5, 2)
+  strategy      String?  @db.VarChar(100)
+  total         Decimal? @db.Decimal(12, 2)
+
+  @@schema("pms_clients_tracker")
+}

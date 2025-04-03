@@ -134,11 +134,11 @@ function calculateDrawdownMetrics(navData) {
 
 function calculateReturns(navData, cashInflow) {
   if (!navData || navData.length < 2) {
-    // console.log("Insufficient NAV data points");
+    // // console.log("Insufficient NAV data points");
     return 0;
   }
 
-  // // console.log(cashInflow)
+  // // // console.log(cashInflow)
 
   const firstDate = new Date(navData[0].date);
   const lastDate = new Date(navData[navData.length - 1].date);
@@ -224,8 +224,8 @@ function calculateTrailingReturns(
       if (period === "1m") {
         targetDate.setMonth(targetDate.getMonth() - 1);
         targetDate.setDate(targetDate.getDate() - 1);
-        console.log("targetDate", targetDate);
-        console.log("currentDate", currentDate);
+        // console.log("targetDate", targetDate);
+        // console.log("currentDate", currentDate);
       } else if (period === "1y") {
         targetDate.setFullYear(targetDate.getFullYear() - 1);
         targetDate.setDate(targetDate.getDate() - 1);
@@ -271,11 +271,11 @@ function calculateTrailingReturns(
 }
 
 function calculateMonthlyPnL(navData) {
-  // console.log('\n=== Starting PnL Calculation ===');
-  // console.log('Input data:', JSON.stringify(navData, null, 2));
+  // // console.log('\n=== Starting PnL Calculation ===');
+  // // console.log('Input data:', JSON.stringify(navData, null, 2));
 
   if (!navData || navData.length === 0) {
-    // console.log('No data provided or empty array');
+    // // console.log('No data provided or empty array');
     return {};
   }
 
@@ -290,7 +290,7 @@ function calculateMonthlyPnL(navData) {
         lastNav: null,
         lastDate: null
       };
-      // console.log(`\nCreating new month bucket for ${yearMonth}`);
+      // // console.log(`\nCreating new month bucket for ${yearMonth}`);
     }
 
     acc[yearMonth].points.push({
@@ -302,24 +302,24 @@ function calculateMonthlyPnL(navData) {
     acc[yearMonth].lastNav = entry.nav;
     acc[yearMonth].lastDate = entry.date;
 
-    // console.log(`Added to ${yearMonth}: Date=${entry.date}, NAV=${entry.nav}`);
+    // // console.log(`Added to ${yearMonth}: Date=${entry.date}, NAV=${entry.nav}`);
     return acc;
   }, {});
 
-  // console.log('\n=== Data Grouped By Month ===');
-  // console.log(JSON.stringify(dataByMonth, null, 2));
+  // // console.log('\n=== Data Grouped By Month ===');
+  // // console.log(JSON.stringify(dataByMonth, null, 2));
 
   const sortedMonths = Object.keys(dataByMonth).sort();
-  // console.log('\nSorted months:', sortedMonths);
+  // // console.log('\nSorted months:', sortedMonths);
 
   const monthlyPnL = {};
 
   sortedMonths.forEach((yearMonth, index) => {
-    // console.log(`\n=== Processing ${yearMonth} ===`);
+    // // console.log(`\n=== Processing ${yearMonth} ===`);
 
     const currentMonthData = dataByMonth[yearMonth];
     const currentMonthEnd = currentMonthData.lastNav;
-    // console.log(`Month end NAV: ${currentMonthEnd}`);
+    // // console.log(`Month end NAV: ${currentMonthEnd}`);
 
     let startNav;
     let startDate;
@@ -327,17 +327,17 @@ function calculateMonthlyPnL(navData) {
       // For first month, use its first available NAV
       startNav = currentMonthData.points[0].nav;
       startDate = currentMonthData.points[0].date;
-      // console.log(`First month - using first day's NAV as start: ${startNav}`);
+      // // console.log(`First month - using first day's NAV as start: ${startNav}`);
     } else {
       // For subsequent months, use previous month's last available NAV
       const previousMonth = sortedMonths[index - 1];
       startNav = dataByMonth[previousMonth].lastNav;
       startDate = dataByMonth[previousMonth].lastDate;
-      // console.log(`Using previous month (${previousMonth}) last NAV as start: ${startNav}`);
+      // // console.log(`Using previous month (${previousMonth}) last NAV as start: ${startNav}`);
     }
 
     const pnl = ((currentMonthEnd - startNav) / startNav) * 100;
-    // console.log(`PnL Calculation: ((${currentMonthEnd} - ${startNav}) / ${startNav}) * 100 = ${pnl.toFixed(2)}%`);
+    // // console.log(`PnL Calculation: ((${currentMonthEnd} - ${startNav}) / ${startNav}) * 100 = ${pnl.toFixed(2)}%`);
 
     monthlyPnL[yearMonth] = {
       startDate: startDate,
@@ -349,15 +349,15 @@ function calculateMonthlyPnL(navData) {
     };
   });
 
-  // console.log('\n=== Monthly PnL Results ===');
+  // // console.log('\n=== Monthly PnL Results ===');
   Object.entries(monthlyPnL).forEach(([month, data]) => {
-    // console.log(`\n${month}:`);
-    // console.log(`  Start Date: ${data.startDate}`);
-    // console.log(`  End Date: ${data.endDate}`);
-    // console.log(`  Start NAV: ${data.startNav}`);
-    // console.log(`  End NAV: ${data.endNav}`);
-    // console.log(`  PnL: ${data.pnl.toFixed(2)}%`);
-    // console.log(`  NAV Points: ${data.navPoints.length}`);
+    // // console.log(`\n${month}:`);
+    // // console.log(`  Start Date: ${data.startDate}`);
+    // // console.log(`  End Date: ${data.endDate}`);
+    // // console.log(`  Start NAV: ${data.startNav}`);
+    // // console.log(`  End NAV: ${data.endNav}`);
+    // // console.log(`  PnL: ${data.pnl.toFixed(2)}%`);
+    // // console.log(`  NAV Points: ${data.navPoints.length}`);
   });
 
   const pnlByYear = {};
@@ -572,8 +572,8 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
   const sortedQuarters = Object.keys(dataByQuarter).sort();
   const quarterlyPnL = {};
   
-  console.log("🧮 Calculating Quarterly PnL...");
-  console.log("🗓 Sorted Quarters:", sortedQuarters);
+  // console.log("🧮 Calculating Quarterly PnL...");
+  // console.log("🗓 Sorted Quarters:", sortedQuarters);
   
   sortedQuarters.forEach((yearQuarter, index) => {
     const currentData = dataByQuarter[yearQuarter];
@@ -601,14 +601,14 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
     const plData = dailyPLByQuarter[yearQuarter] || { totalPL: 0, values: [] };
     const totalDailyPnL = plData.totalPL;
     
-    console.log(`📊 Quarter: ${yearQuarter}`);
-    console.log(`   ➤ Start NAV: ${startNav}`);
-    console.log(`   ➤ End NAV: ${currentQuarterEnd}`);
-    console.log(`   ➤ NAV % PnL: ${navPnLPercent.toFixed(2)}%`);
-    console.log(`   ➤ Start Value: ${startVal} (from ${startDateInfo.date})`);
-    console.log(`   ➤ End Value: ${endVal} (from ${endDateInfo.date})`);
-    console.log(`   ➤ Daily PL Sum: ${totalDailyPnL}`);
-    console.log(`   ➤ NAV Points Count: ${currentData.points.length}`);
+    // console.log(`📊 Quarter: ${yearQuarter}`);
+    // console.log(`   ➤ Start NAV: ${startNav}`);
+    // console.log(`   ➤ End NAV: ${currentQuarterEnd}`);
+    // console.log(`   ➤ NAV % PnL: ${navPnLPercent.toFixed(2)}%`);
+    // console.log(`   ➤ Start Value: ${startVal} (from ${startDateInfo.date})`);
+    // console.log(`   ➤ End Value: ${endVal} (from ${endDateInfo.date})`);
+    // console.log(`   ➤ Daily PL Sum: ${totalDailyPnL}`);
+    // console.log(`   ➤ NAV Points Count: ${currentData.points.length}`);
     
     quarterlyPnL[yearQuarter] = {
       startDate,
@@ -632,8 +632,8 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
   const directSum = sortedPortfolioValues.reduce((sum, item) => 
     sum + (item.daily_pl || 0), 0);
   
-  console.log("\n📊 Total Daily PL across all quarters:", totalPLAllQuarters);
-  console.log("📊 Direct sum of all daily_pl values:", directSum);
+  // console.log("\n📊 Total Daily PL across all quarters:", totalPLAllQuarters);
+  // console.log("📊 Direct sum of all daily_pl values:", directSum);
   
   return {
     byQuarter: quarterlyPnL,
@@ -641,7 +641,6 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
     directSum
   };
 }
-
 
 function calculateSchemeAllocation(investedAmounts) {
   const total = Object.values(investedAmounts).reduce((sum, amount) => sum + amount, 0);
@@ -682,12 +681,12 @@ export async function GET(request) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.log("session", session.user);
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("user_id");
     let user_id = Number(session?.user?.user_id);
-    console.log("master__id", user_id);
     const view_type = searchParams.get("view_type");
+
     if (view_type === "account") {
       const userMasterDetails = await fetchUserMasterDetails(user_id);
       return NextResponse.json(
@@ -698,6 +697,7 @@ export async function GET(request) {
         { status: 200 }
       );
     }
+
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const pageSize = Math.max(
       1,
@@ -727,8 +727,11 @@ export async function GET(request) {
       );
     }
 
+    // Determine if the user is Deepti (AC9)
+    const isDeepti = accountCodes.includes("AC9");
+
     // Fetch cash flows, master sheet data, and portfolio master data
-    const [cashInOutData, masterSheetData, portfolioMasterData] = await Promise.all([
+    const [cashInOutData, masterSheetData, deeptiMasterSheetData, portfolioMasterData] = await Promise.all([
       prisma.managed_accounts_cash_in_out.findMany({
         where: { account_code: { in: accountCodes } },
         select: {
@@ -752,6 +755,18 @@ export async function GET(request) {
         },
         orderBy: { date: "asc" },
       }),
+      isDeepti
+        ? prisma.deepti_master_sheet.findMany({
+            where: { date: { not: null } }, // Ensure valid dates
+            select: {
+              date: true,
+              nav: true,
+              portfolio_value: true,
+              daily_p_l: true, // Map to daily_pl
+            },
+            orderBy: { date: "asc" },
+          })
+        : Promise.resolve([]), // Empty array if not Deepti
       prisma.managed_portfolio_master.findMany({
         where: { account_code: { in: accountCodes } },
         select: {
@@ -801,20 +816,30 @@ export async function GET(request) {
       );
       const schemeInvestedAmounts = {};
 
+      // Use Deepti's data for AC9, otherwise use master_sheet
+      const isCurrentAccountDeepti = accountCode === "AC9";
+      const accountData = isCurrentAccountDeepti ? deeptiMasterSheetData : masterSheetData;
+
       // Process individual schemes
       for (const scheme of schemes) {
         const portfolioNames = getPortfolioNames(accountCode, scheme);
 
-        const currentData = masterSheetData.filter(
-          (entry) => entry.account_names === portfolioNames.current
-        );
+        const currentData = isCurrentAccountDeepti
+          ? accountData // Deepti's data doesn't have account_names, so use all data
+          : accountData.filter(
+              (entry) => entry.account_names === portfolioNames.current
+            );
+
         const metricsName =
           accountCode === "AC5" && scheme === "Scheme B"
             ? "Sarla Performance fibers Total Portfolio B"
             : portfolioNames.metrics;
-        const metricsData = masterSheetData.filter(
-          (entry) => entry.account_names === metricsName
-        );
+        const metricsData = isCurrentAccountDeepti
+          ? accountData // Use all data for Deepti
+          : accountData.filter(
+              (entry) => entry.account_names === metricsName
+            );
+
         const cashForScheme = cashInOutData.filter(
           (entry) =>
             entry.account_code === accountCode && entry.scheme === scheme
@@ -865,18 +890,15 @@ export async function GET(request) {
           });
         }
 
-        // Calculate quarterly PnL with specific handling for AC5 Scheme B
         let quarterlyPnL;
         if (accountCode === "AC5" && scheme === "Scheme B") {
-          // Use Sarla Performance fibers Total Portfolio B data specifically
           quarterlyPnL = calculateQuarterlyPnLWithDailyPL(
-            navCurve, // NAV curve from metricsData (Sarla Performance fibers Total Portfolio B)
+            navCurve,
             cashForScheme,
-            metricsData, // Contains daily_pl for Sarla Performance fibers Total Portfolio B
-            "Sarla Performance fibers Total Portfolio B" // Pass scheme name
+            metricsData,
+            "Sarla Performance fibers Total Portfolio B"
           );
         } else {
-          // Use original data for other schemes
           quarterlyPnL = calculateQuarterlyPnLWithDailyPL(
             navCurve,
             cashForScheme,
@@ -910,12 +932,16 @@ export async function GET(request) {
 
       // Process total portfolio metrics
       const totalPortfolioNames = PORTFOLIO_MAPPING[accountCode]._total;
-      const totalCurrentData = masterSheetData.filter(
-        (entry) => entry.account_names === totalPortfolioNames.current
-      );
-      const totalMetricsData = masterSheetData.filter(
-        (entry) => entry.account_names === totalPortfolioNames.metrics
-      );
+      const totalCurrentData = isCurrentAccountDeepti
+        ? accountData // Use all data for Deepti
+        : masterSheetData.filter(
+            (entry) => entry.account_names === totalPortfolioNames.current
+          );
+      const totalMetricsData = isCurrentAccountDeepti
+        ? accountData // Use all data for Deepti
+        : masterSheetData.filter(
+            (entry) => entry.account_names === totalPortfolioNames.metrics
+          );
       const totalCashFlows = cashInOutData.filter(
         (entry) => entry.account_code === accountCode
       );
@@ -1027,7 +1053,6 @@ export async function GET(request) {
           (sum, { totalAllocation }) => sum + totalAllocation,
           0
         );
-        console.log(`Scheme: ${scheme}, Type: ${type}, Denominator: ${denominator}`);
         for (const stock in stocks) {
           stocks[stock].percentage = denominator
             ? (stocks[stock].totalAllocation / denominator) * 100
