@@ -234,6 +234,7 @@ model deepti_master_sheet {
   prev_exposure_value  Decimal?  @db.Decimal
   prev_pnl             Decimal?  @db.Decimal
   drawdown             Decimal?  @db.Decimal
+  system_tag           String?   @db.VarChar
 
   @@schema("pms_clients_tracker")
 }

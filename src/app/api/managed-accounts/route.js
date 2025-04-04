@@ -70,16 +70,16 @@ const PORTFOLIO_MAPPING = {
       metrics: "Satidham Industries Zerodha Total Portfolio"
     }
   },
-  AC9: {
-    "Scheme B": {
-      current: "Deepti Parikh Zerodha Total Portfolio",
-      metrics: "Deepti Parikh Total Portfolio B"
-    },
-    "_total": {
-      current: "Deepti Parikh Zerodha Total Portfolio",
-      metrics: "Deepti Parikh Total Portfolio B"
-    }
-  }
+  // AC9: {
+  //   "Scheme B": {
+  //     current: "Deepti Parikh Zerodha Total Portfolio",
+  //     metrics: "Deepti Parikh Total Portfolio B"
+  //   },
+  //   "_total": {
+  //     current: "Deepti Parikh Zerodha Total Portfolio",
+  //     metrics: "Deepti Parikh Total Portfolio B"
+  //   }
+  // }
 };
 
 const CLIENT_NAMES = {
@@ -379,16 +379,16 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
     console.warn("No NAV data provided.");
     return {};
   }
-  
+
   const getQuarter = (month) => {
     if (month < 3) return 'Q1';
     if (month < 6) return 'Q2';
     if (month < 9) return 'Q3';
     return 'Q4';
   };
-  
+
   const getFirstMonthOfQuarter = (quarterName) => {
-    switch(quarterName) {
+    switch (quarterName) {
       case 'Q1': return 0;
       case 'Q2': return 3;
       case 'Q3': return 6;
@@ -396,14 +396,14 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
       default: return 0;
     }
   };
-  
+
   // --- NAV-Based Data ---
   const dataByQuarter = navData.reduce((acc, entry) => {
     const date = new Date(entry.date);
     const year = date.getFullYear();
     const quarter = getQuarter(date.getMonth());
     const yearQuarter = `${year}-${quarter}`;
-    
+
     if (!acc[yearQuarter]) {
       acc[yearQuarter] = {
         points: [],
@@ -412,48 +412,48 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
         firstDate: entry.date,
       };
     }
-    
+
     acc[yearQuarter].points.push({
       date: entry.date,
       nav: entry.nav,
     });
-    
+
     acc[yearQuarter].lastNav = entry.nav;
     acc[yearQuarter].lastDate = entry.date;
-    
+
     if (new Date(entry.date) < new Date(acc[yearQuarter].firstDate)) {
       acc[yearQuarter].firstDate = entry.date;
     }
-    
+
     return acc;
   }, {});
-  
+
   // Filter portfolio values based on scheme
   const filteredPortfolioValues = scheme === "Sarla Performance fibers Total Portfolio B"
     ? portfolioValues.filter(item =>
-        item.account_names === "Sarla Performance fibers Total Portfolio B" &&
-        item.daily_pl !== undefined &&
-        item.daily_pl !== null
-      )
+      item.account_names === "Sarla Performance fibers Total Portfolio B" &&
+      item.daily_pl !== undefined &&
+      item.daily_pl !== null
+    )
     : portfolioValues;
-  
+
   // Sort portfolio values by date
-  const sortedPortfolioValues = [...filteredPortfolioValues].sort((a, b) => 
+  const sortedPortfolioValues = [...filteredPortfolioValues].sort((a, b) =>
     new Date(a.date) - new Date(b.date)
   );
-  
+
   // Group daily PL values by quarter directly
   const groupDailyPLByQuarter = () => {
     const result = {};
-    
+
     sortedPortfolioValues.forEach(entry => {
       if (entry.daily_pl === undefined || entry.daily_pl === null) return;
-      
+
       const date = new Date(entry.date);
       const year = date.getFullYear();
       const quarter = getQuarter(date.getMonth());
       const yearQuarter = `${year}-${quarter}`;
-      
+
       if (!result[yearQuarter]) {
         result[yearQuarter] = {
           values: [],
@@ -462,14 +462,14 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
           endDate: entry.date
         };
       }
-      
+
       result[yearQuarter].values.push({
         date: entry.date,
         value: entry.daily_pl
       });
-      
+
       result[yearQuarter].totalPL += entry.daily_pl;
-      
+
       if (new Date(entry.date) < new Date(result[yearQuarter].startDate)) {
         result[yearQuarter].startDate = entry.date;
       }
@@ -477,23 +477,23 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
         result[yearQuarter].endDate = entry.date;
       }
     });
-    
+
     return result;
   };
-  
+
   const dailyPLByQuarter = groupDailyPLByQuarter();
-  
+
   // Helper function to find value from first month of quarter
   const findValueFromFirstMonth = (yearQuarter) => {
     const [year, quarter] = yearQuarter.split('-');
     const firstMonthOfQuarter = getFirstMonthOfQuarter(quarter);
-    
+
     const entriesInFirstMonth = sortedPortfolioValues.filter(entry => {
       const entryDate = new Date(entry.date);
-      return entryDate.getFullYear() === parseInt(year) && 
-             entryDate.getMonth() === firstMonthOfQuarter;
+      return entryDate.getFullYear() === parseInt(year) &&
+        entryDate.getMonth() === firstMonthOfQuarter;
     });
-    
+
     if (entriesInFirstMonth.length > 0) {
       const earliestEntry = entriesInFirstMonth[0];
       return {
@@ -502,12 +502,12 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
         dailyPL: earliestEntry.daily_pl || 0
       };
     }
-    
+
     const quarterStartDate = new Date(parseInt(year), firstMonthOfQuarter, 1);
-    const laterEntries = sortedPortfolioValues.filter(entry => 
+    const laterEntries = sortedPortfolioValues.filter(entry =>
       new Date(entry.date) >= quarterStartDate
     );
-    
+
     if (laterEntries.length > 0) {
       const closestEntry = laterEntries[0];
       return {
@@ -516,29 +516,29 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
         dailyPL: closestEntry.daily_pl || 0
       };
     }
-    
+
     return {
       date: quarterStartDate.toISOString().slice(0, 10),
       value: 0,
       dailyPL: 0
     };
   };
-  
+
   // Helper function to find closest value for date
   const findClosestValueForDate = (targetDate, useLatestFromMonth = true) => {
     const targetDateObj = new Date(targetDate);
-    
+
     if (useLatestFromMonth) {
       const targetYear = targetDateObj.getFullYear();
       const targetMonth = targetDateObj.getMonth();
-      
+
       const sameMonthEntries = sortedPortfolioValues.filter(entry => {
         const entryDate = new Date(entry.date);
-        return entryDate.getFullYear() === targetYear && 
-               entryDate.getMonth() === targetMonth &&
-               entryDate <= targetDateObj;
+        return entryDate.getFullYear() === targetYear &&
+          entryDate.getMonth() === targetMonth &&
+          entryDate <= targetDateObj;
       });
-      
+
       if (sameMonthEntries.length > 0) {
         const latestEntry = sameMonthEntries[sameMonthEntries.length - 1];
         return {
@@ -548,11 +548,11 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
         };
       }
     }
-    
-    const earlierEntries = sortedPortfolioValues.filter(entry => 
+
+    const earlierEntries = sortedPortfolioValues.filter(entry =>
       new Date(entry.date) <= targetDateObj
     );
-    
+
     if (earlierEntries.length > 0) {
       const closestEntry = earlierEntries[earlierEntries.length - 1];
       return {
@@ -561,25 +561,25 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
         dailyPL: closestEntry.daily_pl || 0
       };
     }
-    
+
     return {
       date: targetDate,
       value: 0,
       dailyPL: 0
     };
   };
-  
+
   const sortedQuarters = Object.keys(dataByQuarter).sort();
   const quarterlyPnL = {};
-  
+
   // console.log("🧮 Calculating Quarterly PnL...");
   // console.log("🗓 Sorted Quarters:", sortedQuarters);
-  
+
   sortedQuarters.forEach((yearQuarter, index) => {
     const currentData = dataByQuarter[yearQuarter];
     const currentQuarterEnd = currentData.lastNav;
     let startNav, startDate;
-    
+
     if (index === 0) {
       startNav = currentData.points[0].nav;
       startDate = currentData.points[0].date;
@@ -588,19 +588,19 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
       startNav = dataByQuarter[previousQuarter].lastNav;
       startDate = dataByQuarter[previousQuarter].lastDate;
     }
-    
+
     const navPnLPercent = ((currentQuarterEnd - startNav) / startNav) * 100;
-    
+
     const startDateInfo = findValueFromFirstMonth(yearQuarter);
     const endDateInfo = findClosestValueForDate(currentData.lastDate, true);
-    
+
     const startVal = startDateInfo.value;
     const endVal = endDateInfo.value;
-    
+
     // Use grouped daily PL data instead of recalculating
     const plData = dailyPLByQuarter[yearQuarter] || { totalPL: 0, values: [] };
     const totalDailyPnL = plData.totalPL;
-    
+
     // console.log(`📊 Quarter: ${yearQuarter}`);
     // console.log(`   ➤ Start NAV: ${startNav}`);
     // console.log(`   ➤ End NAV: ${currentQuarterEnd}`);
@@ -609,7 +609,7 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
     // console.log(`   ➤ End Value: ${endVal} (from ${endDateInfo.date})`);
     // console.log(`   ➤ Daily PL Sum: ${totalDailyPnL}`);
     // console.log(`   ➤ NAV Points Count: ${currentData.points.length}`);
-    
+
     quarterlyPnL[yearQuarter] = {
       startDate,
       endDate: currentData.lastDate,
@@ -625,16 +625,16 @@ function calculateQuarterlyPnLWithDailyPL(navData, cashFlows = [], portfolioValu
       dailyPnLValues: plData.values // Added from new logic
     };
   });
-  
+
   // Calculate total PL across all quarters
   const totalPLAllQuarters = Object.values(dailyPLByQuarter)
     .reduce((sum, quarter) => sum + quarter.totalPL, 0);
-  const directSum = sortedPortfolioValues.reduce((sum, item) => 
+  const directSum = sortedPortfolioValues.reduce((sum, item) =>
     sum + (item.daily_pl || 0), 0);
-  
+
   // console.log("\n📊 Total Daily PL across all quarters:", totalPLAllQuarters);
   // console.log("📊 Direct sum of all daily_pl values:", directSum);
-  
+
   return {
     byQuarter: quarterlyPnL,
     totalPL: totalPLAllQuarters,
@@ -660,16 +660,12 @@ function getPortfolioNames(accountCode, scheme) {
   return PORTFOLIO_MAPPING[accountCode][scheme];
 }
 
-/**
- * Fetch all user_master details based on the user id stored in the session.
- * @param {number} userId - The id of the logged in user.
- * @returns {Promise<Object>} - The user_master record including related client_master data.
- */
+
 async function fetchUserMasterDetails(userId) {
   const userDetails = await prisma.user_master.findUnique({
     where: { id: userId },
     include: {
-      client_master: true, // Include any related client_master records
+      client_master: true,
     },
   });
   return userDetails;
@@ -727,10 +723,6 @@ export async function GET(request) {
       );
     }
 
-    // Determine if the user is Deepti (AC9)
-    const isDeepti = accountCodes.includes("AC9");
-
-    // Fetch cash flows, master sheet data, and portfolio master data
     const [cashInOutData, masterSheetData, deeptiMasterSheetData, portfolioMasterData] = await Promise.all([
       prisma.managed_accounts_cash_in_out.findMany({
         where: { account_code: { in: accountCodes } },
@@ -744,7 +736,7 @@ export async function GET(request) {
         orderBy: { date: "asc" },
       }),
       prisma.master_sheet.findMany({
-        where: { account_tag: { in: accountCodes } },
+        where: { account_tag: { in: accountCodes.filter(code => code !== "AC9") } },
         select: {
           date: true,
           account_tag: true,
@@ -755,18 +747,22 @@ export async function GET(request) {
         },
         orderBy: { date: "asc" },
       }),
-      isDeepti
-        ? prisma.deepti_master_sheet.findMany({
-            where: { date: { not: null } }, // Ensure valid dates
-            select: {
-              date: true,
-              nav: true,
-              portfolio_value: true,
-              daily_p_l: true, // Map to daily_pl
-            },
-            orderBy: { date: "asc" },
-          })
-        : Promise.resolve([]), // Empty array if not Deepti
+      accountCodes.includes("AC9")
+  ? prisma.deepti_master_sheet.findMany({
+      where: {
+        system_tag: "Total Portfolio Value", // Filter directly in the query
+      },
+      select: {
+        date: true,
+        nav: true,
+        portfolio_value: true,
+        drawdown: true,
+        daily_p_l: true,
+        system_tag: true, // Optional, for debugging
+      },
+      orderBy: { date: "asc" },
+    })
+  : Promise.resolve([]),
       prisma.managed_portfolio_master.findMany({
         where: { account_code: { in: accountCodes } },
         select: {
@@ -782,230 +778,326 @@ export async function GET(request) {
     const results = {};
     const globalSchemeInvestedAmounts = {};
 
-    // Build global scheme invested amounts
     for (const accountCode of accountCodes) {
-      const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {}).filter(
-        (scheme) => scheme !== "_total"
-      );
-      for (const scheme of schemes) {
-        const cashForScheme = cashInOutData.filter(
-          (entry) =>
-            entry.account_code === accountCode && entry.scheme === scheme
+      if (accountCode === "AC9") {
+        // 1) Find Deepti's row(s) from managed_portfolio_master
+        //    We'll assume "Scheme B" for her main scheme, and "Scheme Total" if you want it separate.
+        const portfolioMasterAC9SchemeB = portfolioMasterData.find(
+          (row) => row.account_code === "AC9" && row.scheme === "Scheme B"
         );
-        const investedAmount = cashForScheme.reduce((sum, entry) => {
-          const capitalAmount = entry.capital_in_out || 0;
-          return sum + capitalAmount;
-        }, 0);
-        if (!globalSchemeInvestedAmounts[scheme]) {
-          globalSchemeInvestedAmounts[scheme] = 0;
-        }
-        globalSchemeInvestedAmounts[scheme] += investedAmount;
-      }
-    }
-
-    // Process accounts and schemes
-    for (const accountCode of accountCodes) {
-      results[accountCode] = {
-        clientName: CLIENT_NAMES[accountCode] || "Unknown Client",
-        schemes: {},
-        totalPortfolio: {},
-      };
-
-      const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {}).filter(
-        (scheme) => scheme !== "_total"
-      );
-      const schemeInvestedAmounts = {};
-
-      // Use Deepti's data for AC9, otherwise use master_sheet
-      const isCurrentAccountDeepti = accountCode === "AC9";
-      const accountData = isCurrentAccountDeepti ? deeptiMasterSheetData : masterSheetData;
-
-      // Process individual schemes
-      for (const scheme of schemes) {
-        const portfolioNames = getPortfolioNames(accountCode, scheme);
-
-        const currentData = isCurrentAccountDeepti
-          ? accountData // Deepti's data doesn't have account_names, so use all data
-          : accountData.filter(
-              (entry) => entry.account_names === portfolioNames.current
-            );
-
-        const metricsName =
-          accountCode === "AC5" && scheme === "Scheme B"
-            ? "Sarla Performance fibers Total Portfolio B"
-            : portfolioNames.metrics;
-        const metricsData = isCurrentAccountDeepti
-          ? accountData // Use all data for Deepti
-          : accountData.filter(
-              (entry) => entry.account_names === metricsName
-            );
-
-        const cashForScheme = cashInOutData.filter(
-          (entry) =>
-            entry.account_code === accountCode && entry.scheme === scheme
+        const portfolioMasterAC9Total = portfolioMasterData.find(
+          (row) => row.account_code === "AC9" && row.scheme === "Scheme Total"
         );
-        const investedAmount = cashForScheme.reduce((sum, entry) => {
-          const capitalAmount = entry.capital_in_out || 0;
-          return sum + capitalAmount;
-        }, 0);
-        schemeInvestedAmounts[scheme] = investedAmount;
-
-        const navCurve = metricsData.map((e) => ({
+      
+        // 2) Filter deeptiMasterSheet using system_tag = "Total Portfolio Value"
+        const filteredDeeptiData = deeptiMasterSheetData.filter(
+          (e) => e.system_tag === "Total Portfolio Value"
+        );
+      
+        // 3) Build navCurve
+        const navData = filteredDeeptiData.map((e) => ({
           date: e.date,
-          nav: e.nav,
+          nav: e.nav || 0,
         }));
-
-        const drawdownMetrics = calculateDrawdownMetrics(navCurve);
-        const calcTotalProfit =
-          accountCode === "AC5" && scheme === "Scheme B"
-            ? calculateTotalProfit(metricsData, cashForScheme)
-            : calculateTotalProfit(currentData, cashForScheme);
-
-        const portfolioMaster = portfolioMasterData.find(
-          (row) => row.account_code === accountCode && row.scheme === scheme
+        // Sort by ascending date (to avoid zigzag lines)
+        const navCurve = navData.sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+        // 4) Calculate your fallback (manual) metrics if needed
+        const cashForAC9 = cashInOutData.filter((entry) => entry.account_code === "AC9");
+        const fallbackTotalProfit = calculateTotalProfit(filteredDeeptiData, cashForAC9) || 0;
+        const fallbackReturns = calculateReturns(navCurve, cashForAC9) || 0;
+        const fallbackPortfolioValue =
+          filteredDeeptiData.length > 0
+            ? filteredDeeptiData[filteredDeeptiData.length - 1].portfolio_value || 0
+            : 0;
+      
+        // 5) AC9 "Scheme B" portfolio metrics from managed_portfolio_master
+        const schemeCurrentPortfolioValue = portfolioMasterAC9SchemeB
+          ? portfolioMasterAC9SchemeB.current_portfolio_value
+          : fallbackPortfolioValue;
+      
+        const schemeReturns = portfolioMasterAC9SchemeB
+          ? portfolioMasterAC9SchemeB.returns
+          : fallbackReturns; // If not found in DB, fallback to manual calculation
+      
+        const schemeTotalProfit = portfolioMasterAC9SchemeB
+          ? portfolioMasterAC9SchemeB.total_profit
+          : fallbackTotalProfit;
+      
+        const investedAmount = cashForAC9.reduce(
+          (sum, entry) => sum + (entry.capital_in_out || 0),
+          0
         );
-        const schemeCurrentPortfolioValue = portfolioMaster
-          ? portfolioMaster.current_portfolio_value
-          : currentData.length > 0
-          ? currentData[currentData.length - 1].portfolio_value || 0
-          : 0;
-        const schemeTotalProfit = portfolioMaster
-          ? portfolioMaster.total_profit
-          : calcTotalProfit;
-        const schemeReturns = portfolioMaster
-          ? portfolioMaster.returns
-          : calculateReturns(navCurve, cashForScheme);
-
-        let trailingReturns;
-        if (scheme === "Scheme A") {
-          trailingReturns = calculateTrailingReturns(navCurve);
-        } else {
-          trailingReturns = calculateTrailingReturns(navCurve, {
-            "5d": 5,
-            "10d": 10,
-            "15d": 15,
-            "1m": 30,
-            "1y": 366,
-            "2y": 731,
-          });
-        }
-
-        let quarterlyPnL;
-        if (accountCode === "AC5" && scheme === "Scheme B") {
-          quarterlyPnL = calculateQuarterlyPnLWithDailyPL(
+      
+        // 6) Drawdown metrics, monthly/quarterly PnL, etc.
+        const drawdownMetrics = calculateDrawdownMetrics(navCurve);
+        const drawdownCurveFromDB = filteredDeeptiData.map((row) => ({
+          date: row.date,
+          drawdown: (row.drawdown ?? 0), // fallback if null
+        }));
+      
+        drawdownCurveFromDB.sort((a, b) => new Date(a.date) - new Date(b.date));
+        // 7) Build the final AC9 result
+        results[accountCode] = {
+          clientName: "Deepti Parikh",
+          schemes: {
+            "Scheme B": {
+              currentPortfolioValue: schemeCurrentPortfolioValue,
+              investedAmount,
+              returns: schemeReturns * 100, // multiplied by 100 if you want a "percent"
+              trailingReturns: calculateTrailingReturns(navCurve, {
+                "5d": 5,
+                "10d": 10,
+                "15d": 15,
+                "1m": 30,
+                "1y": 366,
+                "2y": 731,
+              }) || {},
+              monthlyPnL: calculateMonthlyPnL(navCurve) || {},
+              quarterlyPnL: calculateQuarterlyPnLWithDailyPL(
+                navCurve,
+                cashForAC9,
+                filteredDeeptiData
+              ) || {},
+              navCurve,
+              totalProfit: schemeTotalProfit,
+              dividends: cashForAC9.reduce(
+                (sum, flow) => sum + (flow.dividend || 0),
+                0
+              ),
+              currentDrawdown: drawdownMetrics.currentDD || 0,
+              maxDrawdown: drawdownMetrics.mdd || 0,
+              drawdownCurve: (-drawdownCurveFromDB),
+              cashFlows: cashForAC9.map((flow) => ({
+                date: flow.date,
+                amount: flow.capital_in_out || 0,
+                dividend: flow.dividend || 0,
+              })),
+            },
+          },
+      
+          // 8) For totalPortfolio, you can similarly get from "Scheme Total" row (if defined)
+          totalPortfolio: {
+            currentPortfolioValue: portfolioMasterAC9Total
+              ? portfolioMasterAC9Total.current_portfolio_value
+              : fallbackPortfolioValue,
+            investedAmount,
+            returns: portfolioMasterAC9Total
+              ? portfolioMasterAC9Total.returns * 100
+              : fallbackReturns * 100,
+            trailingReturns: calculateTrailingReturns(navCurve) || {},
+            quarterlyPnL: calculateQuarterlyPnLWithDailyPL(
+              navCurve,
+              cashForAC9,
+              filteredDeeptiData
+            ) || {},
+            monthlyPnL: calculateMonthlyPnL(navCurve) || {},
             navCurve,
-            cashForScheme,
-            metricsData,
-            "Sarla Performance fibers Total Portfolio B"
-          );
-        } else {
-          quarterlyPnL = calculateQuarterlyPnLWithDailyPL(
-            navCurve,
-            cashForScheme,
-            currentData
-          );
-        }
-
-        results[accountCode].schemes[scheme] = {
-          currentPortfolioValue: schemeCurrentPortfolioValue,
-          investedAmount,
-          returns: schemeReturns * 100,
-          trailingReturns,
-          monthlyPnL: calculateMonthlyPnL(navCurve),
-          quarterlyPnL,
-          navCurve,
-          totalProfit: schemeTotalProfit,
-          dividends: cashForScheme.reduce(
-            (sum, flow) => sum + (flow.dividend || 0),
-            0
-          ),
-          currentDrawdown: drawdownMetrics.currentDD,
-          maxDrawdown: drawdownMetrics.mdd,
-          drawdownCurve: drawdownMetrics.ddCurve,
-          cashFlows: cashForScheme.map((flow) => ({
-            date: flow.date,
-            amount: flow.capital_in_out,
-            dividend: flow.dividend,
-          })),
+            totalProfit: portfolioMasterAC9Total
+              ? portfolioMasterAC9Total.total_profit
+              : fallbackTotalProfit,
+            dividends: cashForAC9.reduce(
+              (sum, flow) => sum + (flow.dividend || 0),
+              0
+            ),
+            currentDrawdown: drawdownMetrics.currentDD || 0,
+            maxDrawdown: drawdownMetrics.mdd || 0,
+            drawdownCurve: (drawdownCurveFromDB), // UPDATED: Now using drawdownCurveFromDB instead of drawdownMetrics.ddCurve
+            schemeAllocation: { "Scheme B": 100 },
+            cashFlows: cashForAC9.map((flow) => ({
+              date: flow.date,
+              scheme: "Scheme B",
+              amount: flow.capital_in_out || 0,
+              dividend: flow.dividend || 0,
+            })),
+          },
         };
       }
+       else {
+        // Handle other accounts
+        results[accountCode] = {
+          clientName: CLIENT_NAMES[accountCode] || "Unknown Client",
+          schemes: {},
+          totalPortfolio: {},
+        };
 
-      // Process total portfolio metrics
-      const totalPortfolioNames = PORTFOLIO_MAPPING[accountCode]._total;
-      const totalCurrentData = isCurrentAccountDeepti
-        ? accountData // Use all data for Deepti
-        : masterSheetData.filter(
+        const schemes = Object.keys(PORTFOLIO_MAPPING[accountCode] || {}).filter(
+          (scheme) => scheme !== "_total"
+        );
+        const schemeInvestedAmounts = {};
+
+        for (const scheme of schemes) {
+          const portfolioNames = getPortfolioNames(accountCode, scheme);
+          const currentData = masterSheetData.filter(
+            (entry) => entry.account_names === portfolioNames.current
+          );
+          const metricsName =
+            accountCode === "AC5" && scheme === "Scheme B"
+              ? "Sarla Performance fibers Total Portfolio B"
+              : portfolioNames.metrics;
+          const metricsData = masterSheetData.filter(
+            (entry) => entry.account_names === metricsName
+          );
+          const cashForScheme = cashInOutData.filter(
+            (entry) => entry.account_code === accountCode && entry.scheme === scheme
+          );
+          const investedAmount = cashForScheme.reduce((sum, entry) => sum + (entry.capital_in_out || 0), 0);
+          schemeInvestedAmounts[scheme] = investedAmount;
+
+          const navCurve = metricsData.map((e) => ({
+            date: e.date,
+            nav: e.nav,
+          }));
+
+          const drawdownMetrics = calculateDrawdownMetrics(navCurve);
+          const calcTotalProfit =
+            accountCode === "AC5" && scheme === "Scheme B"
+              ? calculateTotalProfit(metricsData, cashForScheme)
+              : calculateTotalProfit(currentData, cashForScheme);
+
+          const portfolioMaster = portfolioMasterData.find(
+            (row) => row.account_code === accountCode && row.scheme === scheme
+          );
+          const schemeCurrentPortfolioValue = portfolioMaster
+            ? portfolioMaster.current_portfolio_value
+            : currentData.length > 0
+              ? currentData[currentData.length - 1].portfolio_value || 0
+              : 0;
+          const schemeTotalProfit = portfolioMaster
+            ? portfolioMaster.total_profit
+            : calcTotalProfit;
+          const schemeReturns = portfolioMaster
+            ? portfolioMaster.returns
+            : calculateReturns(navCurve, cashForScheme);
+
+          let trailingReturns;
+          if (scheme === "Scheme A") {
+            trailingReturns = calculateTrailingReturns(navCurve);
+          } else {
+            trailingReturns = calculateTrailingReturns(navCurve, {
+              "5d": 5,
+              "10d": 10,
+              "15d": 15,
+              "1m": 30,
+              "1y": 366,
+              "2y": 731,
+            });
+          }
+
+          let quarterlyPnL;
+          if (accountCode === "AC5" && scheme === "Scheme B") {
+            quarterlyPnL = calculateQuarterlyPnLWithDailyPL(
+              navCurve,
+              cashForScheme,
+              metricsData,
+              "Sarla Performance fibers Total Portfolio B"
+            );
+          } else {
+            quarterlyPnL = calculateQuarterlyPnLWithDailyPL(
+              navCurve,
+              cashForScheme,
+              currentData
+            );
+          }
+
+          results[accountCode].schemes[scheme] = {
+            currentPortfolioValue: schemeCurrentPortfolioValue,
+            investedAmount,
+            returns: schemeReturns * 100,
+            trailingReturns,
+            monthlyPnL: calculateMonthlyPnL(navCurve),
+            quarterlyPnL,
+            navCurve,
+            totalProfit: schemeTotalProfit,
+            dividends: cashForScheme.reduce(
+              (sum, flow) => sum + (flow.dividend || 0),
+              0
+            ),
+            currentDrawdown: drawdownMetrics.currentDD,
+            maxDrawdown: drawdownMetrics.mdd,
+            drawdownCurve: drawdownMetrics.ddCurve,
+            cashFlows: cashForScheme.map((flow) => ({
+              date: flow.date,
+              amount: flow.capital_in_out,
+              dividend: flow.dividend,
+            })),
+          };
+        }
+
+        // Process total portfolio metrics for non-AC9 accounts
+        if (PORTFOLIO_MAPPING[accountCode] && PORTFOLIO_MAPPING[accountCode]._total) {
+          const totalPortfolioNames = PORTFOLIO_MAPPING[accountCode]._total;
+          const totalCurrentData = masterSheetData.filter(
             (entry) => entry.account_names === totalPortfolioNames.current
           );
-      const totalMetricsData = isCurrentAccountDeepti
-        ? accountData // Use all data for Deepti
-        : masterSheetData.filter(
+          const totalMetricsData = masterSheetData.filter(
             (entry) => entry.account_names === totalPortfolioNames.metrics
           );
-      const totalCashFlows = cashInOutData.filter(
-        (entry) => entry.account_code === accountCode
-      );
-      const totalInvestedAmount = Object.values(schemeInvestedAmounts).reduce(
-        (sum, amount) => sum + amount,
-        0
-      );
-      const totalNavCurve = totalMetricsData.map((e) => ({
-        date: e.date,
-        nav: e.nav,
-      }));
-      const totalDrawdownMetrics = calculateDrawdownMetrics(totalNavCurve);
-      const calcTotalPortfolioProfit = calculateTotalProfit(
-        totalCurrentData,
-        totalCashFlows
-      );
+          const totalCashFlows = cashInOutData.filter(
+            (entry) => entry.account_code === accountCode
+          );
+          const totalInvestedAmount = Object.values(schemeInvestedAmounts).reduce(
+            (sum, amount) => sum + amount,
+            0
+          );
+          const totalNavCurve = totalMetricsData.map((e) => ({
+            date: e.date,
+            nav: e.nav,
+          }));
+          const totalDrawdownMetrics = calculateDrawdownMetrics(totalNavCurve);
+          const calcTotalPortfolioProfit = calculateTotalProfit(
+            totalCurrentData,
+            totalCashFlows
+          );
 
-      const portfolioMasterTotal = portfolioMasterData.find(
-        (row) => row.account_code === accountCode && row.scheme === "Scheme Total"
-      );
-      const totalPortfolioValue = portfolioMasterTotal
-        ? portfolioMasterTotal.current_portfolio_value
-        : totalCurrentData.length > 0
-        ? totalCurrentData[totalCurrentData.length - 1].portfolio_value || 0
-        : 0;
-      const totalProfitValue = portfolioMasterTotal
-        ? portfolioMasterTotal.total_profit
-        : calcTotalPortfolioProfit;
+          const portfolioMasterTotal = portfolioMasterData.find(
+            (row) => row.account_code === accountCode && row.scheme === "Scheme Total"
+          );
+          const totalPortfolioValue = portfolioMasterTotal
+            ? portfolioMasterTotal.current_portfolio_value
+            : totalCurrentData.length > 0
+              ? totalCurrentData[totalCurrentData.length - 1].portfolio_value || 0
+              : 0;
+          const totalProfitValue = portfolioMasterTotal
+            ? portfolioMasterTotal.total_profit
+            : calcTotalPortfolioProfit;
 
-      results[accountCode].totalPortfolio = {
-        currentPortfolioValue: totalPortfolioValue,
-        investedAmount: totalInvestedAmount,
-        returns: portfolioMasterTotal 
-          ? portfolioMasterTotal.returns * 100 
-          : calculateReturns(totalNavCurve, totalCashFlows),
-        trailingReturns: calculateTrailingReturns(totalNavCurve),
-        quarterlyPnL: calculateQuarterlyPnLWithDailyPL(totalNavCurve, totalCashFlows, totalCurrentData),
-        monthlyPnL: calculateMonthlyPnL(totalNavCurve),
-        navCurve: totalNavCurve,
-        totalProfit: totalProfitValue,
-        dividends: totalCashFlows.reduce(
-          (sum, flow) => sum + (flow.dividend || 0),
-          0
-        ),
-        currentDrawdown: totalDrawdownMetrics.currentDD,
-        maxDrawdown: totalDrawdownMetrics.mdd,
-        drawdownCurve: totalDrawdownMetrics.ddCurve,
-        schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
-        cashFlows: totalCashFlows.map((flow) => ({
-          date: flow.date,
-          scheme: flow.scheme,
-          amount: flow.capital_in_out,
-          dividend: flow.dividend,
-        })),
-      };
+          results[accountCode].totalPortfolio = {
+            currentPortfolioValue: totalPortfolioValue,
+            investedAmount: totalInvestedAmount,
+            returns: portfolioMasterTotal
+              ? portfolioMasterTotal.returns * 100
+              : calculateReturns(totalNavCurve, totalCashFlows),
+            trailingReturns: calculateTrailingReturns(totalNavCurve),
+            quarterlyPnL: calculateQuarterlyPnLWithDailyPL(totalNavCurve, totalCashFlows, totalCurrentData),
+            monthlyPnL: calculateMonthlyPnL(totalNavCurve),
+            navCurve: totalNavCurve,
+            totalProfit: totalProfitValue,
+            dividends: totalCashFlows.reduce(
+              (sum, flow) => sum + (flow.dividend || 0),
+              0
+            ),
+            currentDrawdown: totalDrawdownMetrics.currentDD,
+            maxDrawdown: totalDrawdownMetrics.mdd,
+            drawdownCurve: totalDrawdownMetrics.ddCurve,
+            schemeAllocation: calculateSchemeAllocation(schemeInvestedAmounts),
+            cashFlows: totalCashFlows.map((flow) => ({
+              date: flow.date,
+              scheme: flow.scheme,
+              amount: flow.capital_in_out,
+              dividend: flow.dividend,
+            })),
+          };
+        }
+      }
     }
 
-    // Process holdings (unchanged)
-    const sessionManagedAccountCodes =
-      session?.user?.managed_account_codes || accountCodes;
-    const holdingsData1 = await prisma.managed_accounts_holdings.findMany({
+    // Process holdings only for non-AC9 accounts
+    const sessionManagedAccountCodes = session?.user?.managed_account_codes || accountCodes.filter(code => code !== "AC9");
+    const holdingsData = await prisma.managed_accounts_holdings.findMany({
       where: { account_code: { in: sessionManagedAccountCodes } },
     });
-    const groupedByScheme = holdingsData1.reduce((acc, holding) => {
+    const groupedByScheme = holdingsData.reduce((acc, holding) => {
       const { scheme, stock, sell_price, qty, type } = holding;
       const numericSellPrice = Number(sell_price);
       const numericQty = Number(qty);
@@ -1046,6 +1138,7 @@ export async function GET(request) {
       acc["totalPortfolio"][type][stock].totalAllocation += allocation;
       return acc;
     }, {});
+
     for (const scheme in groupedByScheme) {
       for (const type in groupedByScheme[scheme]) {
         const stocks = groupedByScheme[scheme][type];
@@ -1087,3 +1180,4 @@ export async function GET(request) {
   }
 }
 
+// Keep all other functions (calculateTotalProfit, calculateDrawdownMetrics, etc.) unchanged

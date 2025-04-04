@@ -24,7 +24,7 @@ const useManagedAccounts = () => {
         const response = await axios.get(
           "/api/managed-accounts?user_id=" + session.user.id
         );
-        // console.log("Managed Accounts Response:", response.data);
+        // // console.log("Managed Accounts Response:", response.data);
 
         // Extract both accounts and holdings from the API response
         const { accounts, holdings } = response.data.data;
@@ -114,7 +114,7 @@ const useManagedAccounts = () => {
   // Helper functions for account data
   const getAccountByCode = (accountCode) =>
     accountsData?.find((account) => account.accountCode === accountCode);
-
+  
   const getSchemesByAccount = (accountCode) =>
     getAccountByCode(accountCode)?.schemes || [];
 
@@ -130,7 +130,7 @@ const useManagedAccounts = () => {
   // New helper function for holdings:
   const getHoldingsByScheme = (scheme) => holdingsData?.[scheme] || [];
 
-  console.log('quarterlyPnL:', holdingsData?.[0]?.quarterlyPnL);
+  // console.log('quarterlyPnL:', holdingsData?.[0]?.quarterlyPnL);
 
   return {
     accountsData,

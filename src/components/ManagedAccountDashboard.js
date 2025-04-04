@@ -315,7 +315,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     getHoldingsByScheme
   } = useManagedAccounts();
 
-  console.log('getHoldingsByScheme', holdingsData)
+  // console.log('getHoldingsByScheme', holdingsData)
 
 
 
@@ -398,9 +398,6 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       ? totalPortfolio?.returns || 0
       : selectedScheme?.returns || 0;
 
-  const dailyPercentageChange = 0;
-  const isPositive = returnsValue >= 0;
-
   const latestPreviousValue = 0; // placeholder
 
   // Use totalPortfolio data for trailing returns & drawdown when selected.
@@ -408,7 +405,6 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     activeScheme === "Scheme Total"
       ? totalPortfolio?.trailingReturns || {}
       : selectedScheme?.trailingReturns || {};
-  // console.log(trailingReturns)
   // ── Calculate Benchmark trailing returns and drawdown stats ──
   const benchmarkTrailingReturns = useMemo(() => {
     if (benchmarkData && benchmarkData.length > 0) {
@@ -509,22 +505,43 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
       activeScheme === "Scheme Total"
         ? totalPortfolio?.drawdownCurve
         : selectedScheme?.drawdownCurve;
-    if (portfolioCurve?.length) {
-      drawdownSeries.push({
-        name: "Portfolio Drawdown",
-        data: portfolioCurve.map((point) => [
-          new Date(point.date).getTime(),
-          parseFloat(-point.drawdown)// Multiply drawdown by 100
-        ]),
-        color: "#FF4560",
-        zIndex: 2,
-        yAxis: 1, // assign to drawdown y-axis (bottom)
-        type: "area",
-        marker: { enabled: false },
-        fillOpacity: 0.2,
-        threshold: 0, // Draw from the 0 baseline
-        tooltip: { valueSuffix: "%" }
-      });
+    if (accountCode === "AC9") {
+      if (portfolioCurve?.length) {
+        drawdownSeries.push({
+          name: "Portfolio Drawdown",
+          data: portfolioCurve.map((point) => [
+            new Date(point.date).getTime(),
+            parseFloat(point.drawdown)// Multiply drawdown by 100
+          ]),
+          color: "#FF4560",
+          zIndex: 2,
+          yAxis: 1, // assign to drawdown y-axis (bottom)
+          type: "area",
+          marker: { enabled: false },
+          fillOpacity: 0.2,
+          threshold: 0, // Draw from the 0 baseline
+          tooltip: { valueSuffix: "%" }
+        });
+      }
+    } else {
+
+      if (portfolioCurve?.length) {
+        drawdownSeries.push({
+          name: "Portfolio Drawdown",
+          data: portfolioCurve.map((point) => [
+            new Date(point.date).getTime(),
+            parseFloat(-point.drawdown)// Multiply drawdown by 100
+          ]),
+          color: "#FF4560",
+          zIndex: 2,
+          yAxis: 1, // assign to drawdown y-axis (bottom)
+          type: "area",
+          marker: { enabled: false },
+          fillOpacity: 0.2,
+          threshold: 0, // Draw from the 0 baseline
+          tooltip: { valueSuffix: "%" }
+        });
+      }
     }
 
     let benchmarkDrawdownSeries = [];
@@ -726,7 +743,7 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
         ? selectedScheme.quarterlyPnL || {}
         : {};
 
-  console.log('monthlyPnLFromNormalizedData', quarterlyPnLFromNormalizedData)
+  // console.log('monthlyPnLFromNormalizedData', quarterlyPnLFromNormalizedData)
   // Cash flow data
   const filteredCashInOutData =
     activeScheme === "Scheme Total"
@@ -766,16 +783,19 @@ const ManagedAccountDashboard = ({ accountCodes, accountNames }) => {
     return `${day}-${month}-${year}`;
   };
 
-  const formatCurrency = (amount) => {
+  // Replace your current formatCurrency function with this safer version:
+const formatCurrency = (amount) => {
+  // Safeguard: If amount is undefined, null, or not a finite number, default to 0
+  if (typeof amount !== "number" || !Number.isFinite(amount)) {
+    amount = 0;
+  }
 
-    return (
-      "₹" +
-      amount.toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-    );
-  };
+  return "₹" + amount.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 
 
   // Keep holdingsToDisplay as an object
